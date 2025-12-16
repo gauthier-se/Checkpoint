@@ -1,6 +1,6 @@
+import { TanStackDevtools } from '@tanstack/react-devtools'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import Header from '../components/Header'
 
@@ -36,6 +36,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          defer
+          src="https://analytics.seyzeriat.com/script.js"
+          data-website-id="371c0e6e-eb08-4012-a1fd-0817f6a3775b"
+        ></script>
       </head>
       <body>
         <Header />
