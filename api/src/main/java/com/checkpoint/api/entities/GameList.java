@@ -13,6 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -20,18 +22,15 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "reviews")
-public class Review {
+@Table(name = "lists")
+public class GameList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
-
-    @Column(name = "have_spoilers", nullable = false)
-    private Boolean haveSpoilers = false;
+    @Column(nullable = false)
+    private String title;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,26 +38,26 @@ public class Review {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relationship: Review is written by one user
+    // Relationship: List is created by one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Relationship: Review is for one video game
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "video_game_id", nullable = false)
-    private VideoGame videoGame;
+    // Relationship: List can contain multiple video games (ManyToMany)
+    @ManyToMany
+    @JoinTable(
+        name = "list_video_games",
+        joinColumns = @JoinColumn(name = "list_id"),
+        inverseJoinColumns = @JoinColumn(name = "video_game_id")
+    )
+    private Set<VideoGame> videoGames = new HashSet<>();
 
-    // Relationship: Review can have multiple comments
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Relationship: List can have multiple comments
+    @OneToMany(mappedBy = "gameList", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
 
-    // Relationship: Review can have multiple reports
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Report> reports = new HashSet<>();
-
-    // Relationship: Review can have multiple likes
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Relationship: List can have multiple likes
+    @OneToMany(mappedBy = "gameList", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Like> likes = new HashSet<>();
 
     @PrePersist
@@ -72,13 +71,22 @@ public class Review {
         updatedAt = LocalDateTime.now();
     }
 
-    public Review() {}
+    public GameList() {}
 
-    public Review(String content, Boolean haveSpoilers, User user, VideoGame videoGame) {
-        this.content = content;
-        this.haveSpoilers = haveSpoilers;
+    public GameList(String title, User user) {
+        this.title = title;
         this.user = user;
-        this.videoGame = videoGame;
+    }
+
+    // Helper methods for managing video games
+    public void addVideoGame(VideoGame videoGame) {
+        this.videoGames.add(videoGame);
+        videoGame.getGameLists().add(this);
+    }
+
+    public void removeVideoGame(VideoGame videoGame) {
+        this.videoGames.remove(videoGame);
+        videoGame.getGameLists().remove(this);
     }
 
     public UUID getId() {
@@ -89,20 +97,12 @@ public class Review {
         this.id = id;
     }
 
-    public String getContent() {
-        return content;
+    public String getTitle() {
+        return title;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public Boolean getHaveSpoilers() {
-        return haveSpoilers;
-    }
-
-    public void setHaveSpoilers(Boolean haveSpoilers) {
-        this.haveSpoilers = haveSpoilers;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -129,12 +129,12 @@ public class Review {
         this.user = user;
     }
 
-    public VideoGame getVideoGame() {
-        return videoGame;
+    public Set<VideoGame> getVideoGames() {
+        return videoGames;
     }
 
-    public void setVideoGame(VideoGame videoGame) {
-        this.videoGame = videoGame;
+    public void setVideoGames(Set<VideoGame> videoGames) {
+        this.videoGames = videoGames;
     }
 
     public Set<Comment> getComments() {
@@ -143,14 +143,6 @@ public class Review {
 
     public void setComments(Set<Comment> comments) {
         this.comments = comments;
-    }
-
-    public Set<Report> getReports() {
-        return reports;
-    }
-
-    public void setReports(Set<Report> reports) {
-        this.reports = reports;
     }
 
     public Set<Like> getLikes() {

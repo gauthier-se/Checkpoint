@@ -105,6 +105,38 @@ public class User {
     @ManyToMany(mappedBy = "following")
     private Set<User> followers = new HashSet<>();
 
+    // Relationship: User can have multiple backlogs
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Backlog> backlogs = new HashSet<>();
+
+    // Relationship: User can rate multiple games
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Rate> rates = new HashSet<>();
+
+    // Relationship: User can have multiple wishes
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Wish> wishes = new HashSet<>();
+
+    // Relationship: User can have 0-5 favorites
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Favorite> favorites = new HashSet<>();
+
+    // Relationship: User can like multiple games
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Like> likes = new HashSet<>();
+
+    // Relationship: User can create multiple lists
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GameList> gameLists = new HashSet<>();
+
+    // Relationship: User can post multiple comments
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
+
+    // Relationship: User can make multiple reports
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Report> reports = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -304,5 +336,69 @@ public class User {
     public void removeBadge(Badge badge) {
         this.badges.remove(badge);
         badge.getUsers().remove(this);
+    }
+
+    public Set<Backlog> getBacklogs() {
+        return backlogs;
+    }
+
+    public void setBacklogs(Set<Backlog> backlogs) {
+        this.backlogs = backlogs;
+    }
+
+    public Set<Rate> getRates() {
+        return rates;
+    }
+
+    public void setRates(Set<Rate> rates) {
+        this.rates = rates;
+    }
+
+    public Set<Wish> getWishes() {
+        return wishes;
+    }
+
+    public void setWishes(Set<Wish> wishes) {
+        this.wishes = wishes;
+    }
+
+    public Set<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(Set<Favorite> favorites) {
+        this.favorites = favorites;
+    }
+
+    public Set<Like> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Set<Like> likes) {
+        this.likes = likes;
+    }
+
+    public Set<GameList> getGameLists() {
+        return gameLists;
+    }
+
+    public void setGameLists(Set<GameList> gameLists) {
+        this.gameLists = gameLists;
+    }
+
+    public Set<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(Set<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public Set<Report> getReports() {
+        return reports;
+    }
+
+    public void setReports(Set<Report> reports) {
+        this.reports = reports;
     }
 }

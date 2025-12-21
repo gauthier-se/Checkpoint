@@ -1,11 +1,8 @@
 package com.checkpoint.api.entities;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,14 +11,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+/**
+ * Report entity that can be associated with either a Review or a Comment.
+ * A report is made by a user against a Review or a Comment (polymorphic relationship).
+ */
 @Entity
-@Table(name = "reviews")
-public class Review {
+@Table(name = "reports")
+public class Report {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,36 +30,26 @@ public class Review {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "have_spoilers", nullable = false)
-    private Boolean haveSpoilers = false;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relationship: Review is written by one user
+    // Relationship: Report is made by one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Relationship: Review is for one video game
+    // Relationship: Report can be against a review (nullable - polymorphic)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "video_game_id", nullable = false)
-    private VideoGame videoGame;
+    @JoinColumn(name = "review_id")
+    private Review review;
 
-    // Relationship: Review can have multiple comments
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
-
-    // Relationship: Review can have multiple reports
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Report> reports = new HashSet<>();
-
-    // Relationship: Review can have multiple likes
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Like> likes = new HashSet<>();
+    // Relationship: Report can be against a comment (nullable - polymorphic)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
     @PrePersist
     protected void onCreate() {
@@ -72,13 +62,24 @@ public class Review {
         updatedAt = LocalDateTime.now();
     }
 
-    public Review() {}
+    public Report() {}
 
-    public Review(String content, Boolean haveSpoilers, User user, VideoGame videoGame) {
+    public Report(String content, User user) {
         this.content = content;
-        this.haveSpoilers = haveSpoilers;
         this.user = user;
-        this.videoGame = videoGame;
+    }
+
+    // Factory methods for clarity
+    public static Report onReview(String content, User user, Review review) {
+        Report report = new Report(content, user);
+        report.setReview(review);
+        return report;
+    }
+
+    public static Report onComment(String content, User user, Comment comment) {
+        Report report = new Report(content, user);
+        report.setComment(comment);
+        return report;
     }
 
     public UUID getId() {
@@ -95,14 +96,6 @@ public class Review {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Boolean getHaveSpoilers() {
-        return haveSpoilers;
-    }
-
-    public void setHaveSpoilers(Boolean haveSpoilers) {
-        this.haveSpoilers = haveSpoilers;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -129,35 +122,19 @@ public class Review {
         this.user = user;
     }
 
-    public VideoGame getVideoGame() {
-        return videoGame;
+    public Review getReview() {
+        return review;
     }
 
-    public void setVideoGame(VideoGame videoGame) {
-        this.videoGame = videoGame;
+    public void setReview(Review review) {
+        this.review = review;
     }
 
-    public Set<Comment> getComments() {
-        return comments;
+    public Comment getComment() {
+        return comment;
     }
 
-    public void setComments(Set<Comment> comments) {
-        this.comments = comments;
-    }
-
-    public Set<Report> getReports() {
-        return reports;
-    }
-
-    public void setReports(Set<Report> reports) {
-        this.reports = reports;
-    }
-
-    public Set<Like> getLikes() {
-        return likes;
-    }
-
-    public void setLikes(Set<Like> likes) {
-        this.likes = likes;
+    public void setComment(Comment comment) {
+        this.comment = comment;
     }
 }

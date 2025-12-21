@@ -98,6 +98,30 @@ public class VideoGame {
     @OneToMany(mappedBy = "parentGame", cascade = CascadeType.ALL)
     private Set<VideoGame> dlcs = new HashSet<>();
 
+    // Relationship: VideoGame can be in multiple backlogs
+    @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Backlog> backlogs = new HashSet<>();
+
+    // Relationship: VideoGame can have multiple rates
+    @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Rate> rates = new HashSet<>();
+
+    // Relationship: VideoGame can be in multiple wishlists
+    @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Wish> wishes = new HashSet<>();
+
+    // Relationship: VideoGame can be in multiple favorites
+    @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Favorite> favorites = new HashSet<>();
+
+    // Relationship: VideoGame can have multiple likes
+    @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Like> likes = new HashSet<>();
+
+    // Relationship: VideoGame can be in multiple lists (ManyToMany)
+    @ManyToMany(mappedBy = "videoGames")
+    private Set<GameList> gameLists = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -280,5 +304,53 @@ public class VideoGame {
 
     public void setDlcs(Set<VideoGame> dlcs) {
         this.dlcs = dlcs;
+    }
+
+    public Set<Backlog> getBacklogs() {
+        return backlogs;
+    }
+
+    public void setBacklogs(Set<Backlog> backlogs) {
+        this.backlogs = backlogs;
+    }
+
+    public Set<Rate> getRates() {
+        return rates;
+    }
+
+    public void setRates(Set<Rate> rates) {
+        this.rates = rates;
+    }
+
+    public Set<Wish> getWishes() {
+        return wishes;
+    }
+
+    public void setWishes(Set<Wish> wishes) {
+        this.wishes = wishes;
+    }
+
+    public Set<Favorite> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(Set<Favorite> favorites) {
+        this.favorites = favorites;
+    }
+
+    public Set<Like> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Set<Like> likes) {
+        this.likes = likes;
+    }
+
+    public Set<GameList> getGameLists() {
+        return gameLists;
+    }
+
+    public void setGameLists(Set<GameList> gameLists) {
+        this.gameLists = gameLists;
     }
 }
