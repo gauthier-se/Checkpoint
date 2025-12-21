@@ -19,9 +19,13 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+/**
+ * Comment entity that can be associated with either a GameList or a Review.
+ * A comment belongs to exactly one of these (polymorphic relationship).
+ */
 @Entity
-@Table(name = "reviews")
-public class Review {
+@Table(name = "comments")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,36 +34,30 @@ public class Review {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "have_spoilers", nullable = false)
-    private Boolean haveSpoilers = false;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relationship: Review is written by one user
+    // Relationship: Comment is posted by one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Relationship: Review is for one video game
+    // Relationship: Comment can be on a list (nullable - polymorphic)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "video_game_id", nullable = false)
-    private VideoGame videoGame;
+    @JoinColumn(name = "list_id")
+    private GameList gameList;
 
-    // Relationship: Review can have multiple comments
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Comment> comments = new HashSet<>();
+    // Relationship: Comment can be on a review (nullable - polymorphic)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id")
+    private Review review;
 
-    // Relationship: Review can have multiple reports
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Relationship: Comment can have multiple reports
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Report> reports = new HashSet<>();
-
-    // Relationship: Review can have multiple likes
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Like> likes = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -72,13 +70,24 @@ public class Review {
         updatedAt = LocalDateTime.now();
     }
 
-    public Review() {}
+    public Comment() {}
 
-    public Review(String content, Boolean haveSpoilers, User user, VideoGame videoGame) {
+    public Comment(String content, User user) {
         this.content = content;
-        this.haveSpoilers = haveSpoilers;
         this.user = user;
-        this.videoGame = videoGame;
+    }
+
+    // Factory methods for clarity
+    public static Comment onList(String content, User user, GameList gameList) {
+        Comment comment = new Comment(content, user);
+        comment.setGameList(gameList);
+        return comment;
+    }
+
+    public static Comment onReview(String content, User user, Review review) {
+        Comment comment = new Comment(content, user);
+        comment.setReview(review);
+        return comment;
     }
 
     public UUID getId() {
@@ -95,14 +104,6 @@ public class Review {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Boolean getHaveSpoilers() {
-        return haveSpoilers;
-    }
-
-    public void setHaveSpoilers(Boolean haveSpoilers) {
-        this.haveSpoilers = haveSpoilers;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -129,20 +130,20 @@ public class Review {
         this.user = user;
     }
 
-    public VideoGame getVideoGame() {
-        return videoGame;
+    public GameList getGameList() {
+        return gameList;
     }
 
-    public void setVideoGame(VideoGame videoGame) {
-        this.videoGame = videoGame;
+    public void setGameList(GameList gameList) {
+        this.gameList = gameList;
     }
 
-    public Set<Comment> getComments() {
-        return comments;
+    public Review getReview() {
+        return review;
     }
 
-    public void setComments(Set<Comment> comments) {
-        this.comments = comments;
+    public void setReview(Review review) {
+        this.review = review;
     }
 
     public Set<Report> getReports() {
@@ -151,13 +152,5 @@ public class Review {
 
     public void setReports(Set<Report> reports) {
         this.reports = reports;
-    }
-
-    public Set<Like> getLikes() {
-        return likes;
-    }
-
-    public void setLikes(Set<Like> likes) {
-        this.likes = likes;
     }
 }
