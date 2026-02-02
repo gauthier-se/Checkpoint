@@ -1,0 +1,65 @@
+meta {
+  name: Get Games (Paginated)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/games
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+  ~sort: releaseDate,desc
+}
+
+docs {
+  # Get Games (Paginated)
+
+  Retrieves a paginated list of games from the catalog.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 100) |
+  | sort | releaseDate,desc | Sort field and direction |
+
+  ## Sort Options
+
+  - `releaseDate,desc` - Newest first
+  - `releaseDate,asc` - Oldest first
+  - `title,asc` - Alphabetical A-Z
+  - `title,desc` - Alphabetical Z-A
+
+  ## Response
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "title": "Game Title",
+        "coverUrl": "https://...",
+        "releaseDate": "2025-01-15",
+        "averageRating": 4.5,
+        "ratingCount": 100
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 150,
+      "totalPages": 8,
+      "first": true,
+      "last": false,
+      "hasNext": true,
+      "hasPrevious": false
+    }
+  }
+  ```
+}

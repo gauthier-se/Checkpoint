@@ -1,0 +1,17 @@
+meta {
+  name: Get Games - Page 2
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/games?page=1&size=10&sort=title,asc
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Games - Page 2
+
+  Example: Fetching the second page with 10 items, sorted by title.
+}

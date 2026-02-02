@@ -1,0 +1,63 @@
+meta {
+  name: Get Game by ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/games/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: 550e8400-e29b-41d4-a716-446655440000
+}
+
+docs {
+  # Get Game by ID
+
+  Retrieves detailed information about a specific game.
+
+  ## Path Parameters
+
+  | Parameter | Description |
+  |-----------|-------------|
+  | id | UUID of the game |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "The Witcher 3: Wild Hunt",
+    "description": "An epic RPG adventure...",
+    "coverUrl": "https://images.igdb.com/...",
+    "releaseDate": "2015-05-19",
+    "averageRating": 4.8,
+    "ratingCount": 1500,
+    "genres": [
+      { "id": "uuid", "name": "RPG" },
+      { "id": "uuid", "name": "Adventure" }
+    ],
+    "platforms": [
+      { "id": "uuid", "name": "PC (Microsoft Windows)" },
+      { "id": "uuid", "name": "PlayStation 4" }
+    ],
+    "companies": [
+      { "id": "uuid", "name": "CD Projekt RED" }
+    ]
+  }
+  ```
+
+  ## Error Response (404 Not Found)
+
+  ```json
+  {
+    "status": 404,
+    "error": "Not Found",
+    "message": "Game not found with ID: 550e8400-e29b-41d4-a716-446655440000",
+    "timestamp": "2025-01-15T10:30:00"
+  }
+  ```
+}
