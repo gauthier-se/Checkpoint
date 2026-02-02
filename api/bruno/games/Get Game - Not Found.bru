@@ -1,0 +1,19 @@
+meta {
+  name: Get Game - Not Found
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/games/00000000-0000-0000-0000-000000000000
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Game - Not Found
+
+  Example: Request for a non-existent game ID.
+
+  Expected response: 404 Not Found
+}
