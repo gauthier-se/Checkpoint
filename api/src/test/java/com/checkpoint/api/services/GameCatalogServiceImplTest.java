@@ -29,7 +29,9 @@ import com.checkpoint.api.entities.Company;
 import com.checkpoint.api.entities.Genre;
 import com.checkpoint.api.entities.Platform;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.repositories.VideoGameRepository;
+import com.checkpoint.api.services.impl.GameCatalogServiceImpl;
 
 /**
  * Unit tests for {@link GameCatalogServiceImpl}.

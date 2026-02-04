@@ -36,6 +36,7 @@ import com.checkpoint.api.repositories.CompanyRepository;
 import com.checkpoint.api.repositories.GenreRepository;
 import com.checkpoint.api.repositories.PlatformRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
+import com.checkpoint.api.services.impl.GameImportServiceImpl;
 
 /**
  * Unit tests for {@link GameImportServiceImpl}.

@@ -25,8 +25,8 @@ import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.CompanyDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.GenreDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.PlatformDto;
+import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.services.GameCatalogService;
-import com.checkpoint.api.services.GameNotFoundException;
 
 /**
  * Unit tests for {@link GameController}.

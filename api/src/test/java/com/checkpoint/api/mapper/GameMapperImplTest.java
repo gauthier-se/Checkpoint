@@ -13,6 +13,7 @@ import com.checkpoint.api.dto.igdb.IgdbCoverDto;
 import com.checkpoint.api.dto.igdb.IgdbGameDto;
 import com.checkpoint.api.dto.igdb.IgdbGenreDto;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.mapper.impl.GameMapperImpl;
 
 /**
  * Unit tests for {@link GameMapperImpl}.

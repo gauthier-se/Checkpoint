@@ -1,4 +1,4 @@
-package com.checkpoint.api.client;
+package com.checkpoint.api.exceptions;
 
 /**
  * Exception thrown when an error occurs while communicating with the IGDB API.

@@ -1,4 +1,4 @@
-package com.checkpoint.api.services;
+package com.checkpoint.api.services.impl;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +26,7 @@ import com.checkpoint.api.repositories.CompanyRepository;
 import com.checkpoint.api.repositories.GenreRepository;
 import com.checkpoint.api.repositories.PlatformRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
+import com.checkpoint.api.services.GameImportService;
 
 /**
  * Implementation of {@link GameImportService}.

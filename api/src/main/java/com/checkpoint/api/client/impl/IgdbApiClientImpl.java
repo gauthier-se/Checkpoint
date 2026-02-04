@@ -1,4 +1,4 @@
-package com.checkpoint.api.client;
+package com.checkpoint.api.client.impl;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,7 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import com.checkpoint.api.client.IgdbApiClient;
 import com.checkpoint.api.dto.igdb.IgdbGameDto;
+import com.checkpoint.api.exceptions.IgdbApiException;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;

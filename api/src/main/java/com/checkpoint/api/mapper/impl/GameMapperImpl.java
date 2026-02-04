@@ -1,4 +1,4 @@
-package com.checkpoint.api.mapper;
+package com.checkpoint.api.mapper.impl;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.checkpoint.api.dto.igdb.IgdbGameDto;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.mapper.GameMapper;
 
 /**
  * Implementation of {@link GameMapper} for mapping IGDB DTOs to VideoGame entities.

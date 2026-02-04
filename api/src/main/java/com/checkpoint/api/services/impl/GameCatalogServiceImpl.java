@@ -1,4 +1,4 @@
-package com.checkpoint.api.services;
+package com.checkpoint.api.services.impl;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +16,9 @@ import com.checkpoint.api.dto.catalog.GameDetailDto.CompanyDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.GenreDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.PlatformDto;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.repositories.VideoGameRepository;
+import com.checkpoint.api.services.GameCatalogService;
 
 /**
  * Implementation of {@link GameCatalogService}.
