@@ -1,9 +1,9 @@
-package com.checkpoint.api.services;
+package com.checkpoint.api.exceptions;
 
 import java.util.UUID;
 
 /**
- * Exception thrown when a game is not found.
+ * Exception thrown when a game is not found in the local database.
  */
 public class GameNotFoundException extends RuntimeException {
 

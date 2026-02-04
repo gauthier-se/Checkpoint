@@ -1,0 +1,65 @@
+meta {
+  name: Import Game by External ID
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/games/import/1942
+  body: none
+  auth: none
+}
+
+docs {
+  # Import Game by External ID
+
+  Import a game from IGDB into the local database using its external ID.
+
+  ## Path Parameters
+
+  - **externalId**: The IGDB game ID (obtained from search results)
+
+  ## Response
+
+  Returns the imported game details with:
+  - `id`: Internal UUID
+  - `title`: Game title
+  - `description`: Game description
+  - `releaseDate`: Release date
+  - `coverUrl`: Cover image URL
+  - `genres`: List of genres
+  - `platforms`: List of platforms
+  - `companies`: List of involved companies (developers/publishers)
+
+  ## Example Response
+
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "The Witcher 3: Wild Hunt",
+    "description": "RPG and target demographics...",
+    "releaseDate": "2015-05-19",
+    "coverUrl": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg",
+    "genres": [
+      { "id": "...", "name": "Role-playing (RPG)" }
+    ],
+    "platforms": [
+      { "id": "...", "name": "PC (Microsoft Windows)" }
+    ],
+    "companies": [
+      { "id": "...", "name": "CD Projekt Red", "developer": true, "publisher": false }
+    ]
+  }
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: Game not found in IGDB
+  - **503 Service Unavailable**: IGDB API is down or rate limited
+
+  ## Notes
+
+  - This endpoint requires ROLE_ADMIN (when security is enabled)
+  - If the game already exists (same IGDB ID), it will be updated
+  - Related entities (genres, platforms, companies) are created if they don't exist
+}
