@@ -2,8 +2,8 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
-import Header from '../components/Header'
-
+import { Footer } from '@/components/layout/footer'
+import { Header } from '@/components/layout/header'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -17,7 +17,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Checkpoint - Your gaming journal',
       },
     ],
     links: [
@@ -45,6 +45,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <Header />
         {children}
+        <Footer />
         <TanStackDevtools
           config={{
             position: 'bottom-right',
