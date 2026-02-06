@@ -63,18 +63,26 @@ function RouteComponent() {
         <GameGrid games={data.content.slice(0, 7)} columns={7} />
       </div>
       <h2 id="catalog" className="py-2 text-muted-foreground font-semibold">
-        There {data.metadata.totalElements > 1 ? 'are' : 'is'}{' '}
-        {data.metadata.totalElements} game
-        {data.metadata.totalElements > 1 ? 's' : ''}
+        {data.metadata.totalElements === 0
+          ? 'No games found'
+          : `There ${data.metadata.totalElements > 1 ? 'are' : 'is'} ${data.metadata.totalElements} game${data.metadata.totalElements > 1 ? 's' : ''}`}
       </h2>
       <Separator />
-      <GameGrid games={data.content} />
-      <GamesPagination
-        page={page}
-        totalPages={data.metadata.totalPages}
-        hasNext={data.metadata.hasNext}
-        hasPrevious={data.metadata.hasPrevious}
-      />
+      {data.content.length > 0 ? (
+        <>
+          <GameGrid games={data.content} />
+          <GamesPagination
+            page={page}
+            totalPages={data.metadata.totalPages}
+            hasNext={data.metadata.hasNext}
+            hasPrevious={data.metadata.hasPrevious}
+          />
+        </>
+      ) : (
+        <p className="py-8 text-center text-muted-foreground">
+          No games to display.
+        </p>
+      )}
     </div>
   )
 }

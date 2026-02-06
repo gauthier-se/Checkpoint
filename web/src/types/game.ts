@@ -7,6 +7,34 @@ export interface Game {
   ratingCount: number
 }
 
+export interface Genre {
+  id: string
+  name: string
+}
+
+export interface Platform {
+  id: string
+  name: string
+}
+
+export interface Company {
+  id: string
+  name: string
+}
+
+export interface GameDetail {
+  id: string
+  title: string
+  description: string | null
+  coverUrl: string
+  releaseDate: string
+  averageRating: number | null
+  ratingCount: number
+  genres: Genre[]
+  platforms: Platform[]
+  companies: Company[]
+}
+
 export interface PaginationMetadata {
   page: number
   size: number
