@@ -24,12 +24,12 @@ export const Header = () => {
         <Link to="/" className="text-muted-foreground font-semibold">
           <Search />
         </Link>
-        <Link to="/" className="text-muted-foreground font-semibold">
-          <Button size="sm">
+        <Button asChild size="sm">
+          <Link to="/" className="text-muted-foreground font-semibold">
             <Plus />
             Log
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <AvatarDropdown />
       </nav>
     </header>
