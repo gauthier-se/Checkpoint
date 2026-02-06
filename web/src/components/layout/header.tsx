@@ -7,11 +7,15 @@ export const Header = () => {
   return (
     <header className="max-w-7xl mx-auto py-4 flex items-center justify-between">
       <Link className="flex items-center gap-2" to="/">
-        <img className="w-8 pt-1" src="./public/images/logo.png" alt="" />
+        <img className="w-8 pt-1" src="./images/logo.png" alt="" />
         <h1 className="text-2xl font-bold">Checkpoint</h1>
       </Link>
       <nav className="flex items-center gap-4 pt-2">
-        <Link to="/games" className="text-muted-foreground font-semibold">
+        <Link
+          to="/games"
+          search={{ page: 1 }}
+          className="text-muted-foreground font-semibold"
+        >
           Games
         </Link>
         <Link to="/" className="text-muted-foreground font-semibold">

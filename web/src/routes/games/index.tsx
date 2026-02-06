@@ -1,38 +1,29 @@
+import { GameGrid } from '@/components/games/game-grid'
+import { GamesPagination } from '@/components/games/pagination'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import type { GamesResponse } from '@/types/game'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
-interface Game {
-  id: string
-  title: string
-  coverUrl: string
-  releaseDate: string
-  averageRating: number | null
-  ratingCount: number
-}
+const PAGE_SIZE = 32
 
-interface PaginationMetadata {
+type GamesSearchParams = {
   page: number
-  size: number
-  totalElements: number
-  totalPages: number
-  first: boolean
-  last: boolean
-  hasNext: boolean
-  hasPrevious: boolean
 }
 
-interface GamesResponse {
-  content: Game[]
-  metadata: PaginationMetadata
-}
-
-export const Route = createFileRoute('/games')({
+export const Route = createFileRoute('/games/')({
   component: RouteComponent,
-  loader: async (): Promise<GamesResponse> => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/games`)
+  validateSearch: (search: Record<string, unknown>): GamesSearchParams => ({
+    page: Math.max(1, Math.floor(Number(search?.page ?? 1)) || 1),
+  }),
+  loaderDeps: ({ search: { page } }) => ({ page }),
+  loader: async ({ deps: { page } }): Promise<GamesResponse> => {
+    const apiPage = page - 1 // API is 0-based, URL is 1-based
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/games?page=${apiPage}&size=${PAGE_SIZE}`,
+    )
     const data: GamesResponse = await res.json()
     return data
   },
@@ -40,6 +31,7 @@ export const Route = createFileRoute('/games')({
 
 function RouteComponent() {
   const data = Route.useLoaderData()
+  const { page } = Route.useSearch()
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -62,41 +54,27 @@ function RouteComponent() {
       <div className="my-8">
         <div className="py-2 text-muted-foreground font-semibold flex items-center justify-between">
           <h2>Popular games this week</h2>
-          <Link to="/games">More</Link>
+          <Link to="/games" search={{ page: 1 }}>
+            More
+          </Link>
         </div>
         <Separator />
-        <div className="grid grid-cols-7 gap-3 py-4">
-          {data.content.slice(0, 7).map((game) => (
-            <div key={game.id}>
-              <img
-                className="rounded-sm w-full"
-                src={game.coverUrl}
-                alt={game.title}
-              />
-            </div>
-          ))}
-        </div>
+        {/* TODO: API should support "featured" or "popular" games so we don't have to slice here */}
+        <GameGrid games={data.content.slice(0, 7)} columns={7} />
       </div>
-      <h2 className="py-2 text-muted-foreground font-semibold">
+      <h2 id="catalog" className="py-2 text-muted-foreground font-semibold">
         There {data.metadata.totalElements > 1 ? 'are' : 'is'}{' '}
         {data.metadata.totalElements} game
         {data.metadata.totalElements > 1 ? 's' : ''}
       </h2>
       <Separator />
-      <div className="grid grid-cols-8 gap-2 py-4">
-        {data.content.map((game) => (
-          <div key={game.id}>
-            <img
-              className="rounded-sm w-full"
-              src={game.coverUrl}
-              alt={game.title}
-            />
-          </div>
-        ))}
-      </div>
-      <pre>
-        <code>{JSON.stringify(data, null, 2)}</code>
-      </pre>
+      <GameGrid games={data.content} />
+      <GamesPagination
+        page={page}
+        totalPages={data.metadata.totalPages}
+        hasNext={data.metadata.hasNext}
+        hasPrevious={data.metadata.hasPrevious}
+      />
     </div>
   )
 }
