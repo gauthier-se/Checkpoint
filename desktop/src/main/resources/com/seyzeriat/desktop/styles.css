@@ -1,0 +1,200 @@
+/*
+ * Checkpoint Desktop — Dark theme
+ * Colors derived from the web app (oklch → hex):
+ *
+ *   --background:          #17171f
+ *   --foreground:          #e5e5ea
+ *   --card:                #1f1f2d
+ *   --primary:             #7c3aed  (violet)
+ *   --primary-foreground:  #ffffff
+ *   --secondary:           #27273a
+ *   --secondary-fg:        #b9b9c6
+ *   --muted:               #24243a
+ *   --muted-foreground:    #8b8da3
+ *   --accent:              #3a1d8e  (dark violet)
+ *   --destructive:         #b91c1c
+ *   --border:              #2e2e47
+ *   --input:               #27273a
+ *   --ring:                #7c3aed
+ *   --sidebar:             #111120
+ *   --sidebar-accent:      #27273a
+ */
+
+/* ===== Global ===== */
+.root {
+	-fx-font-family: "Inter", "System", sans-serif;
+	-fx-font-size: 14px;
+	-fx-base: #17171f;
+	-fx-background: #17171f;
+}
+
+/* ===== Navigation Sidebar ===== */
+.sidebar {
+	-fx-background-color: #111120;
+	-fx-padding: 0;
+}
+
+.sidebar .nav-button {
+	-fx-background-color: transparent;
+	-fx-text-fill: #8b8da3;
+	-fx-font-size: 14px;
+	-fx-padding: 12 20;
+	-fx-cursor: hand;
+	-fx-alignment: CENTER_LEFT;
+	-fx-max-width: infinity;
+	-fx-background-radius: 0;
+}
+
+.sidebar .nav-button:hover {
+	-fx-background-color: #27273a;
+	-fx-text-fill: #e5e5ea;
+}
+
+.sidebar .nav-button.active {
+	-fx-background-color: #7c3aed;
+	-fx-text-fill: white;
+	-fx-font-weight: bold;
+}
+
+.sidebar .app-title {
+	-fx-text-fill: #e5e5ea;
+	-fx-font-size: 18px;
+	-fx-font-weight: bold;
+	-fx-padding: 20 20 30 20;
+}
+
+/* ===== Import View ===== */
+.import-view {
+	-fx-background-color: #17171f;
+}
+
+.view-title {
+	-fx-font-size: 24px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #e5e5ea;
+}
+
+/* Search bar */
+.import-view .text-field {
+	-fx-padding: 8 12;
+	-fx-font-size: 14px;
+	-fx-background-color: #27273a;
+	-fx-text-fill: #e5e5ea;
+	-fx-prompt-text-fill: #8b8da3;
+	-fx-background-radius: 6;
+	-fx-border-radius: 6;
+	-fx-border-color: #2e2e47;
+	-fx-border-width: 1;
+}
+
+.import-view .text-field:focused {
+	-fx-border-color: #7c3aed;
+	-fx-effect: dropshadow(three-pass-box, rgba(124, 58, 237, 0.35), 4, 0, 0, 0);
+}
+
+.search-button {
+	-fx-background-color: #7c3aed;
+	-fx-text-fill: white;
+	-fx-font-weight: bold;
+	-fx-padding: 8 20;
+	-fx-background-radius: 6;
+	-fx-cursor: hand;
+}
+
+.search-button:hover {
+	-fx-background-color: #6d28d9;
+}
+
+.search-button:disabled {
+	-fx-background-color: #3a1d8e;
+	-fx-text-fill: #8b8da3;
+}
+
+/* Status label */
+.status-label {
+	-fx-text-fill: #8b8da3;
+	-fx-font-size: 13px;
+}
+
+/* Results scroll pane */
+.results-scroll {
+	-fx-background-color: transparent;
+	-fx-background: transparent;
+	-fx-border-color: transparent;
+}
+
+.results-scroll .viewport {
+	-fx-background-color: transparent;
+}
+
+.results-pane {
+	-fx-background-color: transparent;
+}
+
+/* Game card */
+.game-card {
+	-fx-background-color: #1f1f2d;
+	-fx-background-radius: 8;
+	-fx-border-radius: 8;
+	-fx-border-color: #2e2e47;
+	-fx-border-width: 1;
+	-fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.25), 6, 0, 0, 3);
+}
+
+.game-card:hover {
+	-fx-effect: dropshadow(three-pass-box, rgba(124, 58, 237, 0.2), 10, 0, 0, 4);
+	-fx-border-color: #7c3aed;
+}
+
+.game-title {
+	-fx-font-size: 13px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #e5e5ea;
+	-fx-text-alignment: center;
+}
+
+.game-year {
+	-fx-font-size: 12px;
+	-fx-text-fill: #8b8da3;
+}
+
+/* Import button */
+.import-button {
+	-fx-background-color: #7c3aed;
+	-fx-text-fill: white;
+	-fx-font-size: 12px;
+	-fx-font-weight: bold;
+	-fx-padding: 6 12;
+	-fx-background-radius: 6;
+	-fx-cursor: hand;
+}
+
+.import-button:hover {
+	-fx-background-color: #6d28d9;
+}
+
+.import-button:disabled {
+	-fx-opacity: 0.8;
+	-fx-cursor: default;
+}
+
+.import-button.imported {
+	-fx-background-color: #3a1d8e;
+	-fx-text-fill: #b9b9c6;
+}
+
+/* ===== Welcome View ===== */
+.welcome-view {
+	-fx-background-color: #17171f;
+}
+
+.welcome-title {
+	-fx-font-size: 28px;
+	-fx-font-weight: bold;
+	-fx-text-fill: #e5e5ea;
+}
+
+.welcome-subtitle {
+	-fx-font-size: 16px;
+	-fx-text-fill: #8b8da3;
+}
