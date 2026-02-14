@@ -5,36 +5,36 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/admin/external-games/search?query=witcher&limit=10
+  url: {{baseUrl}}/api/admin/external-games/search?query=animal crossing new&limit=10
   body: none
   auth: none
 }
 
 params:query {
-  query: witcher
+  query: animal crossing new
   limit: 10
 }
 
 docs {
   # Search External Games
-
+  
   Search for games in the external IGDB API.
-
+  
   ## Parameters
-
+  
   - **query** (required): Search term to find games
   - **limit** (optional, default: 20, max: 50): Maximum number of results
-
+  
   ## Response
-
+  
   Returns a list of external game objects with:
   - `externalId`: IGDB game ID (use this for import)
   - `name`: Game title
   - `releaseDate`: Release date (if available)
   - `coverUrl`: Cover image URL (if available)
-
+  
   ## Example Response
-
+  
   ```json
   [
     {
@@ -45,9 +45,9 @@ docs {
     }
   ]
   ```
-
+  
   ## Notes
-
+  
   - This endpoint requires ROLE_ADMIN (when security is enabled)
   - Results are rate-limited by IGDB API (1 request/second)
 }

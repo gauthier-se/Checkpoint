@@ -1,0 +1,182 @@
+package com.checkpoint.api.config;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import com.checkpoint.api.repositories.UserRepository;
+import com.checkpoint.api.security.JwtService;
+
+/**
+ * Integration tests for dual security filter chain configuration.
+ * Validates that the API chain (JWT, stateless) and the Web chain (session-based)
+ * behave correctly for public and protected endpoints.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Testcontainers
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SecurityConfigTest {
+
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeAll
+    void setUpTestUser() {
+        if (userRepository.findByEmail("admin@test.com").isEmpty()) {
+            com.checkpoint.api.entities.User testUser = new com.checkpoint.api.entities.User();
+            testUser.setPseudo("admin");
+            testUser.setEmail("admin@test.com");
+            testUser.setPassword(passwordEncoder.encode("password"));
+            userRepository.save(testUser);
+        }
+    }
+
+    @Nested
+    @DisplayName("API Filter Chain (JWT, stateless)")
+    class ApiFilterChainTests {
+
+        @Test
+        @DisplayName("GET /api/games should be publicly accessible")
+        void publicGamesList_shouldBeAccessible() throws Exception {
+            mockMvc.perform(get("/api/games"))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("GET /api/games/{id} should be publicly accessible (returns 404 for missing game)")
+        void publicGameDetails_shouldBeAccessible() throws Exception {
+            mockMvc.perform(get("/api/games/00000000-0000-0000-0000-000000000001"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("GET /api/admin/external-games/search should require authentication")
+        void protectedAdminEndpoint_shouldRequireAuth() throws Exception {
+            mockMvc.perform(get("/api/admin/external-games/search")
+                            .param("query", "zelda"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("POST /api/admin/games/import/{id} should require authentication")
+        void protectedAdminImport_shouldRequireAuth() throws Exception {
+            mockMvc.perform(post("/api/admin/games/import/12345"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GET /api/auth/** should be publicly accessible (not return 401)")
+        void authEndpoints_shouldBePublic() throws Exception {
+            // Auth endpoints don't exist yet, but the security chain should NOT block them
+            mockMvc.perform(get("/api/auth/test"))
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        assert status != 401 : "Expected /api/auth/** to NOT return 401, got " + status;
+                        assert status != 403 : "Expected /api/auth/** to NOT return 403, got " + status;
+                    });
+        }
+
+        @Test
+        @DisplayName("Protected endpoint should be accessible with valid JWT")
+        void protectedEndpoint_withValidJwt_shouldBeAccessible() throws Exception {
+            // Given
+            UserDetails userDetails = User.builder()
+                    .username("admin@test.com")
+                    .password("password")
+                    .roles("ADMIN")
+                    .build();
+
+            String token = jwtService.generateToken(Map.of(), userDetails);
+
+            // When / Then
+            mockMvc.perform(get("/api/admin/external-games/search")
+                            .param("query", "zelda")
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isServiceUnavailable()); // 503 because IGDB is not configured, but NOT 401
+        }
+
+        @Test
+        @DisplayName("Protected endpoint should reject invalid JWT")
+        void protectedEndpoint_withInvalidJwt_shouldReject() throws Exception {
+            mockMvc.perform(get("/api/admin/external-games/search")
+                            .param("query", "zelda")
+                            .header("Authorization", "Bearer invalid.jwt.token"))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Nested
+    @DisplayName("Web Filter Chain (session-based)")
+    class WebFilterChainTests {
+
+        @Test
+        @DisplayName("/login should be publicly accessible")
+        void loginPage_shouldBeAccessible() throws Exception {
+            // Default Spring Security login page should be accessible
+            mockMvc.perform(get("/login"))
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        assert status != 401 : "Expected /login to NOT return 401, got " + status;
+                        assert status != 403 : "Expected /login to NOT return 403, got " + status;
+                    });
+        }
+
+        @Test
+        @DisplayName("/error should be publicly accessible")
+        void errorEndpoint_shouldBeAccessible() throws Exception {
+            mockMvc.perform(get("/error"))
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        assert status != 401 : "Expected /error to NOT return 401, got " + status;
+                        assert status != 403 : "Expected /error to NOT return 403, got " + status;
+                    });
+        }
+    }
+
+    @Nested
+    @DisplayName("Filter Chain Priority")
+    class FilterChainPriorityTests {
+
+        @Test
+        @DisplayName("API chain should handle /api/** requests (stateless, no session)")
+        void apiChain_shouldBeStateless() throws Exception {
+            // API requests without credentials should return 401, not redirect to login
+            mockMvc.perform(get("/api/admin/external-games/search")
+                            .param("query", "zelda"))
+                    .andExpect(status().isUnauthorized());
+        }
+    }
+}

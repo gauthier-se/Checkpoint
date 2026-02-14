@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,12 +27,15 @@ import com.checkpoint.api.dto.catalog.GameDetailDto.CompanyDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.GenreDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.PlatformDto;
 import com.checkpoint.api.exceptions.GameNotFoundException;
+import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
+import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.GameCatalogService;
 
 /**
  * Unit tests for {@link GameController}.
  */
 @WebMvcTest(GameController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class GameControllerTest {
 
     @Autowired
@@ -39,6 +43,12 @@ class GameControllerTest {
 
     @MockitoBean
     private GameCatalogService gameCatalogService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
     @DisplayName("GET /api/games should return paginated games")
