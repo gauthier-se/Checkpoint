@@ -1,0 +1,43 @@
+meta {
+  name: Get Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@example.com",
+    "password": "password123"
+  }
+}
+
+docs {
+  # Get Token
+
+  Dedicated JWT token endpoint for Desktop clients.
+  Always returns a JWT token regardless of headers.
+
+  ## Request Body
+
+  - **email** (required): User's email address
+  - **password** (required): User's password
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+  ```
+
+  ## Errors
+
+  - **400 Bad Request**: Missing or invalid email/password
+  - **401 Unauthorized**: Invalid credentials
+}

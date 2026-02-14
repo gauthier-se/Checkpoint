@@ -1,0 +1,29 @@
+meta {
+  name: Logout
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/logout
+  body: none
+  auth: none
+}
+
+docs {
+  # Logout
+
+  Logout endpoint that handles both client types:
+
+  - **Web**: Invalidates the server-side session and clears the JSESSIONID cookie.
+  - **Desktop/JWT**: No-op on the server side (JWT is stateless).
+    Token blacklisting can be added in the future.
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "message": "Logout successful"
+  }
+  ```
+}

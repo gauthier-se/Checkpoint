@@ -1,0 +1,35 @@
+meta {
+  name: Login - Invalid Credentials
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "user@example.com",
+    "password": "wrongpassword"
+  }
+}
+
+docs {
+  # Login - Invalid Credentials
+
+  Tests the login endpoint with invalid credentials.
+
+  ## Expected Response (401 Unauthorized)
+
+  ```json
+  {
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "Bad credentials",
+    "timestamp": "2026-02-14T..."
+  }
+  ```
+}

@@ -1,0 +1,51 @@
+meta {
+  name: Login (Desktop - JWT)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  X-Client-Type: Desktop
+}
+
+body:json {
+  {
+    "email": "admin@example.com",
+    "password": "password123"
+  }
+}
+
+docs {
+  # Login (Desktop - JWT)
+
+  Authenticate a user via the unified login endpoint with the `X-Client-Type: Desktop` header.
+  Returns a JWT token in the response body.
+
+  ## Headers
+
+  - **X-Client-Type**: `Desktop` (triggers JWT response instead of session)
+
+  ## Request Body
+
+  - **email** (required): User's email address
+  - **password** (required): User's password
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+  ```
+
+  ## Errors
+
+  - **400 Bad Request**: Missing or invalid email/password
+  - **401 Unauthorized**: Invalid credentials
+}
