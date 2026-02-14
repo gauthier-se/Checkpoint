@@ -121,11 +121,16 @@ class SecurityConfigTest {
 
             String token = jwtService.generateToken(Map.of(), userDetails);
 
-            // When / Then
+            // When / Then — assert authentication passes (not 401/403),
+            // regardless of downstream service availability
             mockMvc.perform(get("/api/admin/external-games/search")
                             .param("query", "zelda")
                             .header("Authorization", "Bearer " + token))
-                    .andExpect(status().isServiceUnavailable()); // 503 because IGDB is not configured, but NOT 401
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        assert status != 401 : "Expected authenticated request to NOT return 401, got 401";
+                        assert status != 403 : "Expected authenticated request to NOT return 403, got 403";
+                    });
         }
 
         @Test
