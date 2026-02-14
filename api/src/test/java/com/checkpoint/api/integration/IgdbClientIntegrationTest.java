@@ -1,31 +1,33 @@
 package com.checkpoint.api.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for IGDB API client.
  * These tests require valid IGDB_CLIENT_ID and IGDB_CLIENT_SECRET environment variables to be set.
+ *
+ * Uses H2 in-memory database to avoid requiring Docker.
  */
 @SpringBootTest
-@Testcontainers
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:igdbtest;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+})
 @EnabledIfEnvironmentVariable(named = "IGDB_CLIENT_ID", matches = ".+")
 class IgdbClientIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired
     @Qualifier("igdbClient")

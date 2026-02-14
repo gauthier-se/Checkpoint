@@ -14,14 +14,11 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
@@ -30,16 +27,19 @@ import com.checkpoint.api.security.JwtService;
  * Integration tests for dual security filter chain configuration.
  * Validates that the API chain (JWT, stateless) and the Web chain (session-based)
  * behave correctly for public and protected endpoints.
+ *
+ * Uses H2 in-memory database to avoid requiring Docker.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:securitytest;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SecurityConfigTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired
     private MockMvc mockMvc;
