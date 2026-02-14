@@ -5,22 +5,22 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/admin/games/import/1942
+  url: {{baseUrl}}/api/admin/games/import/109462
   body: none
   auth: none
 }
 
 docs {
   # Import Game by External ID
-
+  
   Import a game from IGDB into the local database using its external ID.
-
+  
   ## Path Parameters
-
+  
   - **externalId**: The IGDB game ID (obtained from search results)
-
+  
   ## Response
-
+  
   Returns the imported game details with:
   - `id`: Internal UUID
   - `title`: Game title
@@ -30,9 +30,9 @@ docs {
   - `genres`: List of genres
   - `platforms`: List of platforms
   - `companies`: List of involved companies (developers/publishers)
-
+  
   ## Example Response
-
+  
   ```json
   {
     "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -51,14 +51,14 @@ docs {
     ]
   }
   ```
-
+  
   ## Error Responses
-
+  
   - **404 Not Found**: Game not found in IGDB
   - **503 Service Unavailable**: IGDB API is down or rate limited
-
+  
   ## Notes
-
+  
   - This endpoint requires ROLE_ADMIN (when security is enabled)
   - If the game already exists (same IGDB ID), it will be updated
   - Related entities (genres, platforms, companies) are created if they don't exist

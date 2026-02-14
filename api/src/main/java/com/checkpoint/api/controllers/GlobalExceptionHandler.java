@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -122,6 +124,46 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Handles authentication failures (invalid credentials, expired tokens, etc.).
+     *
+     * @param ex the exception
+     * @return error response with 401 status
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    /**
+     * Handles access denied (insufficient privileges).
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "You do not have permission to access this resource",
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

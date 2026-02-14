@@ -29,6 +29,8 @@ import com.checkpoint.api.dto.admin.ExternalGameDto;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
 import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
+import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
+import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AdminGameService;
 
 /**
@@ -43,6 +45,12 @@ class AdminGameControllerTest {
 
     @MockitoBean
     private AdminGameService adminGameService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     private List<ExternalGameDto> sampleExternalGames;
     private VideoGame sampleVideoGame;
