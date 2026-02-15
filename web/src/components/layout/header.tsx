@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { Plus, Search } from 'lucide-react'
+import { LogIn, Plus, Search } from 'lucide-react'
 import { Button } from '../ui/button'
-import { AvatarDropdown } from './avatar-dropdown'
 
 export const Header = () => {
   return (
@@ -30,7 +29,12 @@ export const Header = () => {
             Log
           </Link>
         </Button>
-        <AvatarDropdown />
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/login" className="text-muted-foreground font-semibold">
+            <LogIn />
+            Sign in
+          </Link>
+        </Button>
       </nav>
     </header>
   )
