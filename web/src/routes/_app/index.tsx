@@ -1,14 +1,15 @@
 import { Button } from '@/components/ui/button'
+import { apiFetch } from '@/services/api'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute('/_app/')({ component: App })
 
 function App() {
   const [pong, setPong] = useState('')
 
   const handlePing = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/ping`)
+    const res = await apiFetch('/ping')
     const data = await res.json()
     setPong(data.message)
   }

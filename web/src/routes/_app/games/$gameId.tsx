@@ -1,15 +1,14 @@
 import { useEffect } from 'react'
 
 import { Separator } from '@/components/ui/separator'
+import { apiFetch } from '@/services/api'
 import type { GameDetail } from '@/types/game'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/games/$gameId')({
+export const Route = createFileRoute('/_app/games/$gameId')({
   component: RouteComponent,
   loader: async ({ params: { gameId } }): Promise<GameDetail> => {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/games/${gameId}`,
-    )
+    const res = await apiFetch(`/api/games/${gameId}`)
     if (!res.ok) {
       throw new Error('Game not found')
     }

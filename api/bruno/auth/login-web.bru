@@ -12,34 +12,34 @@ post {
 
 body:json {
   {
-    "email": "user@example.com",
+    "email": "demo@example.com",
     "password": "password123"
   }
 }
 
 docs {
   # Login (Web - Session)
-
+  
   Authenticate a user and create a server-side session.
   A JSESSIONID cookie is set in the response.
-
+  
   ## Request Body
-
+  
   - **email** (required): User's email address
   - **password** (required): User's password
-
+  
   ## Response (200 OK)
-
+  
   ```json
   {
     "message": "Login successful"
   }
   ```
-
+  
   A `JSESSIONID` HttpOnly cookie is set for subsequent requests.
-
+  
   ## Errors
-
+  
   - **400 Bad Request**: Missing or invalid email/password
   - **401 Unauthorized**: Invalid credentials
 }

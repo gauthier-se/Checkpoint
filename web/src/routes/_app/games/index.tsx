@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { apiFetch } from '@/services/api'
 import type { GamesResponse } from '@/types/game'
 import { createFileRoute, Link } from '@tanstack/react-router'
 
@@ -13,7 +14,7 @@ type GamesSearchParams = {
   page: number
 }
 
-export const Route = createFileRoute('/games/')({
+export const Route = createFileRoute('/_app/games/')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): GamesSearchParams => ({
     page: Math.max(1, Math.floor(Number(search?.page ?? 1)) || 1),
@@ -21,9 +22,7 @@ export const Route = createFileRoute('/games/')({
   loaderDeps: ({ search: { page } }) => ({ page }),
   loader: async ({ deps: { page } }): Promise<GamesResponse> => {
     const apiPage = page - 1 // API is 0-based, URL is 1-based
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/games?page=${apiPage}&size=${PAGE_SIZE}`,
-    )
+    const res = await apiFetch(`/api/games?page=${apiPage}&size=${PAGE_SIZE}`)
     const data: GamesResponse = await res.json()
     return data
   },
