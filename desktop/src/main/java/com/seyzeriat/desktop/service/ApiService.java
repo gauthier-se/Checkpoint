@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
+import com.seyzeriat.desktop.dto.UserResult;
 
 /**
  * Service for communicating with the Checkpoint REST API.
@@ -99,6 +100,37 @@ public class ApiService {
         }
 
         return objectMapper.readValue(response.body(), ImportedGameResult.class);
+    }
+
+    /**
+     * Fetches all registered users from the admin API.
+     * The request includes the JWT Bearer token and the backend verifies
+     * the user has the {@code ROLE_ADMIN} authority before returning the list.
+     *
+     * @return list of users with ID, username, and email
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if the token is expired / invalid or the user lacks ROLE_ADMIN
+     */
+    public List<UserResult> getUsers() throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/users";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch users with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), new TypeReference<List<UserResult>>() {});
     }
 
     // ─── Auth interceptor helpers ──────────────────────────────────────
