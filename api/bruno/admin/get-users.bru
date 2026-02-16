@@ -1,0 +1,55 @@
+meta {
+  name: Get All Users
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get All Users
+
+  Retrieve all registered users. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Response
+
+  Returns a JSON array of user objects with:
+  - `id`: User UUID
+  - `username`: User pseudo/display name
+  - `email`: User email address
+
+  ## Example Response
+
+  ```json
+  [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "username": "alice",
+      "email": "alice@example.com"
+    },
+    {
+      "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "username": "bob",
+      "email": "bob@example.com"
+    }
+  ]
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+}

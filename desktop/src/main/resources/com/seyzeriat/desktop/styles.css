@@ -282,3 +282,61 @@
 	-fx-background-color: rgba(239, 68, 68, 0.15);
 	-fx-text-fill: #f87171;
 }
+
+/* ===== Users View / Table ===== */
+.users-view {
+	-fx-background-color: #17171f;
+}
+
+.users-table {
+	-fx-background-color: #1f1f2d;
+	-fx-border-color: #2e2e47;
+	-fx-border-width: 1;
+	-fx-border-radius: 6;
+	-fx-background-radius: 6;
+}
+
+.users-table .column-header-background {
+	-fx-background-color: #24243a;
+}
+
+.users-table .column-header .label {
+	-fx-text-fill: #b9b9c6;
+	-fx-font-weight: bold;
+	-fx-font-size: 13px;
+	-fx-padding: 8 12;
+}
+
+.users-table .column-header {
+	-fx-background-color: #24243a;
+	-fx-border-color: #2e2e47;
+	-fx-border-width: 0 1 1 0;
+}
+
+.users-table .table-row-cell {
+	-fx-background-color: #1f1f2d;
+	-fx-border-color: #2e2e47;
+	-fx-border-width: 0 0 1 0;
+}
+
+.users-table .table-row-cell:odd {
+	-fx-background-color: #24243a;
+}
+
+.users-table .table-row-cell:selected {
+	-fx-background-color: #3a1d8e;
+}
+
+.users-table .table-row-cell:hover {
+	-fx-background-color: #27273a;
+}
+
+.users-table .table-cell {
+	-fx-text-fill: #e5e5ea;
+	-fx-padding: 8 12;
+	-fx-font-size: 13px;
+}
+
+.users-table .table-row-cell:selected .table-cell {
+	-fx-text-fill: white;
+}

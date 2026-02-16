@@ -19,7 +19,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import com.checkpoint.api.entities.Role;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 
@@ -53,15 +55,38 @@ class SecurityConfigTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     @BeforeAll
     void setUpTestUser() {
-        if (userRepository.findByEmail("admin@test.com").isEmpty()) {
-            com.checkpoint.api.entities.User testUser = new com.checkpoint.api.entities.User();
-            testUser.setPseudo("admin");
-            testUser.setEmail("admin@test.com");
-            testUser.setPassword(passwordEncoder.encode("password"));
+        transactionTemplate.executeWithoutResult(status -> {
+            Role adminRole = entityManager
+                    .createQuery("SELECT r FROM Role r WHERE r.name = :name", Role.class)
+                    .setParameter("name", "ADMIN")
+                    .getResultStream()
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Role r = new Role("ADMIN");
+                        entityManager.persist(r);
+                        return r;
+                    });
+
+            com.checkpoint.api.entities.User testUser = userRepository.findByEmail("admin@test.com")
+                    .orElseGet(() -> {
+                        com.checkpoint.api.entities.User u = new com.checkpoint.api.entities.User();
+                        u.setPseudo("admin");
+                        u.setEmail("admin@test.com");
+                        u.setPassword(passwordEncoder.encode("password"));
+                        return u;
+                    });
+
+            testUser.setRole(adminRole);
             userRepository.save(testUser);
-        }
+        });
     }
 
     @Nested

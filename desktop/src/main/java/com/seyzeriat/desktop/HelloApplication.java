@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.seyzeriat.desktop.controller.ImportGamesController;
 import com.seyzeriat.desktop.controller.LoginController;
+import com.seyzeriat.desktop.controller.UserManagementController;
 import com.seyzeriat.desktop.service.TokenManager;
 
 import javafx.application.Application;
@@ -106,6 +107,7 @@ public class HelloApplication extends Application {
 
         Button homeBtn = createNavButton("Accueil", this::showWelcomeView);
         Button importBtn = createNavButton("Importer des jeux", this::showImportGamesView);
+        Button usersBtn = createNavButton("Utilisateurs", this::showUsersView);
 
         // Set home as active by default
         homeBtn.getStyleClass().add("active");
@@ -121,7 +123,7 @@ public class HelloApplication extends Application {
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
         logoutBtn.setOnAction(event -> showLoginView());
 
-        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, spacer, logoutBtn);
+        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, usersBtn, spacer, logoutBtn);
         return sidebar;
     }
 
@@ -165,6 +167,21 @@ public class HelloApplication extends Application {
             controller.setApplication(this);
 
             setContent(importView);
+        } catch (IOException e) {
+            Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
+            setContent(error);
+        }
+    }
+
+    private void showUsersView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("users-view.fxml"));
+            Node usersView = loader.load();
+
+            UserManagementController controller = loader.getController();
+            controller.setApplication(this);
+
+            setContent(usersView);
         } catch (IOException e) {
             Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
             setContent(error);
