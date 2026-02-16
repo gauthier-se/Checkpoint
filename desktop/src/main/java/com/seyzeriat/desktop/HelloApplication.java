@@ -3,6 +3,10 @@ package com.seyzeriat.desktop;
 import java.io.IOException;
 import java.util.Objects;
 
+import com.seyzeriat.desktop.controller.ImportGamesController;
+import com.seyzeriat.desktop.controller.LoginController;
+import com.seyzeriat.desktop.service.TokenManager;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -13,17 +17,63 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class HelloApplication extends Application {
 
+    private Stage primaryStage;
     private StackPane contentArea;
     private Button activeNavButton;
+    private String stylesheetUrl;
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
+        this.primaryStage = stage;
+        this.stylesheetUrl = Objects.requireNonNull(
+                getClass().getResource("styles.css")).toExternalForm();
+
+        stage.setTitle("Checkpoint — Administration");
+
+        // Always start with the login screen
+        showLoginView();
+    }
+
+    /**
+     * Shows the login screen. Called on startup and when the user is
+     * redirected after a 401/403 or logout.
+     */
+    public void showLoginView() {
+        TokenManager.getInstance().clear();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("login-view.fxml"));
+            Node loginView = loader.load();
+
+            LoginController controller = loader.getController();
+            controller.setApplication(this);
+
+            StackPane root = new StackPane(loginView);
+            root.setAlignment(Pos.CENTER);
+            root.getStyleClass().add("login-root");
+
+            Scene scene = new Scene(root, 500, 600);
+            scene.getStylesheets().add(stylesheetUrl);
+
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load login view", e);
+        }
+    }
+
+    /**
+     * Shows the main application view (sidebar + content area).
+     * Called by {@link LoginController} after successful authentication.
+     */
+    public void showMainView() {
         // Sidebar navigation
         VBox sidebar = createSidebar();
 
@@ -39,12 +89,10 @@ public class HelloApplication extends Application {
         showWelcomeView();
 
         Scene scene = new Scene(root, 1100, 700);
-        scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("styles.css")).toExternalForm()
-        );
-        stage.setTitle("Checkpoint — Administration");
-        stage.setScene(scene);
-        stage.show();
+        scene.getStylesheets().add(stylesheetUrl);
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     private VBox createSidebar() {
@@ -63,7 +111,17 @@ public class HelloApplication extends Application {
         homeBtn.getStyleClass().add("active");
         activeNavButton = homeBtn;
 
-        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn);
+        // Spacer to push logout to the bottom
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        // Logout button
+        Button logoutBtn = new Button("Se déconnecter");
+        logoutBtn.getStyleClass().addAll("nav-button", "logout-button");
+        logoutBtn.setMaxWidth(Double.MAX_VALUE);
+        logoutBtn.setOnAction(event -> showLoginView());
+
+        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, spacer, logoutBtn);
         return sidebar;
     }
 
@@ -102,6 +160,10 @@ public class HelloApplication extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("import-games-view.fxml"));
             Node importView = loader.load();
+
+            ImportGamesController controller = loader.getController();
+            controller.setApplication(this);
+
             setContent(importView);
         } catch (IOException e) {
             Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());

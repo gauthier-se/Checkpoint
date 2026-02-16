@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.seyzeriat.desktop.HelloApplication;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.service.ApiService;
 
@@ -37,6 +38,7 @@ public class ImportGamesController {
 
     private final ApiService apiService = new ApiService();
     private final Set<Long> importedIds = new HashSet<>();
+    private HelloApplication application;
 
     @FXML
     public void initialize() {
@@ -84,6 +86,10 @@ public class ImportGamesController {
             searchProgress.setVisible(false);
             searchButton.setDisable(false);
             Throwable ex = searchTask.getException();
+            if (isUnauthorized(ex)) {
+                redirectToLogin();
+                return;
+            }
             statusLabel.setText("Erreur : " + ex.getMessage());
         });
 
@@ -189,13 +195,31 @@ public class ImportGamesController {
         }));
 
         importTask.setOnFailed(event -> Platform.runLater(() -> {
+            Throwable ex = importTask.getException();
+            if (isUnauthorized(ex)) {
+                redirectToLogin();
+                return;
+            }
             importButton.setText("Importer");
             importButton.setGraphic(null);
             importButton.setDisable(false);
-            Throwable ex = importTask.getException();
             statusLabel.setText("Erreur lors de l'import de \"" + game.getTitle() + "\" : " + ex.getMessage());
         }));
 
         new Thread(importTask, "import-thread").start();
+    }
+
+    public void setApplication(HelloApplication application) {
+        this.application = application;
+    }
+
+    private boolean isUnauthorized(Throwable ex) {
+        return ex instanceof ApiService.UnauthorizedException;
+    }
+
+    private void redirectToLogin() {
+        if (application != null) {
+            application.showLoginView();
+        }
     }
 }
