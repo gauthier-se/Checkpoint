@@ -1,0 +1,33 @@
+meta {
+  name: Get Me (Web - Session)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: none
+}
+
+docs {
+  # Get Me (Web - Session)
+
+  Returns the profile of the currently authenticated user using a session cookie.
+  Requires a valid `JSESSIONID` cookie (obtained via Login Web).
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "alice",
+    "email": "alice@example.com",
+    "role": "ADMIN"
+  }
+  ```
+
+  ## Errors
+
+  - **401 Unauthorized**: No valid session or JWT provided
+}

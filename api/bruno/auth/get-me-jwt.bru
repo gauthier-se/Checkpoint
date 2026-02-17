@@ -1,0 +1,41 @@
+meta {
+  name: Get Me (Desktop - JWT)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Me (Desktop - JWT)
+
+  Returns the profile of the currently authenticated user using a JWT Bearer token.
+  Requires a valid JWT in the Authorization header (obtained via Login Desktop or Get Token).
+
+  ## Headers
+
+  - **Authorization**: `Bearer <token>`
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "admin",
+    "email": "admin@example.com",
+    "role": "ADMIN"
+  }
+  ```
+
+  ## Errors
+
+  - **401 Unauthorized**: Missing, expired, or invalid JWT token
+}

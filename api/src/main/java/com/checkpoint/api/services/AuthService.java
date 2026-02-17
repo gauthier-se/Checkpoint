@@ -1,6 +1,7 @@
 package com.checkpoint.api.services;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.UserMeDto;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,4 +39,12 @@ public interface AuthService {
      */
     void logoutSession(HttpServletRequest servletRequest,
                        HttpServletResponse servletResponse);
+
+    /**
+     * Retrieves profile information for the currently authenticated user.
+     *
+     * @param email the authenticated user's email
+     * @return user profile information
+     */
+    UserMeDto getCurrentUser(String email);
 }

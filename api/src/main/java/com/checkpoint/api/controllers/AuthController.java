@@ -1,6 +1,9 @@
 package com.checkpoint.api.controllers;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.auth.AuthMessageDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.LoginResponseDto;
+import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.services.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -100,5 +104,19 @@ public class AuthController {
 
         authService.logoutSession(servletRequest, servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Logout successful"));
+    }
+
+    /**
+     * Returns profile information for the currently authenticated user.
+     *
+     * <p>Works with both JWT (Desktop) and session cookie (Web) authentication.</p>
+     *
+     * @param userDetails the authenticated user principal (injected by Spring Security)
+     * @return user profile including ID, username, email, and role
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDto> me(@AuthenticationPrincipal UserDetails userDetails) {
+        UserMeDto user = authService.getCurrentUser(userDetails.getUsername());
+        return ResponseEntity.ok(user);
     }
 }
