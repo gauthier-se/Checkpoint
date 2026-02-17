@@ -14,17 +14,20 @@ import {
   FieldSeparator,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
 import { useNavigate } from '@tanstack/react-router'
 import { useActionState } from 'react'
 import { SubmitButton } from './submit-button'
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+interface LoginFormProps extends React.ComponentProps<'div'> {
+  redirectTo?: string
+}
+
+export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
   const navigate = useNavigate()
+  const { invalidate } = useAuth()
   const [error, formAction] = useActionState(
     async (_prevState: string | null, formData: FormData) => {
       const email = formData.get('email')?.toString().trim() ?? ''
@@ -46,8 +49,11 @@ export function LoginForm({
           return data?.message ?? 'Invalid email or password'
         }
 
-        // Session cookie is automatically stored by the browser.
-        await navigate({ to: '/' })
+        // Invalidate the auth query so TanStack Query refetches fresh user data.
+        await invalidate()
+
+        // Navigate to the redirect target or home.
+        await navigate({ to: redirectTo ?? '/' })
         return null
       } catch {
         return 'Unable to reach the server. Please try again later.'

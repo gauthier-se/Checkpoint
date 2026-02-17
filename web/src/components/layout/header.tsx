@@ -1,8 +1,12 @@
+import { useAuth } from '@/hooks/use-auth'
 import { Link } from '@tanstack/react-router'
 import { LogIn, Plus, Search } from 'lucide-react'
 import { Button } from '../ui/button'
+import { AvatarDropdown } from './avatar-dropdown'
 
 export const Header = () => {
+  const { user, isLoading } = useAuth()
+
   return (
     <header className="max-w-7xl mx-auto py-4 flex items-center justify-between">
       <Link className="flex items-center gap-2" to="/">
@@ -29,12 +33,17 @@ export const Header = () => {
             Log
           </Link>
         </Button>
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/login" className="text-muted-foreground font-semibold">
-            <LogIn />
-            Sign in
-          </Link>
-        </Button>
+        {!isLoading &&
+          (user ? (
+            <AvatarDropdown user={user} />
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/login" className="text-muted-foreground font-semibold">
+                <LogIn />
+                Sign in
+              </Link>
+            </Button>
+          ))}
       </nav>
     </header>
   )

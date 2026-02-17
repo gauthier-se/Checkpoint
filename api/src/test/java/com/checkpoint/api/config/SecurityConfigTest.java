@@ -27,7 +27,7 @@ import com.checkpoint.api.security.JwtService;
 
 /**
  * Integration tests for dual security filter chain configuration.
- * Validates that the API chain (JWT, stateless) and the Web chain (session-based)
+ * Validates that the API chain (JWT + session hybrid) and the Web chain (session-based)
  * behave correctly for public and protected endpoints.
  *
  * Uses H2 in-memory database to avoid requiring Docker.
@@ -90,7 +90,7 @@ class SecurityConfigTest {
     }
 
     @Nested
-    @DisplayName("API Filter Chain (JWT, stateless)")
+    @DisplayName("API Filter Chain (JWT + session hybrid)")
     class ApiFilterChainTests {
 
         @Test
@@ -226,8 +226,8 @@ class SecurityConfigTest {
     class FilterChainPriorityTests {
 
         @Test
-        @DisplayName("API chain should handle /api/** requests (stateless, no session)")
-        void apiChain_shouldBeStateless() throws Exception {
+        @DisplayName("API chain should return 401 for unauthenticated requests, not redirect")
+        void apiChain_shouldReturn401NotRedirect() throws Exception {
             // API requests without credentials should return 401, not redirect to login
             mockMvc.perform(get("/api/admin/external-games/search")
                             .param("query", "zelda"))

@@ -8,27 +8,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/hooks/use-auth'
+import type { User } from '@/types/user'
+import { Link, useNavigate } from '@tanstack/react-router'
 
-export function AvatarDropdown() {
+export function AvatarDropdown({ user }: { user: User }) {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  const initials = user.username.slice(0, 2).toUpperCase()
+
+  const handleLogout = async () => {
+    await logout()
+    await navigate({ to: '/' })
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar>
-            <AvatarImage src="/images/default-user.jpg" alt="shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src="/images/default-user.jpg" alt={user.username} />
+            <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-32">
         <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/profile">Profile</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem variant="destructive">Log out</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+            Log out
+          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

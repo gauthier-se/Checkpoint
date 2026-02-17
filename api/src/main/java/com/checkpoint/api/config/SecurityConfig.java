@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +23,8 @@ import com.checkpoint.api.security.JwtAuthenticationFilter;
  * Dual security configuration providing two filter chains:
  *
  * <ol>
- *   <li><strong>API chain</strong> ({@code /api/**}): Stateless JWT authentication.
+ *   <li><strong>API chain</strong> ({@code /api/**}): Hybrid JWT + session authentication.
+ *       Supports both JWT tokens (Desktop) and session cookies (Web).
  *       CSRF is disabled. Evaluated first (order 1).</li>
  *   <li><strong>Web/Form chain</strong> (all other routes): Session-based authentication
  *       with CSRF protection enabled. Evaluated second (order 2).</li>
@@ -50,18 +52,25 @@ public class SecurityConfig {
     }
 
     /**
-     * Filter Chain 1 — API (JWT, stateless).
+     * Filter Chain 1 — API (JWT + session-cookie hybrid).
      * Matches all requests under {@code /api/**}.
      * Ordered first so it is evaluated before the web chain.
+     *
+     * <p>Uses {@code IF_REQUIRED} session policy so that:</p>
+     * <ul>
+     *   <li>Web clients authenticate via session cookies ({@code JSESSIONID}).</li>
+     *   <li>Desktop clients authenticate via JWT ({@code Authorization: Bearer …}).</li>
+     * </ul>
      */
     @Bean
     @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/**")
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
