@@ -6,9 +6,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,10 +21,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AuthService;
@@ -252,6 +258,61 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/auth/logout"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Logout successful"));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/auth/me")
+    class MeTests {
+
+        @Test
+        @DisplayName("Should return current user profile with role")
+        @WithMockUser(username = "alice@test.com")
+        void shouldReturnCurrentUserProfile() throws Exception {
+            // Given
+            UUID userId = UUID.randomUUID();
+            UserMeDto userMeDto = new UserMeDto(userId, "alice", "alice@test.com", "ADMIN");
+
+            when(authService.getCurrentUser("alice@test.com")).thenReturn(userMeDto);
+
+            // When / Then
+            mockMvc.perform(get("/api/auth/me"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(userId.toString()))
+                    .andExpect(jsonPath("$.username").value("alice"))
+                    .andExpect(jsonPath("$.email").value("alice@test.com"))
+                    .andExpect(jsonPath("$.role").value("ADMIN"));
+
+            verify(authService).getCurrentUser("alice@test.com");
+        }
+
+        @Test
+        @DisplayName("Should return user profile with USER role")
+        @WithMockUser(username = "bob@test.com")
+        void shouldReturnUserWithDefaultRole() throws Exception {
+            // Given
+            UUID userId = UUID.randomUUID();
+            UserMeDto userMeDto = new UserMeDto(userId, "bob", "bob@test.com", "USER");
+
+            when(authService.getCurrentUser("bob@test.com")).thenReturn(userMeDto);
+
+            // When / Then
+            mockMvc.perform(get("/api/auth/me"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.role").value("USER"));
+        }
+
+        @Test
+        @DisplayName("Should return 401 when user not found in database")
+        @WithMockUser(username = "unknown@test.com")
+        void shouldReturn401WhenUserNotFound() throws Exception {
+            // Given
+            when(authService.getCurrentUser("unknown@test.com"))
+                    .thenThrow(new UsernameNotFoundException("User not found with email: unknown@test.com"));
+
+            // When / Then
+            mockMvc.perform(get("/api/auth/me"))
+                    .andExpect(status().isUnauthorized());
         }
     }
 }

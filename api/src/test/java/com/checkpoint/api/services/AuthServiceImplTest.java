@@ -8,6 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,8 +25,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.entities.Role;
+import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.impl.AuthServiceImpl;
 
@@ -43,6 +50,9 @@ class AuthServiceImplTest {
 
     @Mock
     private UserDetailsService userDetailsService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -179,6 +189,67 @@ class AuthServiceImplTest {
 
             // Then
             verify(servletRequest).getSession(false);
+        }
+    }
+
+    @Nested
+    @DisplayName("getCurrentUser")
+    class GetCurrentUserTests {
+
+        @Test
+        @DisplayName("Should return UserMeDto with role for existing user")
+        void shouldReturnUserMeDto() {
+            // Given
+            UUID userId = UUID.randomUUID();
+            Role role = new Role("ADMIN");
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            user.setId(userId);
+            user.setPseudo("alice");
+            user.setEmail("alice@test.com");
+            user.setRole(role);
+
+            when(userRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(user));
+
+            // When
+            UserMeDto result = authService.getCurrentUser("alice@test.com");
+
+            // Then
+            assertThat(result.id()).isEqualTo(userId);
+            assertThat(result.username()).isEqualTo("alice");
+            assertThat(result.email()).isEqualTo("alice@test.com");
+            assertThat(result.role()).isEqualTo("ADMIN");
+        }
+
+        @Test
+        @DisplayName("Should default role to USER when user has no role")
+        void shouldDefaultRoleToUser() {
+            // Given
+            UUID userId = UUID.randomUUID();
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            user.setId(userId);
+            user.setPseudo("bob");
+            user.setEmail("bob@test.com");
+            user.setRole(null);
+
+            when(userRepository.findByEmail("bob@test.com")).thenReturn(Optional.of(user));
+
+            // When
+            UserMeDto result = authService.getCurrentUser("bob@test.com");
+
+            // Then
+            assertThat(result.role()).isEqualTo("USER");
+        }
+
+        @Test
+        @DisplayName("Should throw UsernameNotFoundException when user not found")
+        void shouldThrowWhenUserNotFound() {
+            // Given
+            when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> authService.getCurrentUser("unknown@test.com"))
+                    .isInstanceOf(UsernameNotFoundException.class)
+                    .hasMessageContaining("unknown@test.com");
         }
     }
 }

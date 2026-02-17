@@ -135,6 +135,31 @@ class SecurityConfigTest {
         }
 
         @Test
+        @DisplayName("GET /api/auth/me should require authentication")
+        void meEndpoint_shouldRequireAuth() throws Exception {
+            mockMvc.perform(get("/api/auth/me"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GET /api/auth/me should be accessible with valid JWT")
+        void meEndpoint_withValidJwt_shouldBeAccessible() throws Exception {
+            // Given
+            UserDetails userDetails = User.builder()
+                    .username("admin@test.com")
+                    .password("password")
+                    .roles("ADMIN")
+                    .build();
+
+            String token = jwtService.generateToken(Map.of(), userDetails);
+
+            // When / Then
+            mockMvc.perform(get("/api/auth/me")
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
         @DisplayName("Protected endpoint should be accessible with valid JWT")
         void protectedEndpoint_withValidJwt_shouldBeAccessible() throws Exception {
             // Given
