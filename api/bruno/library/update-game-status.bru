@@ -1,0 +1,64 @@
+meta {
+  name: Update Game Status
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/me/library/{{gameId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "videoGameId": "{{gameId}}",
+    "status": "COMPLETED"
+  }
+}
+
+docs {
+  # Update Game Status
+
+  Updates the status of a game already in the authenticated user's library.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **gameId**: The UUID of the video game in the library
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | videoGameId | UUID | Yes | The ID of the video game |
+  | status | String | Yes | The new status: `BACKLOG`, `PLAYING`, `COMPLETED`, `DROPPED` |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "videoGameId": "uuid",
+    "title": "Game Title",
+    "coverUrl": "https://...",
+    "releaseDate": "2025-01-15",
+    "status": "COMPLETED",
+    "addedAt": "2025-06-01T10:00:00",
+    "updatedAt": "2025-06-20T09:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Missing or invalid fields
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game not in library
+}

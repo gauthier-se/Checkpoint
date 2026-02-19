@@ -137,6 +137,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Report> reports = new HashSet<>();
 
+    // Relationship: User can have multiple games in their library
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserGame> userGames = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -400,5 +404,13 @@ public class User {
 
     public void setReports(Set<Report> reports) {
         this.reports = reports;
+    }
+
+    public Set<UserGame> getUserGames() {
+        return userGames;
+    }
+
+    public void setUserGames(Set<UserGame> userGames) {
+        this.userGames = userGames;
     }
 }

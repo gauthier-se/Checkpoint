@@ -1,0 +1,38 @@
+meta {
+  name: Remove Game from Library
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/me/library/{{gameId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Remove Game from Library
+
+  Removes a game from the authenticated user's library.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **gameId**: The UUID of the video game to remove from the library
+
+  ## Response (204 No Content)
+
+  Empty response body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game not in library
+}
