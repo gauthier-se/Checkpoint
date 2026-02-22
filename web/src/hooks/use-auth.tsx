@@ -1,7 +1,7 @@
-import { apiFetch } from '@/services/api'
-import type { User } from '@/types/user'
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
+import type { User } from '@/types/user'
+import { apiFetch } from '@/services/api'
 
 export const authQueryOptions = queryOptions({
   queryKey: ['auth', 'me'],

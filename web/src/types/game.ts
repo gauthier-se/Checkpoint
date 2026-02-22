@@ -30,9 +30,9 @@ export interface GameDetail {
   releaseDate: string
   averageRating: number | null
   ratingCount: number
-  genres: Genre[]
-  platforms: Platform[]
-  companies: Company[]
+  genres: Array<Genre>
+  platforms: Array<Platform>
+  companies: Array<Company>
 }
 
 export interface PaginationMetadata {
@@ -47,6 +47,6 @@ export interface PaginationMetadata {
 }
 
 export interface GamesResponse {
-  content: Game[]
+  content: Array<Game>
   metadata: PaginationMetadata
 }

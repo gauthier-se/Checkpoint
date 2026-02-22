@@ -1,3 +1,5 @@
+import { Link, createFileRoute } from '@tanstack/react-router'
+import type { GamesResponse } from '@/types/game'
 import { GameGrid } from '@/components/games/game-grid'
 import { GamesPagination } from '@/components/games/pagination'
 import { Button } from '@/components/ui/button'
@@ -5,8 +7,6 @@ import { ButtonGroup } from '@/components/ui/button-group'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
-import type { GamesResponse } from '@/types/game'
-import { createFileRoute, Link } from '@tanstack/react-router'
 
 const PAGE_SIZE = 32
 
@@ -17,7 +17,7 @@ type GamesSearchParams = {
 export const Route = createFileRoute('/_app/games/')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): GamesSearchParams => ({
-    page: Math.max(1, Math.floor(Number(search?.page ?? 1)) || 1),
+    page: Math.max(1, Math.floor(Number(search.page ?? 1)) || 1),
   }),
   loaderDeps: ({ search: { page } }) => ({ page }),
   loader: async ({ deps: { page } }): Promise<GamesResponse> => {

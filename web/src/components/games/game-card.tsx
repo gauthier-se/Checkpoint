@@ -1,5 +1,5 @@
-import type { Game } from '@/types/game'
 import { Link } from '@tanstack/react-router'
+import type { Game } from '@/types/game'
 
 interface GameCardProps {
   game: Game

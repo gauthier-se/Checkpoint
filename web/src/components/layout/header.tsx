@@ -1,8 +1,8 @@
-import { useAuth } from '@/hooks/use-auth'
 import { Link } from '@tanstack/react-router'
 import { LogIn, Plus, Search } from 'lucide-react'
 import { Button } from '../ui/button'
 import { AvatarDropdown } from './avatar-dropdown'
+import { useAuth } from '@/hooks/use-auth'
 
 export const Header = () => {
   const { user, isLoading } = useAuth()

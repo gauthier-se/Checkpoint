@@ -1,11 +1,11 @@
-import { authQueryOptions, useAuth } from '@/hooks/use-auth'
 import {
-  createFileRoute,
   Outlet,
+  createFileRoute,
   redirect,
   useNavigate,
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { authQueryOptions, useAuth } from '@/hooks/use-auth'
 
 export const Route = createFileRoute('/_app/_protected')({
   beforeLoad: async ({ context, location }) => {
