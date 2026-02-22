@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button'
-import { apiFetch } from '@/services/api'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { apiFetch } from '@/services/api'
 
 export const Route = createFileRoute('/_app/')({ component: App })
 

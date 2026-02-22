@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 
+import { createFileRoute, useRouter } from '@tanstack/react-router'
+import type { GameDetail } from '@/types/game'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
-import type { GameDetail } from '@/types/game'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/games/$gameId')({
   component: RouteComponent,

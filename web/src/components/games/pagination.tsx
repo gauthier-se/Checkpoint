@@ -1,8 +1,8 @@
+import { Link } from '@tanstack/react-router'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { getPageNumbers } from '@/lib/pagination'
-import { Link } from '@tanstack/react-router'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
 
 const CATALOG_HASH = 'catalog'
 
@@ -39,15 +39,8 @@ export function GamesPagination({
               ...
             </Button>
           ) : (
-            <Link
-              key={p}
-              to="/games"
-              search={{ page: p as number }}
-              hash={CATALOG_HASH}
-            >
-              <Button variant={(p as number) === page ? 'default' : 'outline'}>
-                {p}
-              </Button>
+            <Link key={p} to="/games" search={{ page: p }} hash={CATALOG_HASH}>
+              <Button variant={p === page ? 'default' : 'outline'}>{p}</Button>
             </Link>
           ),
         )}

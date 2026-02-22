@@ -1,3 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { Shield, User } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -6,8 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
-import { createFileRoute } from '@tanstack/react-router'
-import { Shield, User } from 'lucide-react'
 
 export const Route = createFileRoute('/_app/_protected/profile')({
   component: ProfilePage,

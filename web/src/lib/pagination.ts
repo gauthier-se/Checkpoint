@@ -5,12 +5,12 @@
 export function getPageNumbers(
   current: number,
   total: number,
-): (number | '...')[] {
+): Array<number | '...'> {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1)
   }
 
-  const pages: (number | '...')[] = []
+  const pages: Array<number | '...'> = []
   const siblings = 1
 
   const rangeStart = Math.max(2, current - siblings)

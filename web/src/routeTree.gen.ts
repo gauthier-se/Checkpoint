@@ -17,6 +17,7 @@ import { Route as AppProtectedRouteImport } from './routes/_app/_protected'
 import { Route as AppGamesIndexRouteImport } from './routes/_app/games/index'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
+import { Route as AppProtectedUsernameGamesIndexRouteImport } from './routes/_app/_protected/$username/games/index'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -55,6 +56,12 @@ const AppProtectedProfileRoute = AppProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppProtectedRoute,
 } as any)
+const AppProtectedUsernameGamesIndexRoute =
+  AppProtectedUsernameGamesIndexRouteImport.update({
+    id: '/$username/games/',
+    path: '/$username/games/',
+    getParentRoute: () => AppProtectedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/games': typeof AppGamesIndexRoute
+  '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/games': typeof AppGamesIndexRoute
+  '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,12 +89,25 @@ export interface FileRoutesById {
   '/_app/_protected/profile': typeof AppProtectedProfileRoute
   '/_app/games/$gameId': typeof AppGamesGameIdRoute
   '/_app/games/': typeof AppGamesIndexRoute
+  '/_app/_protected/$username/games/': typeof AppProtectedUsernameGamesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/' | '/profile' | '/games/$gameId' | '/games'
+  fullPaths:
+    | '/login'
+    | '/'
+    | '/profile'
+    | '/games/$gameId'
+    | '/games'
+    | '/$username/games'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/profile' | '/games/$gameId' | '/games'
+  to:
+    | '/login'
+    | '/'
+    | '/profile'
+    | '/games/$gameId'
+    | '/games'
+    | '/$username/games'
   id:
     | '__root__'
     | '/_app'
@@ -96,6 +118,7 @@ export interface FileRouteTypes {
     | '/_app/_protected/profile'
     | '/_app/games/$gameId'
     | '/_app/games/'
+    | '/_app/_protected/$username/games/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,15 +184,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedProfileRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/_protected/$username/games/': {
+      id: '/_app/_protected/$username/games/'
+      path: '/$username/games'
+      fullPath: '/$username/games'
+      preLoaderRoute: typeof AppProtectedUsernameGamesIndexRouteImport
+      parentRoute: typeof AppProtectedRoute
+    }
   }
 }
 
 interface AppProtectedRouteChildren {
   AppProtectedProfileRoute: typeof AppProtectedProfileRoute
+  AppProtectedUsernameGamesIndexRoute: typeof AppProtectedUsernameGamesIndexRoute
 }
 
 const AppProtectedRouteChildren: AppProtectedRouteChildren = {
   AppProtectedProfileRoute: AppProtectedProfileRoute,
+  AppProtectedUsernameGamesIndexRoute: AppProtectedUsernameGamesIndexRoute,
 }
 
 const AppProtectedRouteWithChildren = AppProtectedRoute._addFileChildren(
