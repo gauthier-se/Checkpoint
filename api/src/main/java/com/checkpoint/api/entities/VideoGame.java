@@ -51,6 +51,9 @@ public class VideoGame {
     @Column(name = "release_date")
     private LocalDate releaseDate;
 
+    @Column(name = "average_rating", nullable = true)
+    private Double averageRating = 0.0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -248,6 +251,14 @@ public class VideoGame {
 
     public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
+    }
+
+    public Double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(Double averageRating) {
+        this.averageRating = averageRating;
     }
 
     public LocalDateTime getCreatedAt() {

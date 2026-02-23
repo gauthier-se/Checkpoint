@@ -1,0 +1,21 @@
+meta {
+  name: Get Reviews
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/games/:id/reviews?page=0&size=20&sort=createdAt,desc
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+  sort: createdAt,desc
+}
+
+params:path {
+  id: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}

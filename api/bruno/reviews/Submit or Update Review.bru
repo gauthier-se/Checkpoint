@@ -1,0 +1,27 @@
+meta {
+  name: Submit or Update Review
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/games/:id/reviews
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "score": 5,
+    "content": "This game is absolutely amazing!",
+    "haveSpoilers": false
+  }
+}

@@ -52,7 +52,7 @@ public class GameCatalogServiceImpl implements GameCatalogService {
                 .orElseThrow(() -> new GameNotFoundException(id));
 
         // Get rating statistics
-        Double averageRating = videoGameRepository.calculateAverageRating(id);
+        Double averageRating = game.getAverageRating();
         Long ratingCount = videoGameRepository.countRatings(id);
 
         return mapToGameDetailDto(game, averageRating, ratingCount);

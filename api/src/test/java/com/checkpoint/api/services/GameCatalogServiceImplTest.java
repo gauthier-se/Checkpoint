@@ -99,7 +99,7 @@ class GameCatalogServiceImplTest {
         game.setCompanies(Set.of(company));
 
         when(videoGameRepository.findByIdWithRelationships(gameId)).thenReturn(Optional.of(game));
-        when(videoGameRepository.calculateAverageRating(gameId)).thenReturn(4.8);
+        game.setAverageRating(4.8);
         when(videoGameRepository.countRatings(gameId)).thenReturn(1500L);
 
         // When
@@ -144,7 +144,7 @@ class GameCatalogServiceImplTest {
         game.setCompanies(Set.of());
 
         when(videoGameRepository.findByIdWithRelationships(gameId)).thenReturn(Optional.of(game));
-        when(videoGameRepository.calculateAverageRating(gameId)).thenReturn(null);
+        game.setAverageRating(null);
         when(videoGameRepository.countRatings(gameId)).thenReturn(0L);
 
         // When
