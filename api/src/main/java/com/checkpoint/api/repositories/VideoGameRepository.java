@@ -49,12 +49,12 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID> {
                 vg.title,
                 vg.coverUrl,
                 vg.releaseDate,
-                AVG(CAST(r.score AS double)),
+                vg.averageRating,
                 COUNT(r.id)
             )
             FROM VideoGame vg
             LEFT JOIN vg.rates r
-            GROUP BY vg.id, vg.title, vg.coverUrl, vg.releaseDate
+            GROUP BY vg.id, vg.title, vg.coverUrl, vg.releaseDate, vg.averageRating
             """)
     Page<GameCardDto> findAllAsGameCards(Pageable pageable);
 
@@ -73,15 +73,6 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID> {
             WHERE vg.id = :id
             """)
     Optional<VideoGame> findByIdWithRelationships(@Param("id") UUID id);
-
-    /**
-     * Calculates the average rating for a video game.
-     *
-     * @param videoGameId the video game ID
-     * @return average rating or null if no ratings
-     */
-    @Query("SELECT AVG(CAST(r.score AS double)) FROM Rate r WHERE r.videoGame.id = :videoGameId")
-    Double calculateAverageRating(@Param("videoGameId") UUID videoGameId);
 
     /**
      * Counts the number of ratings for a video game.

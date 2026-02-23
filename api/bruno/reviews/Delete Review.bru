@@ -1,0 +1,19 @@
+meta {
+  name: Delete Review
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/games/:id/reviews
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
