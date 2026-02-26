@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.seyzeriat.desktop.controller.ImportGamesController;
 import com.seyzeriat.desktop.controller.LoginController;
+import com.seyzeriat.desktop.controller.ReviewModerationController;
 import com.seyzeriat.desktop.controller.UserManagementController;
 import com.seyzeriat.desktop.service.TokenManager;
 
@@ -108,6 +109,7 @@ public class HelloApplication extends Application {
         Button homeBtn = createNavButton("Accueil", this::showWelcomeView);
         Button importBtn = createNavButton("Importer des jeux", this::showImportGamesView);
         Button usersBtn = createNavButton("Utilisateurs", this::showUsersView);
+        Button reviewsBtn = createNavButton("Modération des avis", this::showReviewsView);
 
         // Set home as active by default
         homeBtn.getStyleClass().add("active");
@@ -123,7 +125,7 @@ public class HelloApplication extends Application {
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
         logoutBtn.setOnAction(event -> showLoginView());
 
-        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, usersBtn, spacer, logoutBtn);
+        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, usersBtn, reviewsBtn, spacer, logoutBtn);
         return sidebar;
     }
 
@@ -182,6 +184,21 @@ public class HelloApplication extends Application {
             controller.setApplication(this);
 
             setContent(usersView);
+        } catch (IOException e) {
+            Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
+            setContent(error);
+        }
+    }
+
+    private void showReviewsView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("reviews-view.fxml"));
+            Node reviewsView = loader.load();
+
+            ReviewModerationController controller = loader.getController();
+            controller.setApplication(this);
+
+            setContent(reviewsView);
         } catch (IOException e) {
             Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
             setContent(error);
