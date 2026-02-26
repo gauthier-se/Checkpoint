@@ -1,3 +1,5 @@
+import { Link, useNavigate } from '@tanstack/react-router'
+import type { User } from '@/types/user'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,8 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/use-auth'
-import type { User } from '@/types/user'
-import { Link, useNavigate } from '@tanstack/react-router'
 
 export function AvatarDropdown({ user }: { user: User }) {
   const { logout } = useAuth()
