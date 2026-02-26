@@ -1,18 +1,26 @@
 import { useEffect } from 'react'
 
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
+import { ReviewList } from '@/components/reviews/review-list'
 import { Separator } from '@/components/ui/separator'
+import { gameReviewsQueryOptions } from '@/queries/review'
 import { apiFetch } from '@/services/api'
 
 export const Route = createFileRoute('/_app/games/$gameId')({
   component: RouteComponent,
-  loader: async ({ params: { gameId } }): Promise<GameDetail> => {
+  loader: async ({ params: { gameId }, context }) => {
+    // start fetching reviews in background
+    void context.queryClient.prefetchQuery(
+      gameReviewsQueryOptions(gameId, 0, 10),
+    )
+
     const res = await apiFetch(`/api/games/${gameId}`)
     if (!res.ok) {
       throw new Error('Game not found')
     }
-    return res.json()
+    return res.json() as Promise<GameDetail>
   },
 })
 
@@ -63,10 +71,19 @@ function RouteComponent() {
           )}
 
           {game.averageRating != null && (
-            <p className="text-muted-foreground">
-              Rating: {game.averageRating.toFixed(1)} / 5 ({game.ratingCount}{' '}
-              {game.ratingCount > 1 ? 'ratings' : 'rating'})
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center bg-yellow-400/10 text-yellow-600 px-3 py-1.5 rounded-md">
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-500 mr-2" />
+                <span className="text-xl font-bold font-mono">
+                  {game.averageRating.toFixed(1)}
+                </span>
+                <span className="text-muted-foreground ml-1 text-sm">/ 5</span>
+              </div>
+              <span className="text-muted-foreground text-sm">
+                ({game.ratingCount}{' '}
+                {game.ratingCount > 1 ? 'ratings' : 'rating'})
+              </span>
+            </div>
           )}
 
           {game.genres.length > 0 && (
@@ -116,11 +133,10 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Description */}
       {game.description && (
         <>
           <Separator className="my-6" />
-          <div>
+          <div className="mb-10">
             <h2 className="text-xl font-semibold mb-2">About</h2>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
               {game.description}
@@ -128,6 +144,11 @@ function RouteComponent() {
           </div>
         </>
       )}
+
+      <Separator className="my-6" />
+
+      {/* Reviews */}
+      <ReviewList gameId={game.id} />
     </div>
   )
 }
