@@ -47,4 +47,11 @@ public interface AuthService {
      * @return user profile information
      */
     UserMeDto getCurrentUser(String email);
+
+    /**
+     * Registers a new user account.
+     *
+     * @param request the registration details
+     */
+    void register(com.checkpoint.api.dto.auth.RegisterRequestDto request);
 }
