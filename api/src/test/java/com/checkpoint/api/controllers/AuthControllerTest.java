@@ -27,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
@@ -239,6 +240,59 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/auth/token")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/auth/register")
+    class RegisterTests {
+
+        @Test
+        @DisplayName("Should return 201 Created on successful registration")
+        void shouldReturn201OnSuccess() throws Exception {
+            doNothing().when(authService).register(any(RegisterRequestDto.class));
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "newuser", "email": "newuser@test.com", "password": "password123"}
+                                    """))
+                    .andExpect(status().isCreated());
+
+            verify(authService).register(any(RegisterRequestDto.class));
+        }
+
+        @Test
+        @DisplayName("Should return 400 for missing fields")
+        void shouldReturn400ForMissingFields() throws Exception {
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"email": "user@test.com"}
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 for invalid email")
+        void shouldReturn400ForInvalidEmail() throws Exception {
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "user", "email": "invalid", "password": "password123"}
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 for short password")
+        void shouldReturn400ForShortPassword() throws Exception {
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "user", "email": "user@test.com", "password": "short"}
+                                    """))
                     .andExpect(status().isBadRequest());
         }
     }

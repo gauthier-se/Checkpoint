@@ -1,5 +1,6 @@
 package com.checkpoint.api.controllers;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.auth.AuthMessageDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.LoginResponseDto;
+import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.services.AuthService;
 
@@ -68,6 +70,22 @@ public class AuthController {
 
         authService.authenticateAndCreateSession(loginRequest, servletRequest, servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Login successful"));
+    }
+
+    /**
+     * Endpoint for user registration.
+     *
+     * <p>Creates a new user account with the provided pseudo, email, and password.</p>
+     *
+     * @param registerRequest the registration details
+     * @return 201 Created on success
+     */
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(
+            @Valid @RequestBody RegisterRequestDto registerRequest) {
+
+        authService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**

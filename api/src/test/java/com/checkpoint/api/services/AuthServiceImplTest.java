@@ -28,11 +28,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.entities.Role;
+import com.checkpoint.api.repositories.RoleRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.impl.AuthServiceImpl;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,6 +56,12 @@ class AuthServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private RoleRepository roleRepository;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -151,6 +160,71 @@ class AuthServiceImplTest {
             assertThatThrownBy(() -> authService.authenticateAndCreateSession(
                     request, servletRequest, servletResponse))
                     .isInstanceOf(BadCredentialsException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("register")
+    class RegisterTests {
+
+        @Test
+        @DisplayName("Should successfully register a new user")
+        void shouldRegisterNewUser() {
+            // Given
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            Role role = new Role("USER");
+
+            when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("newuser")).thenReturn(false);
+            when(roleRepository.findByName("USER")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+
+            // When
+            authService.register(request);
+
+            // Then
+            verify(userRepository).save(any(com.checkpoint.api.entities.User.class));
+        }
+
+        @Test
+        @DisplayName("Should create USER role if it does not exist")
+        void shouldCreateRoleIfNotFound() {
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            Role newRole = new Role("USER");
+
+            when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("newuser")).thenReturn(false);
+            when(roleRepository.findByName("USER")).thenReturn(Optional.empty());
+            when(roleRepository.save(any(Role.class))).thenReturn(newRole);
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+
+            authService.register(request);
+
+            verify(roleRepository).save(any(Role.class));
+            verify(userRepository).save(any(com.checkpoint.api.entities.User.class));
+        }
+
+        @Test
+        @DisplayName("Should throw exception if email exists")
+        void shouldThrowIfEmailExists() {
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            when(userRepository.existsByEmail("test@test.com")).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .hasMessageContaining("Email is already in use");
+        }
+
+        @Test
+        @DisplayName("Should throw exception if pseudo exists")
+        void shouldThrowIfPseudoExists() {
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("newuser")).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .hasMessageContaining("Pseudo is already in use");
         }
     }
 

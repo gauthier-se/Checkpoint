@@ -22,6 +22,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.entities.Role;
+import com.checkpoint.api.repositories.RoleRepository;
+
 /**
  * Implementation of {@link AuthService}.
  * Delegates credential validation to Spring Security's {@link AuthenticationManager},
@@ -34,15 +40,21 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtService jwtService,
                            UserDetailsService userDetailsService,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           RoleRepository roleRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -98,5 +110,29 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 roleName
         );
+    }
+
+    @Override
+    public void register(RegisterRequestDto request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new DataIntegrityViolationException("Email is already in use");
+        }
+        if (userRepository.existsByPseudo(request.pseudo())) {
+            throw new DataIntegrityViolationException("Pseudo is already in use");
+        }
+
+        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
+            Role newRole = new Role("USER");
+            return roleRepository.save(newRole);
+        });
+
+        User user = new User(
+                request.pseudo(),
+                request.email(),
+                passwordEncoder.encode(request.password())
+        );
+        user.setRole(userRole);
+
+        userRepository.save(user);
     }
 }
