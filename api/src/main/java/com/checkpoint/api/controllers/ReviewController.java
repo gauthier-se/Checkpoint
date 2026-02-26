@@ -117,6 +117,29 @@ public class ReviewController {
     }
 
     /**
+     * Retrieves the authenticated user's review for a specific game.
+     *
+     * @param userDetails the authenticated user principal
+     * @param gameId the video game ID
+     * @return the review if found, or 404 Not Found if no review is left by the user yet
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ReviewResponseDto> getMyReview(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID gameId) {
+
+        log.info("GET /api/games/{}/reviews/me - user: {}", gameId, userDetails.getUsername());
+
+        ReviewResponseDto response = reviewService.getReviewByUserAndGame(userDetails.getUsername(), gameId);
+
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Creates a Pageable from the sort string.
      */
     private Pageable createPageable(int page, int size, String sort) {
