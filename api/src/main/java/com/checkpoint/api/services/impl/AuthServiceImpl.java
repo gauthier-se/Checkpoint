@@ -18,6 +18,19 @@ import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.AuthService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.entities.PasswordResetToken;
+import com.checkpoint.api.repositories.PasswordResetTokenRepository;
+import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.services.EmailService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -36,25 +49,33 @@ import com.checkpoint.api.repositories.RoleRepository;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtService jwtService,
                            UserDetailsService userDetailsService,
                            UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           RoleRepository roleRepository) {
+                           RoleRepository roleRepository,
+                           PasswordResetTokenRepository passwordResetTokenRepository,
+                           EmailService emailService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -134,5 +155,46 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(userRole);
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequestDto request) {
+        userRepository.findByEmail(request.email()).ifPresent(user -> {
+            // Clear old tokens for this user
+            passwordResetTokenRepository.deleteByUserId(user.getId());
+
+            // Generate new token valid for 15 minutes
+            String token = UUID.randomUUID().toString();
+            PasswordResetToken resetToken = new PasswordResetToken(
+                    token,
+                    user,
+                    LocalDateTime.now().plusMinutes(15)
+            );
+            passwordResetTokenRepository.save(resetToken);
+
+            // Send email using EmailService
+            String resetLink = "http://localhost:3000/reset-password?token=" + token;
+            emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDto request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.token())
+                .orElseThrow(() -> new InvalidTokenException("Invalid reset token"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new InvalidTokenException("Token has expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        // Invalidate token after use
+        passwordResetTokenRepository.delete(resetToken);
     }
 }

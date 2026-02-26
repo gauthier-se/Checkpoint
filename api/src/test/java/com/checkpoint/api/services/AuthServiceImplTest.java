@@ -10,6 +10,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
+
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.entities.PasswordResetToken;
+import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.repositories.PasswordResetTokenRepository;
+import com.checkpoint.api.services.EmailService;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -62,6 +70,12 @@ class AuthServiceImplTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -324,6 +338,110 @@ class AuthServiceImplTest {
             assertThatThrownBy(() -> authService.getCurrentUser("unknown@test.com"))
                     .isInstanceOf(UsernameNotFoundException.class)
                     .hasMessageContaining("unknown@test.com");
+        }
+    }
+
+    @Nested
+    @DisplayName("forgotPassword")
+    class ForgotPasswordTests {
+
+        @Test
+        @DisplayName("Should generate token and log link if email exists")
+        void shouldGenerateToken() {
+            // Given
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            UUID userId = UUID.randomUUID();
+            user.setId(userId);
+            user.setEmail("user@test.com");
+
+            when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
+
+            ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("user@test.com");
+
+            // When
+            authService.forgotPassword(request);
+
+            // Then
+            verify(passwordResetTokenRepository).deleteByUserId(userId);
+            verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
+            verify(emailService).sendPasswordResetEmail(any(String.class), any(String.class));
+        }
+
+        @Test
+        @DisplayName("Should silently ignore if email does not exist")
+        void shouldIgnoreIfEmailNotFound() {
+            // Given
+            when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
+
+            ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("unknown@test.com");
+
+            // When
+            authService.forgotPassword(request);
+
+            // Then
+            verify(passwordResetTokenRepository, never()).deleteByUserId(any());
+            verify(passwordResetTokenRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("resetPassword")
+    class ResetPasswordTests {
+
+        @Test
+        @DisplayName("Should reset password and delete token on success")
+        void shouldResetPassword() {
+            // Given
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            PasswordResetToken token = new PasswordResetToken("valid-token", user, LocalDateTime.now().plusMinutes(15));
+
+            when(passwordResetTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(token));
+            when(passwordEncoder.encode("new-password123")).thenReturn("encoded-new-password");
+
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("valid-token", "new-password123");
+
+            // When
+            authService.resetPassword(request);
+
+            // Then
+            verify(passwordEncoder).encode("new-password123");
+            verify(userRepository).save(user);
+            verify(passwordResetTokenRepository).delete(token);
+        }
+
+        @Test
+        @DisplayName("Should throw if token not found")
+        void shouldThrowIfTokenNotFound() {
+            // Given
+            when(passwordResetTokenRepository.findByToken("invalid-token")).thenReturn(Optional.empty());
+
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("invalid-token", "new-password123");
+
+            // When / Then
+            assertThatThrownBy(() -> authService.resetPassword(request))
+                    .isInstanceOf(InvalidTokenException.class)
+                    .hasMessageContaining("Invalid reset token");
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should throw if token expired")
+        void shouldThrowIfTokenExpired() {
+            // Given
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            PasswordResetToken token = new PasswordResetToken("expired-token", user, LocalDateTime.now().minusMinutes(1)); // Expired
+
+            when(passwordResetTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(token));
+
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("expired-token", "new-password123");
+
+            // When / Then
+            assertThatThrownBy(() -> authService.resetPassword(request))
+                    .isInstanceOf(InvalidTokenException.class)
+                    .hasMessageContaining("Token has expired");
+
+            verify(passwordResetTokenRepository).delete(token);
+            verify(userRepository, never()).save(any());
         }
     }
 }

@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,8 +28,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
@@ -45,6 +49,9 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private AuthService authService;
@@ -367,6 +374,90 @@ class AuthControllerTest {
             // When / Then
             mockMvc.perform(get("/api/auth/me"))
                     .andExpect(status().isUnauthorized());
+        }
+    }
+
+    @Nested
+    @DisplayName("forgotPassword")
+    class ForgotPasswordTests {
+
+        @Test
+        @DisplayName("Should return 200 OK on successful request")
+        void shouldReturn200OnSuccess() throws Exception {
+            ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("user@test.com");
+            doNothing().when(authService).forgotPassword(any(ForgotPasswordRequestDto.class));
+
+            mockMvc.perform(post("/api/auth/forgot-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value("If the email exists, a password reset link has been logged."));
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request if email is empty")
+        void shouldReturn400IfEmailEmpty() throws Exception {
+            ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("");
+
+            mockMvc.perform(post("/api/auth/forgot-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Email is required")));
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request if email is invalid format")
+        void shouldReturn400IfEmailInvalid() throws Exception {
+            ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("invalid-email");
+
+            mockMvc.perform(post("/api/auth/forgot-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Email must be valid")));
+        }
+    }
+
+    @Nested
+    @DisplayName("resetPassword")
+    class ResetPasswordTests {
+
+        @Test
+        @DisplayName("Should return 200 OK on successful request")
+        void shouldReturn200OnSuccess() throws Exception {
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("valid-token", "new-password123");
+            doNothing().when(authService).resetPassword(any(ResetPasswordRequestDto.class));
+
+            mockMvc.perform(post("/api/auth/reset-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value("Password has been reset successfully."));
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request if token is empty")
+        void shouldReturn400IfTokenEmpty() throws Exception {
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("", "new-password123");
+
+            mockMvc.perform(post("/api/auth/reset-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Token is required")));
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request if password is too short")
+        void shouldReturn400IfPasswordTooShort() throws Exception {
+            ResetPasswordRequestDto request = new ResetPasswordRequestDto("valid-token", "short");
+
+            mockMvc.perform(post("/api/auth/reset-password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Password must be at least 8 characters long")));
         }
     }
 }
