@@ -126,4 +126,29 @@ public class ReviewServiceImpl implements ReviewService {
         videoGame.setAverageRating(averageRating);
         videoGameRepository.save(videoGame);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReviewResponseDto getReviewByUserAndGame(String pseudo, UUID videoGameId) {
+        User user = userRepository.findByEmail(pseudo)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with pseudo/email: " + pseudo));
+
+        if (!videoGameRepository.existsById(videoGameId)) {
+            throw new GameNotFoundException(videoGameId);
+        }
+
+        Review review = reviewRepository.findByUserPseudoAndVideoGameId(user.getPseudo(), videoGameId)
+                .orElse(null);
+
+        if (review == null) {
+            return null;
+        }
+
+        Rate rate = rateRepository.findByUserPseudoAndVideoGameId(user.getPseudo(), videoGameId)
+                .orElse(null);
+
+        Integer score = (rate != null) ? rate.getScore() : null;
+
+        return reviewMapper.toDto(review, score);
+    }
 }

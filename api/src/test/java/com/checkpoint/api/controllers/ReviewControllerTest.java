@@ -99,4 +99,32 @@ class ReviewControllerTest {
         mockMvc.perform(delete("/api/games/{gameId}/reviews", gameId))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    @WithMockUser(username = "testuser")
+    @DisplayName("GET /api/games/{gameId}/reviews/me should return 200 OK when review exists")
+    void shouldReturnMyReview() throws Exception {
+        // Given
+        when(reviewService.getReviewByUserAndGame(eq("testuser"), eq(gameId)))
+                .thenReturn(reviewResponseDto);
+
+        // When & Then
+        mockMvc.perform(get("/api/games/{gameId}/reviews/me", gameId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(5))
+                .andExpect(jsonPath("$.content").value("Great game!"));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser")
+    @DisplayName("GET /api/games/{gameId}/reviews/me should return 404 Not Found when no review exists")
+    void shouldReturn404WhenNoReviewExists() throws Exception {
+        // Given
+        when(reviewService.getReviewByUserAndGame(eq("testuser"), eq(gameId)))
+                .thenReturn(null);
+
+        // When & Then
+        mockMvc.perform(get("/api/games/{gameId}/reviews/me", gameId))
+                .andExpect(status().isNotFound());
+    }
 }

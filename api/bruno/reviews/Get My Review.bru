@@ -1,0 +1,15 @@
+meta {
+  name: Get My Review
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/games/:gameId/reviews/me
+  body: none
+  auth: inherit
+}
+
+params:path {
+  gameId: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}

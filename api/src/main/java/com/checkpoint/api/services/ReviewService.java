@@ -39,4 +39,13 @@ public interface ReviewService {
      * @param videoGameId the video game ID
      */
     void deleteReview(String pseudo, UUID videoGameId);
+
+    /**
+     * Retrieves the authenticated user's review for a specific video game.
+     *
+     * @param pseudo the authenticated user's pseudo
+     * @param videoGameId the video game ID
+     * @return the review if found, null otherwise
+     */
+    ReviewResponseDto getReviewByUserAndGame(String pseudo, UUID videoGameId);
 }
