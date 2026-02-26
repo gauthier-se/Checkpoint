@@ -54,4 +54,18 @@ public interface AuthService {
      * @param request the registration details
      */
     void register(com.checkpoint.api.dto.auth.RegisterRequestDto request);
+
+    /**
+     * Handles forgot password requests by generating a token.
+     *
+     * @param request the forgot password request containing the email
+     */
+    void forgotPassword(com.checkpoint.api.dto.auth.ForgotPasswordRequestDto request);
+
+    /**
+     * Resets the user's password using the provided token.
+     *
+     * @param request the reset password request containing the token and new password
+     */
+    void resetPassword(com.checkpoint.api.dto.auth.ResetPasswordRequestDto request);
 }

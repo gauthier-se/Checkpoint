@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.checkpoint.api.dto.auth.AuthMessageDto;
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.LoginResponseDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.services.AuthService;
 
@@ -136,5 +138,37 @@ public class AuthController {
     public ResponseEntity<UserMeDto> me(@AuthenticationPrincipal UserDetails userDetails) {
         UserMeDto user = authService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * Endpoint for requesting a password reset.
+     *
+     * <p>Generates a reset token and logs the reset link.</p>
+     *
+     * @param request the forgot password request
+     * @return 200 OK
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthMessageDto> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDto request) {
+
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(new AuthMessageDto("If the email exists, a password reset link has been logged."));
+    }
+
+    /**
+     * Endpoint for resetting a password.
+     *
+     * <p>Verifies the token and updates the user's password.</p>
+     *
+     * @param request the reset password request
+     * @return 200 OK
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthMessageDto> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDto request) {
+
+        authService.resetPassword(request);
+        return ResponseEntity.ok(new AuthMessageDto("Password has been reset successfully."));
     }
 }
