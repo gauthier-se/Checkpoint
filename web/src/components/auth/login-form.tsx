@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useActionState } from 'react'
 import { SubmitButton } from './submit-button'
 import { Button } from '@/components/ui/button'
@@ -111,12 +111,12 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
+                  <Link
+                    to="/forgot-password"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
@@ -132,7 +132,8 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
               <Field>
                 <SubmitButton />
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
+                  Don&apos;t have an account?{' '}
+                  <Link to="/register">Sign up</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
