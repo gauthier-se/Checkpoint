@@ -35,7 +35,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.springframework.dao.DataIntegrityViolationException;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.entities.Role;
@@ -135,11 +135,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequestDto request) {
+        if (!request.password().equals(request.confirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
         if (userRepository.existsByEmail(request.email())) {
-            throw new DataIntegrityViolationException("Email is already in use");
+            throw new RegistrationConflictException("Email is already in use");
         }
         if (userRepository.existsByPseudo(request.pseudo())) {
-            throw new DataIntegrityViolationException("Pseudo is already in use");
+            throw new RegistrationConflictException("Pseudo is already in use");
         }
 
         Role userRole = roleRepository.findByName("USER").orElseGet(() -> {

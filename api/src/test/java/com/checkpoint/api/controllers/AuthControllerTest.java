@@ -33,6 +33,7 @@ import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AuthService;
@@ -263,7 +264,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"pseudo": "newuser", "email": "newuser@test.com", "password": "password123"}
+                                    {"pseudo": "newuser", "email": "newuser@test.com", "password": "password123", "confirmPassword": "password123"}
                                     """))
                     .andExpect(status().isCreated());
 
@@ -287,7 +288,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"pseudo": "user", "email": "invalid", "password": "password123"}
+                                    {"pseudo": "user", "email": "invalid", "password": "password123", "confirmPassword": "password123"}
                                     """))
                     .andExpect(status().isBadRequest());
         }
@@ -298,9 +299,73 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"pseudo": "user", "email": "user@test.com", "password": "short"}
+                                    {"pseudo": "user", "email": "user@test.com", "password": "short", "confirmPassword": "short"}
                                     """))
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 for missing confirmPassword")
+        void shouldReturn400ForMissingConfirmPassword() throws Exception {
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "user", "email": "user@test.com", "password": "password123"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(
+                            org.hamcrest.Matchers.containsString("Password confirmation is required")));
+        }
+
+        @Test
+        @DisplayName("Should return 400 for password mismatch")
+        void shouldReturn400ForPasswordMismatch() throws Exception {
+            // Given
+            doThrow(new IllegalArgumentException("Passwords do not match"))
+                    .when(authService).register(any(RegisterRequestDto.class));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "user", "email": "user@test.com", "password": "password123", "confirmPassword": "different123"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Passwords do not match"));
+        }
+
+        @Test
+        @DisplayName("Should return 409 for duplicate email")
+        void shouldReturn409ForDuplicateEmail() throws Exception {
+            // Given
+            doThrow(new RegistrationConflictException("Email is already in use"))
+                    .when(authService).register(any(RegisterRequestDto.class));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "newuser", "email": "existing@test.com", "password": "password123", "confirmPassword": "password123"}
+                                    """))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.message").value("Email is already in use"));
+        }
+
+        @Test
+        @DisplayName("Should return 409 for duplicate pseudo")
+        void shouldReturn409ForDuplicatePseudo() throws Exception {
+            // Given
+            doThrow(new RegistrationConflictException("Pseudo is already in use"))
+                    .when(authService).register(any(RegisterRequestDto.class));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"pseudo": "existinguser", "email": "new@test.com", "password": "password123", "confirmPassword": "password123"}
+                                    """))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.message").value("Pseudo is already in use"));
         }
     }
 
