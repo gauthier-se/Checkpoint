@@ -1,6 +1,3 @@
-import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -18,6 +15,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
 
 export function RegisterForm({
   className,
@@ -25,12 +26,29 @@ export function RegisterForm({
 }: React.ComponentProps<'div'>) {
   const navigate = useNavigate()
 
+  const registerSchema = z
+    .object({
+      pseudo: z.string().min(1, 'Username is required'),
+      email: z.email('Please enter a valid email address'),
+      password: z
+        .string()
+        .min(8, 'Password must be at least 8 characters long'),
+      confirmPassword: z.string().min(1, 'Password confirmation is required'),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    })
+
   const form = useForm({
     defaultValues: {
       pseudo: '',
       email: '',
       password: '',
       confirmPassword: '',
+    },
+    validators: {
+      onChange: registerSchema,
     },
     onSubmit: async ({ value }) => {
       const res = await apiFetch('/api/auth/register', {
@@ -69,10 +87,6 @@ export function RegisterForm({
             <FieldGroup>
               <form.Field
                 name="pseudo"
-                validators={{
-                  onBlur: ({ value }) =>
-                    !value.trim() ? 'Username is required' : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="pseudo">Username</FieldLabel>
@@ -97,10 +111,6 @@ export function RegisterForm({
               />
               <form.Field
                 name="email"
-                validators={{
-                  onBlur: ({ value }) =>
-                    !value.trim() ? 'Email is required' : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -125,12 +135,6 @@ export function RegisterForm({
               />
               <form.Field
                 name="password"
-                validators={{
-                  onBlur: ({ value }) =>
-                    value.length < 8
-                      ? 'Password must be at least 8 characters long'
-                      : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -156,14 +160,6 @@ export function RegisterForm({
               />
               <form.Field
                 name="confirmPassword"
-                validators={{
-                  onBlur: ({ value, fieldApi }) => {
-                    const password = fieldApi.form.getFieldValue('password')
-                    if (!value) return 'Password confirmation is required'
-                    if (value !== password) return 'Passwords do not match'
-                    return undefined
-                  },
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="confirmPassword">

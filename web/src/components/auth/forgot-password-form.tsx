@@ -1,7 +1,3 @@
-import { useForm } from '@tanstack/react-form'
-import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -19,6 +15,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
+import { useForm } from '@tanstack/react-form'
+import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { z } from 'zod'
 
 export function ForgotPasswordForm({
   className,
@@ -26,9 +27,16 @@ export function ForgotPasswordForm({
 }: React.ComponentProps<'div'>) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  const forgotPasswordSchema = z.object({
+    email: z.email('Please enter a valid email address'),
+  })
+
   const form = useForm({
     defaultValues: {
       email: '',
+    },
+    validators: {
+      onChange: forgotPasswordSchema,
     },
     onSubmit: async ({ value }) => {
       const res = await apiFetch('/api/auth/forgot-password', {
@@ -69,10 +77,6 @@ export function ForgotPasswordForm({
             <FieldGroup>
               <form.Field
                 name="email"
-                validators={{
-                  onBlur: ({ value }) =>
-                    !value.trim() ? 'Email is required' : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>

@@ -2,13 +2,14 @@ import { useForm } from '@tanstack/react-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Star } from 'lucide-react'
 import { useState } from 'react'
+import { z } from 'zod'
 
-import type { Review } from '@/types/review'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { submitReview } from '@/queries/review'
+import type { Review } from '@/types/review'
 
 interface ReviewFormProps {
   gameId: string
@@ -23,6 +24,12 @@ export function ReviewForm({
 }: ReviewFormProps) {
   const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(!existingReview)
+
+  const reviewSchema = z.object({
+    score: z.number().min(1, 'Select a rating').max(5, 'Score maximum is 5'),
+    content: z.string().optional().default(''),
+    haveSpoilers: z.boolean().default(false),
+  })
 
   const mutation = useMutation({
     mutationFn: (values: {
@@ -46,16 +53,12 @@ export function ReviewForm({
       content: existingReview?.content ?? '',
       haveSpoilers: existingReview?.haveSpoilers ?? false,
     },
+    validators: {
+      // @ts-expect-error Zod schema compatibility with form validator definition is slightly off
+      onChange: reviewSchema,
+    },
     onSubmit: ({ value }) => {
       mutation.mutate(value)
-    },
-    validators: {
-      onChange({ value }) {
-        if (value.score < 1 || value.score > 5) {
-          return 'Score must be between 1 and 5'
-        }
-        return undefined
-      },
     },
   })
 
@@ -99,10 +102,6 @@ export function ReviewForm({
       >
         <form.Field
           name="score"
-          validators={{
-            onChange: ({ value }) =>
-              value < 1 || value > 5 ? 'Select a rating' : undefined,
-          }}
           children={(field) => (
             <div className="flex flex-col gap-2">
               <Label>

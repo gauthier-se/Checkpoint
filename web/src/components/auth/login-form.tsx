@@ -1,6 +1,3 @@
-import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -20,10 +17,19 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   redirectTo?: string
 }
+
+const loginSchema = z.object({
+  email: z.email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
 
 export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
   const navigate = useNavigate()
@@ -33,6 +39,9 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
     defaultValues: {
       email: '',
       password: '',
+    },
+    validators: {
+      onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
       const res = await apiFetch('/api/auth/login', {
@@ -95,10 +104,6 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
               </FieldSeparator>
               <form.Field
                 name="email"
-                validators={{
-                  onBlur: ({ value }) =>
-                    !value ? 'Email is required' : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -123,10 +128,6 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
               />
               <form.Field
                 name="password"
-                validators={{
-                  onBlur: ({ value }) =>
-                    !value ? 'Password is required' : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <div className="flex items-center">
