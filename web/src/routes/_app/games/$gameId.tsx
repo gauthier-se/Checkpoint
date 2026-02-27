@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
+import { GameQuickActions } from '@/components/games/quick-actions'
 import { ReviewForm } from '@/components/reviews/review-form'
 import { ReviewList } from '@/components/reviews/review-list'
 import { Button } from '@/components/ui/button'
@@ -144,6 +145,10 @@ function RouteComponent() {
               ))}
             </div>
           )}
+
+          <div className="mt-4">
+            <GameQuickActions game={game} />
+          </div>
         </div>
       </div>
 
