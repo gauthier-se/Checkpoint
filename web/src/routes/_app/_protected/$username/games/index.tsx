@@ -1,161 +1,125 @@
-import {
-  queryOptions,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import type { GameStatus, LibraryResponse } from '@/types/library'
-import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
-import { apiFetch } from '@/services/api'
+import { Archive, BookOpen, Heart, Library } from 'lucide-react'
+import type { CollectionTab } from '@/types/collection'
+import { BacklogTab, backlogQuery } from '@/components/collection/backlog-tab'
+import { LibraryTab, libraryQuery } from '@/components/collection/library-tab'
+import { PlayLogTab, playLogQuery } from '@/components/collection/play-log-tab'
+import {
+  WishlistTab,
+  wishlistQuery,
+} from '@/components/collection/wishlist-tab'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export const libraryQueryOptions = queryOptions({
-  queryKey: ['library', 'me'],
-  queryFn: async (): Promise<LibraryResponse> => {
-    const res = await apiFetch(`/api/me/library?page=0&size=100`)
-    if (!res.ok) {
-      throw new Error('Failed to load library')
-    }
-    return res.json()
-  },
-})
+// Search params
+
+const VALID_TABS: Array<CollectionTab> = [
+  'library',
+  'wishlist',
+  'backlog',
+  'playlog',
+]
+
+type GamesSearchParams = {
+  tab: CollectionTab
+  page: number
+}
+
+// Route
 
 export const Route = createFileRoute('/_app/_protected/$username/games/')({
   component: UserGamesPage,
-  loader: async ({ context }) => {
-    return context.queryClient.ensureQueryData(libraryQueryOptions)
+  validateSearch: (search: Record<string, unknown>): GamesSearchParams => {
+    const rawTab = String(search.tab ?? 'library')
+    const tab = VALID_TABS.includes(rawTab as CollectionTab)
+      ? (rawTab as CollectionTab)
+      : 'library'
+    const page = Math.max(1, Math.floor(Number(search.page ?? 1)) || 1)
+    return { tab, page }
+  },
+  loaderDeps: ({ search: { tab, page } }) => ({ tab, page }),
+  loader: async ({ context, deps: { tab, page } }) => {
+    // Prefetch data for the active tab; wrapped in try/catch so
+    // missing API endpoints (not yet merged) don't crash navigation
+    try {
+      switch (tab) {
+        case 'library':
+          await context.queryClient.ensureQueryData(libraryQuery(page))
+          break
+        case 'wishlist':
+          await context.queryClient.ensureQueryData(wishlistQuery(page))
+          break
+        case 'backlog':
+          await context.queryClient.ensureQueryData(backlogQuery(page))
+          break
+        case 'playlog':
+          await context.queryClient.ensureQueryData(playLogQuery(page))
+          break
+      }
+    } catch {
+      // Silently ignore — the tab component will show the error inline
+    }
   },
 })
 
+// Tab config
+
+const TAB_CONFIG: Array<{
+  value: CollectionTab
+  label: string
+  icon: React.ReactNode
+}> = [
+  { value: 'library', label: 'Library', icon: <Library className="size-4" /> },
+  { value: 'wishlist', label: 'Wishlist', icon: <Heart className="size-4" /> },
+  { value: 'backlog', label: 'Backlog', icon: <Archive className="size-4" /> },
+  {
+    value: 'playlog',
+    label: 'Play Log',
+    icon: <BookOpen className="size-4" />,
+  },
+]
+
+// Page
+
 function UserGamesPage() {
-  const { data } = useSuspenseQuery(libraryQueryOptions)
-  const queryClient = useQueryClient()
-  const [filter, setFilter] = useState<GameStatus | 'ALL'>('ALL')
+  const { tab, page } = Route.useSearch()
+  const navigate = Route.useNavigate()
 
-  const filteredGames = data.content.filter(
-    (game) => filter === 'ALL' || game.status === filter,
-  )
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({
-      gameId,
-      status,
-    }: {
-      gameId: string
-      status: GameStatus
-    }) => {
-      const res = await apiFetch(`/api/me/library/${gameId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ videoGameId: gameId, status }),
-        headers: { 'Content-Type': 'application/json' },
-      })
-      if (!res.ok) throw new Error('Failed to update status')
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
-    },
-  })
-
-  const removeGameMutation = useMutation({
-    mutationFn: async (gameId: string) => {
-      const res = await apiFetch(`/api/me/library/${gameId}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to remove game')
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
-    },
-  })
+  function onTabChange(newTab: string) {
+    void navigate({
+      search: { tab: newTab as CollectionTab, page: 1 },
+    })
+  }
 
   return (
-    <main className="max-w-7xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8">My Games</h1>
+    <main className="mx-auto max-w-7xl px-4 py-10">
+      <h1 className="mb-8 text-3xl font-bold">My Games</h1>
 
-      <div className="mb-8 flex space-x-2">
-        <ButtonGroup>
-          <Button
-            variant={filter === 'ALL' ? 'default' : 'outline'}
-            onClick={() => setFilter('ALL')}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === 'BACKLOG' ? 'default' : 'outline'}
-            onClick={() => setFilter('BACKLOG')}
-          >
-            Backlog
-          </Button>
-          <Button
-            variant={filter === 'PLAYING' ? 'default' : 'outline'}
-            onClick={() => setFilter('PLAYING')}
-          >
-            Playing
-          </Button>
-          <Button
-            variant={filter === 'COMPLETED' ? 'default' : 'outline'}
-            onClick={() => setFilter('COMPLETED')}
-          >
-            Completed
-          </Button>
-        </ButtonGroup>
-      </div>
+      <Tabs value={tab} onValueChange={onTabChange}>
+        <TabsList variant="line" className="mb-6 w-full justify-start">
+          {TAB_CONFIG.map(({ value, label, icon }) => (
+            <TabsTrigger key={value} value={value} className="gap-2 px-4 py-2">
+              {icon}
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {filteredGames.length === 0 ? (
-          <p className="text-muted-foreground col-span-full py-8 text-center">
-            No games found.
-          </p>
-        ) : (
-          filteredGames.map((game) => (
-            <div
-              key={game.id}
-              className="group relative flex flex-col gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
-            >
-              <div className="aspect-[3/4] overflow-hidden rounded-md bg-muted">
-                {game.coverUrl ? (
-                  <img
-                    src={game.coverUrl}
-                    alt={game.title}
-                    className="h-full w-full object-cover transition-all group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-secondary">
-                    <span className="text-muted-foreground">No Cover</span>
-                  </div>
-                )}
-              </div>
-              <h3 className="font-semibold line-clamp-1">{game.title}</h3>
-              <p className="text-xs text-muted-foreground">{game.status}</p>
+        <TabsContent value="library">
+          <LibraryTab page={tab === 'library' ? page : 1} />
+        </TabsContent>
 
-              <div className="mt-auto pt-4 flex gap-2">
-                <button
-                  className="text-xs text-blue-500 hover:underline disabled:opacity-50"
-                  disabled={updateStatusMutation.isPending}
-                  onClick={() =>
-                    updateStatusMutation.mutate({
-                      gameId: game.videoGameId,
-                      status:
-                        game.status === 'COMPLETED' ? 'BACKLOG' : 'COMPLETED',
-                    })
-                  }
-                >
-                  Toggle Status
-                </button>
-                <button
-                  className="text-xs text-red-500 hover:underline disabled:opacity-50"
-                  disabled={removeGameMutation.isPending}
-                  onClick={() => removeGameMutation.mutate(game.videoGameId)}
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+        <TabsContent value="wishlist">
+          <WishlistTab page={tab === 'wishlist' ? page : 1} />
+        </TabsContent>
+
+        <TabsContent value="backlog">
+          <BacklogTab page={tab === 'backlog' ? page : 1} />
+        </TabsContent>
+
+        <TabsContent value="playlog">
+          <PlayLogTab page={tab === 'playlog' ? page : 1} />
+        </TabsContent>
+      </Tabs>
     </main>
   )
 }
