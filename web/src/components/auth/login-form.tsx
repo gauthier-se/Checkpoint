@@ -1,6 +1,6 @@
+import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useActionState } from 'react'
-import { SubmitButton } from './submit-button'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -28,39 +28,29 @@ interface LoginFormProps extends React.ComponentProps<'div'> {
 export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
   const navigate = useNavigate()
   const { invalidate } = useAuth()
-  const [error, formAction] = useActionState(
-    async (_prevState: string | null, formData: FormData) => {
-      const email = formData.get('email')?.toString().trim() ?? ''
-      const password = formData.get('password')?.toString() ?? ''
 
-      if (!email || !password) {
-        return 'Email and password are required.'
-      }
-
-      try {
-        const res = await apiFetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => null)
-          return data?.message ?? 'Invalid email or password'
-        }
-
-        // Invalidate the auth query so TanStack Query refetches fresh user data.
-        await invalidate()
-
-        // Navigate to the redirect target or home.
-        await navigate({ to: redirectTo ?? '/' })
-        return null
-      } catch {
-        return 'Unable to reach the server. Please try again later.'
-      }
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
     },
-    null,
-  )
+    onSubmit: async ({ value }) => {
+      const res = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        toast.error(data?.message ?? 'Invalid email or password')
+        return
+      }
+
+      await invalidate()
+      await navigate({ to: redirectTo ?? '/' })
+    },
+  })
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -72,7 +62,13 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+          >
             <FieldGroup>
               <Field>
                 <Button variant="outline" type="button" disabled>
@@ -97,40 +93,79 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
+              <form.Field
+                name="email"
+                validators={{
+                  onBlur: ({ value }) =>
+                    !value ? 'Email is required' : undefined,
+                }}
+                children={(field) => (
+                  <Field>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-destructive">
+                        {field.state.meta.errors.join(', ')}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              />
+              <form.Field
+                name="password"
+                validators={{
+                  onBlur: ({ value }) =>
+                    !value ? 'Password is required' : undefined,
+                }}
+                children={(field) => (
+                  <Field>
+                    <div className="flex items-center">
+                      <FieldLabel htmlFor="password">Password</FieldLabel>
+                      <Link
+                        to="/forgot-password"
+                        className="ml-auto text-sm underline-offset-4 hover:underline"
+                      >
+                        Forgot your password?
+                      </Link>
+                    </div>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-destructive">
+                        {field.state.meta.errors.join(', ')}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              />
+
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
+                <form.Subscribe
+                  selector={(state) => [state.canSubmit, state.isSubmitting]}
+                  children={([canSubmit, isSubmitting]) => (
+                    <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                      {isSubmitting ? 'Signing in...' : 'Login'}
+                    </Button>
+                  )}
                 />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    to="/forgot-password"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </Field>
-              {error && (
-                <p className="text-sm text-destructive text-center">{error}</p>
-              )}
-              <Field>
-                <SubmitButton />
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{' '}
                   <Link to="/register">Sign up</Link>
