@@ -1,6 +1,8 @@
+import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
-import { useActionState } from 'react'
-import { SubmitButton } from './submit-button'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -18,52 +20,34 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
 
-type FormState = {
-  error: string | null
-  success: string | null
-}
-
 export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const [state, formAction] = useActionState(
-    async (_prevState: FormState, formData: FormData): Promise<FormState> => {
-      const email = formData.get('email')?.toString().trim() ?? ''
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-      if (!email) {
-        return { error: 'Email is required.', success: null }
-      }
-
-      try {
-        const res = await apiFetch('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => null)
-          return {
-            error: data?.message ?? 'Something went wrong. Please try again.',
-            success: null,
-          }
-        }
-
-        return {
-          error: null,
-          success:
-            'If an account with that email exists, a password reset link has been sent.',
-        }
-      } catch {
-        return {
-          error: 'Unable to reach the server. Please try again later.',
-          success: null,
-        }
-      }
+  const form = useForm({
+    defaultValues: {
+      email: '',
     },
-    { error: null, success: null },
-  )
+    onSubmit: async ({ value }) => {
+      const res = await apiFetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        toast.error(data?.message ?? 'Something went wrong. Please try again.')
+        return
+      }
+
+      setSuccessMessage(
+        'If an account with that email exists, a password reset link has been sent.',
+      )
+    },
+  })
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -75,33 +59,56 @@ export function ForgotPasswordForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+          >
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
-                />
-              </Field>
-              {state.error && (
-                <p className="text-sm text-destructive text-center">
-                  {state.error}
-                </p>
-              )}
-              {state.success && (
+              <form.Field
+                name="email"
+                validators={{
+                  onBlur: ({ value }) =>
+                    !value.trim() ? 'Email is required' : undefined,
+                }}
+                children={(field) => (
+                  <Field>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-destructive">
+                        {field.state.meta.errors.join(', ')}
+                      </p>
+                    )}
+                  </Field>
+                )}
+              />
+
+              {successMessage && (
                 <p className="text-sm text-emerald-600 text-center">
-                  {state.success}
+                  {successMessage}
                 </p>
               )}
               <Field>
-                <SubmitButton
-                  label="Send reset link"
-                  pendingLabel="Sending..."
+                <form.Subscribe
+                  selector={(state) => [state.canSubmit, state.isSubmitting]}
+                  children={([canSubmit, isSubmitting]) => (
+                    <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                      {isSubmitting ? 'Sending...' : 'Send reset link'}
+                    </Button>
+                  )}
                 />
                 <FieldDescription className="text-center">
                   Remember your password? <Link to="/login">Back to login</Link>
