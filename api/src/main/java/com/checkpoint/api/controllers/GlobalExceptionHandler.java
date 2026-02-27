@@ -18,6 +18,8 @@ import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
 import com.checkpoint.api.exceptions.GameAlreadyInLibraryException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInLibraryException;
+import com.checkpoint.api.exceptions.GameAlreadyInWishlistException;
+import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 
@@ -119,6 +121,46 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(GameNotInLibraryException.class)
     public ResponseEntity<ErrorResponse> handleGameNotInLibrary(GameNotInLibraryException ex) {
         log.warn("Game not in library: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles GameAlreadyInWishlistException when a game is already in the user's wishlist.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(GameAlreadyInWishlistException.class)
+    public ResponseEntity<ErrorResponse> handleGameAlreadyInWishlist(GameAlreadyInWishlistException ex) {
+        log.warn("Game already in wishlist: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handles GameNotInWishlistException when a game is not found in the user's wishlist.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(GameNotInWishlistException.class)
+    public ResponseEntity<ErrorResponse> handleGameNotInWishlist(GameNotInWishlistException ex) {
+        log.warn("Game not in wishlist: {}", ex.getMessage());
 
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),

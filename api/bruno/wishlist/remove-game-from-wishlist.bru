@@ -1,0 +1,42 @@
+meta {
+  name: Remove Game from Wishlist
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/me/wishlist/:gameId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  gameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Remove Game from Wishlist
+  
+  Removes a game from the authenticated user's wishlist.
+  
+  ## Authentication
+  
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+  
+  ## Path Parameters
+  
+  - **gameId**: The UUID of the video game to remove from the wishlist
+  
+  ## Response (204 No Content)
+  
+  Empty response body on success.
+  
+  ## Error Responses
+  
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game not in wishlist
+}
