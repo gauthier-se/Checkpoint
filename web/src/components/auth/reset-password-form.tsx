@@ -1,6 +1,7 @@
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -30,10 +31,25 @@ export function ResetPasswordForm({
 }: ResetPasswordFormProps) {
   const navigate = useNavigate()
 
+  const resetPasswordSchema = z
+    .object({
+      newPassword: z
+        .string()
+        .min(8, 'Password must be at least 8 characters long'),
+      confirmPassword: z.string().min(1, 'Password confirmation is required'),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    })
+
   const form = useForm({
     defaultValues: {
       newPassword: '',
       confirmPassword: '',
+    },
+    validators: {
+      onChange: resetPasswordSchema,
     },
     onSubmit: async ({ value }) => {
       const res = await apiFetch('/api/auth/reset-password', {
@@ -70,12 +86,6 @@ export function ResetPasswordForm({
             <FieldGroup>
               <form.Field
                 name="newPassword"
-                validators={{
-                  onBlur: ({ value }) =>
-                    value.length < 8
-                      ? 'Password must be at least 8 characters long'
-                      : undefined,
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="newPassword">New password</FieldLabel>
@@ -101,14 +111,6 @@ export function ResetPasswordForm({
               />
               <form.Field
                 name="confirmPassword"
-                validators={{
-                  onBlur: ({ value, fieldApi }) => {
-                    const password = fieldApi.form.getFieldValue('newPassword')
-                    if (!value) return 'Password confirmation is required'
-                    if (value !== password) return 'Passwords do not match'
-                    return undefined
-                  },
-                }}
                 children={(field) => (
                   <Field>
                     <FieldLabel htmlFor="confirmPassword">

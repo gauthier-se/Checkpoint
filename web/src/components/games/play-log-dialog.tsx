@@ -1,5 +1,4 @@
 import { useForm } from '@tanstack/react-form'
-import { zodValidator } from '@tanstack/zod-form-adapter'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import type { GameDetail } from '@/types/game'
@@ -57,7 +56,6 @@ export function PlayLogDialog({
       ownership: '',
       isReplay: false,
     },
-    validatorAdapter: zodValidator(),
     validators: {
       // @ts-expect-error Form library schema types are slightly off
       onChange: playLogSchema,
