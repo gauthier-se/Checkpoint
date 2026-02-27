@@ -1,0 +1,142 @@
+package com.checkpoint.api.services.impl;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.checkpoint.api.dto.collection.GameInteractionStatusDto;
+import com.checkpoint.api.entities.Rate;
+import com.checkpoint.api.entities.Review;
+import com.checkpoint.api.entities.User;
+import com.checkpoint.api.entities.UserGame;
+import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.GameStatus;
+import com.checkpoint.api.repositories.BacklogRepository;
+import com.checkpoint.api.repositories.RateRepository;
+import com.checkpoint.api.repositories.ReviewRepository;
+import com.checkpoint.api.repositories.UserGamePlayRepository;
+import com.checkpoint.api.repositories.UserGameRepository;
+import com.checkpoint.api.repositories.UserRepository;
+import com.checkpoint.api.repositories.WishRepository;
+
+@ExtendWith(MockitoExtension.class)
+class GameInteractionServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private WishRepository wishRepository;
+
+    @Mock
+    private BacklogRepository backlogRepository;
+
+    @Mock
+    private UserGameRepository userGameRepository;
+
+    @Mock
+    private UserGamePlayRepository userGamePlayRepository;
+
+    @Mock
+    private RateRepository rateRepository;
+
+    @Mock
+    private ReviewRepository reviewRepository;
+
+    @InjectMocks
+    private GameInteractionServiceImpl gameInteractionService;
+
+    private User testUser;
+    private VideoGame testGame;
+
+    @BeforeEach
+    void setUp() {
+        testUser = new User();
+        testUser.setId(UUID.randomUUID());
+        testUser.setEmail("user@example.com");
+        testUser.setPseudo("user");
+
+        testGame = new VideoGame();
+        testGame.setId(UUID.randomUUID());
+        testGame.setTitle("The Witcher 3");
+    }
+
+    @Test
+    @DisplayName("should return aggregate status when all interactions exist")
+    void shouldReturnStatusWhenAllExist() {
+        // Given
+        UserGame userGame = new UserGame(testUser, testGame, GameStatus.PLAYING);
+        Rate rate = new Rate(testUser, testGame, 5);
+        Review review = new Review();
+
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
+        when(backlogRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
+        when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.of(userGame));
+        when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(3L);
+        when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.of(rate));
+        when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.of(review));
+
+        // When
+        GameInteractionStatusDto result = gameInteractionService.getGameInteractionStatus(testUser.getEmail(), testGame.getId());
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.inWishlist()).isTrue();
+        assertThat(result.inBacklog()).isTrue();
+        assertThat(result.inLibrary()).isTrue();
+        assertThat(result.libraryStatus()).isEqualTo(GameStatus.PLAYING);
+        assertThat(result.playCount()).isEqualTo(3);
+        assertThat(result.userRating()).isEqualTo(5);
+        assertThat(result.hasReview()).isTrue();
+    }
+
+    @Test
+    @DisplayName("should return status with defaults when no interactions exist")
+    void shouldReturnStatusWhenNoneExist() {
+        // Given
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(false);
+        when(backlogRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(false);
+        when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
+        when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(0L);
+        when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.empty());
+        when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.empty());
+
+        // When
+        GameInteractionStatusDto result = gameInteractionService.getGameInteractionStatus(testUser.getEmail(), testGame.getId());
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.inWishlist()).isFalse();
+        assertThat(result.inBacklog()).isFalse();
+        assertThat(result.inLibrary()).isFalse();
+        assertThat(result.libraryStatus()).isNull();
+        assertThat(result.playCount()).isEqualTo(0);
+        assertThat(result.userRating()).isNull();
+        assertThat(result.hasReview()).isFalse();
+    }
+
+    @Test
+    @DisplayName("should throw error when user does not exist")
+    void shouldThrowErrorWhenUserDoesNotExist() {
+        // Given
+        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> gameInteractionService.getGameInteractionStatus(testUser.getEmail(), testGame.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found with email");
+    }
+}
