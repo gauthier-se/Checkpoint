@@ -18,7 +18,9 @@ import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
 import com.checkpoint.api.exceptions.GameAlreadyInLibraryException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInLibraryException;
+import com.checkpoint.api.exceptions.GameAlreadyInBacklogException;
 import com.checkpoint.api.exceptions.GameAlreadyInWishlistException;
+import com.checkpoint.api.exceptions.GameNotInBacklogException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
@@ -161,6 +163,46 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(GameNotInWishlistException.class)
     public ResponseEntity<ErrorResponse> handleGameNotInWishlist(GameNotInWishlistException ex) {
         log.warn("Game not in wishlist: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles GameAlreadyInBacklogException when a game is already in the user's backlog.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(GameAlreadyInBacklogException.class)
+    public ResponseEntity<ErrorResponse> handleGameAlreadyInBacklog(GameAlreadyInBacklogException ex) {
+        log.warn("Game already in backlog: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handles GameNotInBacklogException when a game is not found in the user's backlog.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(GameNotInBacklogException.class)
+    public ResponseEntity<ErrorResponse> handleGameNotInBacklog(GameNotInBacklogException ex) {
+        log.warn("Game not in backlog: {}", ex.getMessage());
 
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),

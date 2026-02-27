@@ -1,0 +1,45 @@
+meta {
+  name: Check Backlog Status
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/me/backlog/:gameId/status
+  body: none
+  auth: bearer
+}
+
+params:path {
+  gameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Check Backlog Status
+
+  Checks if a specific game is in the authenticated user's backlog.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **gameId**: The UUID of the video game to check
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "inBacklog": true
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}

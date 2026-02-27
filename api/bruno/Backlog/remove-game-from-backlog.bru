@@ -1,0 +1,42 @@
+meta {
+  name: Remove Game from Backlog
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/me/backlog/:gameId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  gameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Remove Game from Backlog
+
+  Removes a game from the authenticated user's backlog.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **gameId**: The UUID of the video game to remove from the backlog
+
+  ## Response (204 No Content)
+
+  Empty response body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game not in backlog
+}
