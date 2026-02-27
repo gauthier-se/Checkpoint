@@ -1,0 +1,19 @@
+meta {
+  name: Get Game Play History
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/me/plays/game/:videoGameId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  videoGameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}

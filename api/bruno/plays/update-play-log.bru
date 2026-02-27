@@ -1,0 +1,32 @@
+meta {
+  name: Update Play Log
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/me/plays/:playId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  playId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "videoGameId": "9ca266dd-0852-4748-ab5d-f7cf575e9d7a",
+    "platformId": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "status": "COMPLETED",
+    "startDate": "2025-10-01",
+    "endDate": "2025-10-15",
+    "timePlayed": 3600,
+    "ownership": "owned",
+    "isReplay": false
+  }
+}

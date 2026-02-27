@@ -1,0 +1,21 @@
+meta {
+  name: Get My Play Logs
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/me/plays?page=0&size=20&sort=updatedAt,desc
+  body: none
+  auth: bearer
+}
+
+query {
+  page: 0
+  size: 20
+  sort: updatedAt,desc
+}
+
+auth:bearer {
+  token: {{token}}
+}

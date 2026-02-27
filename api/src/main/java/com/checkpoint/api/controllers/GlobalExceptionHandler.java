@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,6 +25,7 @@ import com.checkpoint.api.exceptions.GameNotInBacklogException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
+import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 
 /**
  * Global exception handler for REST controllers.
@@ -215,6 +217,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles PlayLogNotFoundException when a play log is not found.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(PlayLogNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePlayLogNotFound(PlayLogNotFoundException ex) {
+        log.warn("Play log not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    /**
      * Handles missing required request parameters.
      *
      * @param ex the exception
@@ -352,6 +373,27 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /**
+     * Handles type mismatches for path variables and request parameters (e.g., String to UUID).
+     *
+     * @param ex the exception
+     * @return error response with 400 status
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        String message = String.format("Type mismatch for parameter '%s'. Failed to convert value to required type.", ex.getName());
+        log.warn("Type mismatch error: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                message,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     /**

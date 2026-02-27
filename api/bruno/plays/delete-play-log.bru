@@ -1,0 +1,19 @@
+meta {
+  name: Delete Play Log
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/me/plays/:playId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  playId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
