@@ -28,8 +28,9 @@ export function RegisterForm({
       const pseudo = formData.get('pseudo')?.toString().trim() ?? ''
       const email = formData.get('email')?.toString().trim() ?? ''
       const password = formData.get('password')?.toString() ?? ''
+      const confirmPassword = formData.get('confirmPassword')?.toString() ?? ''
 
-      if (!pseudo || !email || !password) {
+      if (!pseudo || !email || !password || !confirmPassword) {
         return 'All fields are required.'
       }
 
@@ -37,11 +38,15 @@ export function RegisterForm({
         return 'Password must be at least 8 characters long.'
       }
 
+      if (password !== confirmPassword) {
+        return 'Passwords do not match.'
+      }
+
       try {
         const res = await apiFetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pseudo, email, password }),
+          body: JSON.stringify({ pseudo, email, password, confirmPassword }),
         })
 
         if (!res.ok) {
@@ -99,6 +104,20 @@ export function RegisterForm({
                   name="password"
                   type="password"
                   placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="confirmPassword">
+                  Confirm password
+                </FieldLabel>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Repeat your password"
                   autoComplete="new-password"
                   minLength={8}
                   required

@@ -19,6 +19,7 @@ import com.checkpoint.api.exceptions.GameAlreadyInLibraryException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInLibraryException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
 
 /**
  * Global exception handler for REST controllers.
@@ -195,11 +196,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles authentication failures (invalid credentials, expired tokens, etc.).
+     * Handles RegistrationConflictException when a registration attempt uses a
+     * duplicate email or pseudo.
      *
      * @param ex the exception
-     * @return error response with 401 status
+     * @return error response with 409 status
      */
+    @ExceptionHandler(RegistrationConflictException.class)
+    public ResponseEntity<ErrorResponse> handleRegistrationConflict(RegistrationConflictException ex) {
+        log.warn("Registration conflict: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     /**
      * Handles InvalidTokenException when a password reset token is invalid or expired.
      *

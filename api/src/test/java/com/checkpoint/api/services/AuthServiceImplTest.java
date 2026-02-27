@@ -16,6 +16,7 @@ import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.entities.PasswordResetToken;
 import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.repositories.PasswordResetTokenRepository;
 import com.checkpoint.api.services.EmailService;
 
@@ -185,7 +186,7 @@ class AuthServiceImplTest {
         @DisplayName("Should successfully register a new user")
         void shouldRegisterNewUser() {
             // Given
-            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123", "password123");
             Role role = new Role("USER");
 
             when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
@@ -203,7 +204,7 @@ class AuthServiceImplTest {
         @Test
         @DisplayName("Should create USER role if it does not exist")
         void shouldCreateRoleIfNotFound() {
-            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123", "password123");
             Role newRole = new Role("USER");
 
             when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
@@ -219,26 +220,39 @@ class AuthServiceImplTest {
         }
 
         @Test
-        @DisplayName("Should throw exception if email exists")
+        @DisplayName("Should throw RegistrationConflictException if email exists")
         void shouldThrowIfEmailExists() {
-            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123", "password123");
             when(userRepository.existsByEmail("test@test.com")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(request))
-                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .isInstanceOf(RegistrationConflictException.class)
                     .hasMessageContaining("Email is already in use");
         }
 
         @Test
-        @DisplayName("Should throw exception if pseudo exists")
+        @DisplayName("Should throw RegistrationConflictException if pseudo exists")
         void shouldThrowIfPseudoExists() {
-            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123");
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123", "password123");
             when(userRepository.existsByEmail("test@test.com")).thenReturn(false);
             when(userRepository.existsByPseudo("newuser")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(request))
-                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .isInstanceOf(RegistrationConflictException.class)
                     .hasMessageContaining("Pseudo is already in use");
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException if passwords do not match")
+        void shouldThrowIfPasswordsMismatch() {
+            RegisterRequestDto request = new RegisterRequestDto("newuser", "test@test.com", "password123", "different123");
+
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Passwords do not match");
+
+            verify(userRepository, never()).existsByEmail(any());
+            verify(userRepository, never()).save(any());
         }
     }
 
