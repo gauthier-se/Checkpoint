@@ -1,0 +1,76 @@
+meta {
+  name: Get My Wishlist
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/me/wishlist
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+  ~sort: createdAt,desc
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get My Wishlist
+
+  Returns the authenticated user's wishlist, paginated.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 100) |
+  | sort | createdAt,desc | Sort field and direction |
+
+  ## Sort Options
+
+  - `createdAt,desc` — Most recently added first
+  - `createdAt,asc` — Oldest first
+  - `title,asc` — By game title A-Z
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "videoGameId": "uuid",
+        "title": "Game Title",
+        "coverUrl": "https://...",
+        "releaseDate": "2025-01-15",
+        "addedAt": "2025-06-01T10:00:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 5,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}
