@@ -1,0 +1,52 @@
+meta {
+  name: Add Game to Backlog
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/me/backlog/:gameId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  gameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Add Game to Backlog
+
+  Adds a video game to the authenticated user's backlog.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **gameId**: The UUID of the video game to add to the backlog
+
+  ## Response (201 Created)
+
+  ```json
+  {
+    "id": "uuid",
+    "videoGameId": "uuid",
+    "title": "Game Title",
+    "coverUrl": "https://...",
+    "releaseDate": "2025-01-15",
+    "addedAt": "2025-06-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Video game does not exist
+  - **409 Conflict**: Game already in backlog
+}
