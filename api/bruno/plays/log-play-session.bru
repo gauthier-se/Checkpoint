@@ -1,0 +1,28 @@
+meta {
+  name: Log Play (Create)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/me/plays
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "videoGameId": "9ca266dd-0852-4748-ab5d-f7cf575e9d7a",
+    "platformId": "04e0e992-48ad-4e35-b023-5f7c88892ce5",
+    "status": "ARE_PLAYING",
+    "startDate": "2025-10-01",
+    "endDate": null,
+    "timePlayed": 120,
+    "ownership": "owned",
+    "isReplay": false
+  }
+}
