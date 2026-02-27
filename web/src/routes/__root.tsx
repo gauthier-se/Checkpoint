@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -57,20 +58,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         ></script>
       </head>
       <body>
-        {children}
-        <Toaster richColors closeButton position="top-right" />
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-        <Scripts />
+        <TooltipProvider>
+          {children}
+          <Toaster richColors closeButton position="top-right" />
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+          <Scripts />
+        </TooltipProvider>
       </body>
     </html>
   )
