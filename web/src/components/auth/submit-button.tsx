@@ -1,12 +1,20 @@
 import { useFormStatus } from 'react-dom'
 import { Button } from '@/components/ui/button'
 
-export function SubmitButton() {
+interface SubmitButtonProps {
+  label?: string
+  pendingLabel?: string
+}
+
+export function SubmitButton({
+  label = 'Login',
+  pendingLabel = 'Signing in...',
+}: SubmitButtonProps) {
   const { pending } = useFormStatus()
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? 'Signing in...' : 'Login'}
+      {pending ? pendingLabel : label}
     </Button>
   )
 }

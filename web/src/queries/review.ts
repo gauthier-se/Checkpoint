@@ -1,6 +1,6 @@
-import { apiFetch } from '@/services/api'
-import type { Review, ReviewsResponse } from '@/types/review'
 import { queryOptions } from '@tanstack/react-query'
+import type { Review, ReviewsResponse } from '@/types/review'
+import { apiFetch } from '@/services/api'
 
 export const gameReviewsQueryOptions = (
   gameId: string,
