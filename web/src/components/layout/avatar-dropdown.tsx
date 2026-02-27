@@ -39,7 +39,11 @@ export function AvatarDropdown({ user }: { user: User }) {
             <Link to="/profile">Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/$username/games" params={{ username: user.username }}>
+            <Link
+              to="/$username/games"
+              params={{ username: user.username }}
+              search={{ tab: 'library', page: 1 }}
+            >
               My Games
             </Link>
           </DropdownMenuItem>

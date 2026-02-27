@@ -1,0 +1,233 @@
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { Library } from 'lucide-react'
+import { useState } from 'react'
+import type { GameStatus, LibraryResponse } from '@/types/library'
+import { CollectionGameCard } from '@/components/collection/collection-game-card'
+import { CollectionPagination } from '@/components/collection/collection-pagination'
+import { EmptyState } from '@/components/collection/empty-state'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { apiFetch } from '@/services/api'
+
+const PAGE_SIZE = 20
+
+export function libraryQuery(page: number) {
+  return queryOptions({
+    queryKey: ['library', 'me', page],
+    queryFn: async (): Promise<LibraryResponse> => {
+      const apiPage = page - 1
+      const res = await apiFetch(
+        `/api/me/library?page=${apiPage}&size=${PAGE_SIZE}`,
+      )
+      if (!res.ok) throw new Error('Failed to load library')
+      return res.json()
+    },
+  })
+}
+
+const STATUS_LABELS: Record<GameStatus, string> = {
+  PLAYING: 'Playing',
+  COMPLETED: 'Completed',
+  BACKLOG: 'Backlog',
+  DROPPED: 'Dropped',
+}
+
+const STATUS_COLORS: Record<GameStatus, string> = {
+  PLAYING: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+  COMPLETED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  BACKLOG: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+  DROPPED: 'bg-red-500/15 text-red-400 border-red-500/20',
+}
+
+const ALL_STATUSES: Array<GameStatus | 'ALL'> = [
+  'ALL',
+  'PLAYING',
+  'COMPLETED',
+  'BACKLOG',
+  'DROPPED',
+]
+
+interface LibraryTabProps {
+  page: number
+}
+
+export function LibraryTab({ page }: LibraryTabProps) {
+  const { data, isLoading, isError } = useQuery(libraryQuery(page))
+  const queryClient = useQueryClient()
+  const [filter, setFilter] = useState<GameStatus | 'ALL'>('ALL')
+
+  const filteredGames = (data?.content ?? []).filter(
+    (game) => filter === 'ALL' || game.status === filter,
+  )
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({
+      gameId,
+      status,
+    }: {
+      gameId: string
+      status: GameStatus
+    }) => {
+      const res = await apiFetch(`/api/me/library/${gameId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ videoGameId: gameId, status }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) throw new Error('Failed to update status')
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
+    },
+  })
+
+  const removeGameMutation = useMutation({
+    mutationFn: async (gameId: string) => {
+      const res = await apiFetch(`/api/me/library/${gameId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Failed to remove game')
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
+    },
+  })
+
+  return (
+    <div>
+      {/* Status filter */}
+      <div className="mb-6 flex items-center gap-3">
+        <span className="text-sm font-medium text-muted-foreground">
+          Filter:
+        </span>
+        <ButtonGroup>
+          {ALL_STATUSES.map((status) => (
+            <Button
+              key={status}
+              variant={filter === status ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter(status)}
+            >
+              {status === 'ALL' ? 'All' : STATUS_LABELS[status]}
+            </Button>
+          ))}
+        </ButtonGroup>
+      </div>
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2 rounded-lg border p-3">
+              <div className="aspect-[3/4] animate-pulse rounded-md bg-muted" />
+              <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {(isError || (!isLoading && !data)) && (
+        <EmptyState
+          icon={<Library className="size-12" />}
+          title="Unable to load library"
+          description="Something went wrong loading your library. Please try again later."
+        />
+      )}
+
+      {/* Games grid */}
+      {data && filteredGames.length === 0 && (
+        <EmptyState
+          icon={<Library className="size-12" />}
+          title="No games found"
+          description={
+            filter === 'ALL'
+              ? 'Your library is empty. Browse games to start building your collection!'
+              : `No games with status "${STATUS_LABELS[filter]}".`
+          }
+          actionLabel={filter === 'ALL' ? 'Browse Games' : undefined}
+          actionTo={filter === 'ALL' ? '/games' : undefined}
+        />
+      )}
+
+      {data && filteredGames.length > 0 && (
+        <>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {filteredGames.map((game) => (
+              <CollectionGameCard
+                key={game.id}
+                videoGameId={game.videoGameId}
+                title={game.title}
+                coverUrl={game.coverUrl}
+              >
+                <Badge
+                  className={`${STATUS_COLORS[game.status]} mt-1 text-[11px]`}
+                >
+                  {STATUS_LABELS[game.status]}
+                </Badge>
+                <div className="mt-auto flex gap-1 pt-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        Change Status
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {(['PLAYING', 'COMPLETED', 'BACKLOG', 'DROPPED'] as const)
+                        .filter((s) => s !== game.status)
+                        .map((s) => (
+                          <DropdownMenuItem
+                            key={s}
+                            onClick={() =>
+                              updateStatusMutation.mutate({
+                                gameId: game.videoGameId,
+                                status: s,
+                              })
+                            }
+                          >
+                            {STATUS_LABELS[s]}
+                          </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:text-destructive"
+                    disabled={removeGameMutation.isPending}
+                    onClick={() => removeGameMutation.mutate(game.videoGameId)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </CollectionGameCard>
+            ))}
+          </div>
+          <CollectionPagination
+            tab="library"
+            page={page}
+            totalPages={data.metadata.totalPages}
+            hasNext={data.metadata.hasNext}
+            hasPrevious={data.metadata.hasPrevious}
+          />
+        </>
+      )}
+    </div>
+  )
+}
