@@ -48,7 +48,8 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
                 playLog.getCreatedAt(),
                 playLog.getUpdatedAt(),
                 hasReview,
-                reviewPreview
+                reviewPreview,
+                playLog.getScore()
         );
     }
 
@@ -76,6 +77,7 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
         playLog.setEndDate(request.endDate());
         playLog.setTimePlayed(request.timePlayed());
         playLog.setOwnership(request.ownership());
+        playLog.setScore(request.score());
 
         return playLog;
     }
@@ -108,5 +110,6 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
         playLog.setEndDate(request.endDate());
         playLog.setTimePlayed(request.timePlayed());
         playLog.setOwnership(request.ownership());
+        playLog.setScore(request.score());
     }
 }

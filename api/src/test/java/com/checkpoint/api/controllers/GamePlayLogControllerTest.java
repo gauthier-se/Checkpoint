@@ -77,13 +77,13 @@ class GamePlayLogControllerTest {
             UUID playId = UUID.randomUUID();
 
             GamePlayLogRequestDto request = new GamePlayLogRequestDto(
-                    videoGameId, platformId, PlayStatus.ARE_PLAYING, LocalDate.now(), null, 120, "owned", false
+                    videoGameId, platformId, PlayStatus.ARE_PLAYING, LocalDate.now(), null, 120, "owned", false, null
             );
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
                     playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
                     PlayStatus.ARE_PLAYING, false, 120, LocalDate.now(), null, "owned",
-                    LocalDateTime.now(), LocalDateTime.now(), null, null
+                    LocalDateTime.now(), LocalDateTime.now(), null, null, null
             );
 
             when(gamePlayLogService.logPlay(eq("user@example.com"), any(GamePlayLogRequestDto.class)))
@@ -105,7 +105,7 @@ class GamePlayLogControllerTest {
         void logPlay_shouldReturn400WhenMissingFields() throws Exception {
             // Given
             GamePlayLogRequestDto request = new GamePlayLogRequestDto(
-                    null, null, null, null, null, null, null, null
+                    null, null, null, null, null, null, null, null, null
             );
 
             // When / Then
@@ -130,13 +130,13 @@ class GamePlayLogControllerTest {
             UUID playId = UUID.randomUUID();
 
             GamePlayLogRequestDto request = new GamePlayLogRequestDto(
-                    videoGameId, platformId, PlayStatus.COMPLETED, LocalDate.now(), LocalDate.now(), 2000, "owned", false
+                    videoGameId, platformId, PlayStatus.COMPLETED, LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
             );
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
                     playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                    LocalDateTime.now(), LocalDateTime.now(), null, null
+                    LocalDateTime.now(), LocalDateTime.now(), null, null, null
             );
 
             when(gamePlayLogService.updatePlayLog(eq("user@example.com"), eq(playId), any(GamePlayLogRequestDto.class)))
@@ -161,7 +161,7 @@ class GamePlayLogControllerTest {
             UUID playId = UUID.randomUUID();
 
             GamePlayLogRequestDto request = new GamePlayLogRequestDto(
-                    videoGameId, platformId, PlayStatus.COMPLETED, LocalDate.now(), LocalDate.now(), 2000, "owned", false
+                    videoGameId, platformId, PlayStatus.COMPLETED, LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
             );
 
             when(gamePlayLogService.updatePlayLog(eq("user@example.com"), eq(playId), any(GamePlayLogRequestDto.class)))
@@ -223,7 +223,7 @@ class GamePlayLogControllerTest {
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
                     playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                    LocalDateTime.now(), LocalDateTime.now(), null, null
+                    LocalDateTime.now(), LocalDateTime.now(), null, null, null
             );
 
             Page<GamePlayLogResponseDto> page = new PageImpl<>(List.of(response));
@@ -256,7 +256,7 @@ class GamePlayLogControllerTest {
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
                     playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                    LocalDateTime.now(), LocalDateTime.now(), null, null
+                    LocalDateTime.now(), LocalDateTime.now(), null, null, null
             );
 
             when(gamePlayLogService.getGamePlayHistory("user@example.com", videoGameId))

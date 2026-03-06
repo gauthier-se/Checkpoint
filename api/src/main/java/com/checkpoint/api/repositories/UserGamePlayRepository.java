@@ -1,6 +1,7 @@
 package com.checkpoint.api.repositories;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -44,4 +45,23 @@ public interface UserGamePlayRepository extends JpaRepository<UserGamePlay, UUID
      * Counts the number of play entries for a specific user and game.
      */
     long countByUserIdAndVideoGameId(UUID userId, UUID videoGameId);
+
+    /**
+     * Finds the most recent play log with a non-null score for a specific user and game.
+     * Used to recalculate the global rating after a scored log is updated or deleted.
+     *
+     * @param userId      the user ID
+     * @param videoGameId the video game ID
+     * @return the most recent scored play log, if any
+     */
+    @Query("""
+            SELECT p FROM UserGamePlay p
+            WHERE p.user.id = :userId
+              AND p.videoGame.id = :videoGameId
+              AND p.score IS NOT NULL
+            ORDER BY p.createdAt DESC
+            LIMIT 1
+            """)
+    Optional<UserGamePlay> findMostRecentScoredPlay(@Param("userId") UUID userId,
+                                                     @Param("videoGameId") UUID videoGameId);
 }
