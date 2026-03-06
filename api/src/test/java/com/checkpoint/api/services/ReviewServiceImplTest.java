@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,16 +25,27 @@ import org.springframework.data.domain.Pageable;
 
 import com.checkpoint.api.dto.catalog.ReviewRequestDto;
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
+import com.checkpoint.api.dto.catalog.ReviewUserDto;
+import com.checkpoint.api.entities.Platform;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.PlayStatus;
 import com.checkpoint.api.exceptions.GameNotFoundException;
+import com.checkpoint.api.exceptions.PlayLogNotFoundException;
+import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
+import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.mapper.ReviewMapper;
 import com.checkpoint.api.repositories.ReviewRepository;
+import com.checkpoint.api.repositories.UserGamePlayRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
 import com.checkpoint.api.services.impl.ReviewServiceImpl;
 
+/**
+ * Unit tests for {@link ReviewServiceImpl}.
+ */
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
 
@@ -47,19 +59,28 @@ class ReviewServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserGamePlayRepository userGamePlayRepository;
+
+    @Mock
     private ReviewMapper reviewMapper;
 
     private ReviewServiceImpl reviewService;
 
     private User testUser;
     private VideoGame testGame;
+    private Platform testPlatform;
+    private UserGamePlay testPlayLog;
     private UUID gameId;
+    private UUID playId;
 
     @BeforeEach
     void setUp() {
-        reviewService = new ReviewServiceImpl(reviewRepository, videoGameRepository, userRepository, reviewMapper);
+        reviewService = new ReviewServiceImpl(
+                reviewRepository, videoGameRepository, userRepository,
+                userGamePlayRepository, reviewMapper);
 
         gameId = UUID.randomUUID();
+        playId = UUID.randomUUID();
 
         testUser = new User();
         testUser.setId(UUID.randomUUID());
@@ -69,76 +90,13 @@ class ReviewServiceImplTest {
         testGame = new VideoGame();
         testGame.setId(gameId);
         testGame.setTitle("Test Game");
-    }
 
-    @Nested
-    @DisplayName("addOrUpdateReview()")
-    class AddOrUpdateReview {
+        testPlatform = new Platform();
+        testPlatform.setId(UUID.randomUUID());
+        testPlatform.setName("PC");
 
-        @Test
-        @DisplayName("Should create a new review if none exists")
-        void shouldCreateNewReview() {
-            // Given
-            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
-            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(videoGameRepository.findById(gameId)).thenReturn(Optional.of(testGame));
-            when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), gameId)).thenReturn(Optional.empty());
-
-            Review savedReview = new Review("Great game!", false, testUser, testGame);
-            savedReview.setId(UUID.randomUUID());
-            when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
-
-            ReviewResponseDto responseDto = new ReviewResponseDto(savedReview.getId(), "Great game!", false, null, null, null);
-            when(reviewMapper.toDto(savedReview)).thenReturn(responseDto);
-
-            // When
-            ReviewResponseDto result = reviewService.addOrUpdateReview(testUser.getEmail(), gameId, requestDto);
-
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.content()).isEqualTo("Great game!");
-            verify(reviewRepository).save(any(Review.class));
-        }
-
-        @Test
-        @DisplayName("Should update an existing review if one exists")
-        void shouldUpdateExistingReview() {
-            // Given
-            Review existingReview = new Review("Okay game", false, testUser, testGame);
-            existingReview.setId(UUID.randomUUID());
-
-            ReviewRequestDto requestDto = new ReviewRequestDto("Actually, it's better", true);
-            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(videoGameRepository.findById(gameId)).thenReturn(Optional.of(testGame));
-            when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), gameId)).thenReturn(Optional.of(existingReview));
-
-            when(reviewRepository.save(existingReview)).thenReturn(existingReview);
-
-            ReviewResponseDto responseDto = new ReviewResponseDto(existingReview.getId(), "Actually, it's better", true, null, null, null);
-            when(reviewMapper.toDto(existingReview)).thenReturn(responseDto);
-
-            // When
-            ReviewResponseDto result = reviewService.addOrUpdateReview(testUser.getEmail(), gameId, requestDto);
-
-            // Then
-            assertThat(result).isNotNull();
-            assertThat(result.content()).isEqualTo("Actually, it's better");
-            assertThat(existingReview.getContent()).isEqualTo("Actually, it's better");
-            verify(reviewRepository).save(existingReview);
-        }
-
-        @Test
-        @DisplayName("Should throw GameNotFoundException when video game does not exist")
-        void shouldThrowExceptionWhenGameNotFound() {
-            // Given
-            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
-            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(videoGameRepository.findById(gameId)).thenReturn(Optional.empty());
-
-            // When & Then
-            assertThatThrownBy(() -> reviewService.addOrUpdateReview(testUser.getEmail(), gameId, requestDto))
-                    .isInstanceOf(GameNotFoundException.class);
-        }
+        testPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
+        testPlayLog.setId(playId);
     }
 
     @Nested
@@ -147,16 +105,20 @@ class ReviewServiceImplTest {
 
         @Test
         @DisplayName("Should return a paginated list of reviews")
-        void shouldReturnPaginatedReviews() {
+        void getGameReviews_shouldReturnPaginatedReviews() {
             // Given
             Pageable pageable = PageRequest.of(0, 10);
-            Review review = new Review("Good", false, testUser, testGame);
+            Review review = new Review("Good", false, testUser, testGame, testPlayLog);
             Page<Review> reviewPage = new PageImpl<>(List.of(review));
 
             when(videoGameRepository.existsById(gameId)).thenReturn(true);
             when(reviewRepository.findByVideoGameId(gameId, pageable)).thenReturn(reviewPage);
 
-            ReviewResponseDto responseDto = new ReviewResponseDto(UUID.randomUUID(), "Good", false, null, null, null);
+            ReviewResponseDto responseDto = new ReviewResponseDto(
+                    UUID.randomUUID(), "Good", false,
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    playId, "PC", PlayStatus.COMPLETED, false);
             when(reviewMapper.toDto(review)).thenReturn(responseDto);
 
             // When
@@ -167,72 +129,235 @@ class ReviewServiceImplTest {
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).content()).isEqualTo("Good");
         }
-    }
-
-    @Nested
-    @DisplayName("deleteReview()")
-    class DeleteReview {
 
         @Test
-        @DisplayName("Should delete a review without touching ratings")
-        void shouldDeleteReview() {
+        @DisplayName("Should throw GameNotFoundException when game does not exist")
+        void getGameReviews_shouldThrowWhenGameNotFound() {
             // Given
-            Review existingReview = new Review("Good", false, testUser, testGame);
-            existingReview.setId(UUID.randomUUID());
+            Pageable pageable = PageRequest.of(0, 10);
+            when(videoGameRepository.existsById(gameId)).thenReturn(false);
 
-            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), gameId))
-                    .thenReturn(Optional.of(existingReview));
-
-            // When
-            reviewService.deleteReview(testUser.getEmail(), gameId);
-
-            // Then
-            verify(reviewRepository).delete(existingReview);
+            // When / Then
+            assertThatThrownBy(() -> reviewService.getGameReviews(gameId, pageable))
+                    .isInstanceOf(GameNotFoundException.class);
         }
     }
 
     @Nested
-    @DisplayName("getReviewByUserAndGame()")
-    class GetReviewByUserAndGame {
+    @DisplayName("createPlayLogReview()")
+    class CreatePlayLogReview {
 
         @Test
-        @DisplayName("Should return review when it exists")
-        void shouldReturnReviewWhenExists() {
+        @DisplayName("Should create a review for a play log")
+        void createPlayLogReview_shouldCreateReview() {
             // Given
-            Review review = new Review("Great game!", false, testUser, testGame);
-            review.setId(UUID.randomUUID());
-
+            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(videoGameRepository.existsById(gameId)).thenReturn(true);
-            when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), gameId))
-                    .thenReturn(Optional.of(review));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.existsByUserGamePlayId(playId)).thenReturn(false);
 
-            ReviewResponseDto responseDto = new ReviewResponseDto(review.getId(), "Great game!", false, null, null, null);
-            when(reviewMapper.toDto(review)).thenReturn(responseDto);
+            Review savedReview = new Review("Great game!", false, testUser, testGame, testPlayLog);
+            savedReview.setId(UUID.randomUUID());
+            when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
+
+            ReviewResponseDto responseDto = new ReviewResponseDto(
+                    savedReview.getId(), "Great game!", false,
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    playId, "PC", PlayStatus.COMPLETED, false);
+            when(reviewMapper.toDto(savedReview)).thenReturn(responseDto);
 
             // When
-            ReviewResponseDto result = reviewService.getReviewByUserAndGame(testUser.getEmail(), gameId);
+            ReviewResponseDto result = reviewService.createPlayLogReview(
+                    testUser.getEmail(), playId, requestDto);
 
             // Then
             assertThat(result).isNotNull();
             assertThat(result.content()).isEqualTo("Great game!");
+            assertThat(result.playLogId()).isEqualTo(playId);
+            verify(reviewRepository).save(any(Review.class));
         }
 
         @Test
-        @DisplayName("Should return null when no review exists")
-        void shouldReturnNullWhenNoReviewExists() {
+        @DisplayName("Should throw ReviewAlreadyExistsException when play log already has a review")
+        void createPlayLogReview_shouldThrowWhenReviewAlreadyExists() {
             // Given
+            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-            when(videoGameRepository.existsById(gameId)).thenReturn(true);
-            when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), gameId))
-                    .thenReturn(Optional.empty());
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.existsByUserGamePlayId(playId)).thenReturn(true);
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.createPlayLogReview(
+                    testUser.getEmail(), playId, requestDto))
+                    .isInstanceOf(ReviewAlreadyExistsException.class);
+        }
+
+        @Test
+        @DisplayName("Should throw PlayLogNotFoundException when play log does not exist")
+        void createPlayLogReview_shouldThrowWhenPlayLogNotFound() {
+            // Given
+            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.createPlayLogReview(
+                    testUser.getEmail(), playId, requestDto))
+                    .isInstanceOf(PlayLogNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("Should throw PlayLogNotFoundException when play log belongs to another user")
+        void createPlayLogReview_shouldThrowWhenPlayLogNotOwnedByUser() {
+            // Given
+            ReviewRequestDto requestDto = new ReviewRequestDto("Great game!", false);
+            User otherUser = new User();
+            otherUser.setId(UUID.randomUUID());
+            testPlayLog.setUser(otherUser);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.createPlayLogReview(
+                    testUser.getEmail(), playId, requestDto))
+                    .isInstanceOf(PlayLogNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("updatePlayLogReview()")
+    class UpdatePlayLogReview {
+
+        @Test
+        @DisplayName("Should update the review of a play log")
+        void updatePlayLogReview_shouldUpdateReview() {
+            // Given
+            ReviewRequestDto requestDto = new ReviewRequestDto("Updated review", true);
+            Review existingReview = new Review("Old content", false, testUser, testGame, testPlayLog);
+            existingReview.setId(UUID.randomUUID());
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.of(existingReview));
+            when(reviewRepository.save(existingReview)).thenReturn(existingReview);
+
+            ReviewResponseDto responseDto = new ReviewResponseDto(
+                    existingReview.getId(), "Updated review", true,
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    playId, "PC", PlayStatus.COMPLETED, false);
+            when(reviewMapper.toDto(existingReview)).thenReturn(responseDto);
 
             // When
-            ReviewResponseDto result = reviewService.getReviewByUserAndGame(testUser.getEmail(), gameId);
+            ReviewResponseDto result = reviewService.updatePlayLogReview(
+                    testUser.getEmail(), playId, requestDto);
 
             // Then
-            assertThat(result).isNull();
+            assertThat(result).isNotNull();
+            assertThat(result.content()).isEqualTo("Updated review");
+            assertThat(result.haveSpoilers()).isTrue();
+            assertThat(existingReview.getContent()).isEqualTo("Updated review");
+            assertThat(existingReview.getHaveSpoilers()).isTrue();
+            verify(reviewRepository).save(existingReview);
+        }
+
+        @Test
+        @DisplayName("Should throw ReviewNotFoundException when no review exists for play log")
+        void updatePlayLogReview_shouldThrowWhenReviewNotFound() {
+            // Given
+            ReviewRequestDto requestDto = new ReviewRequestDto("Updated review", true);
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.updatePlayLogReview(
+                    testUser.getEmail(), playId, requestDto))
+                    .isInstanceOf(ReviewNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("deletePlayLogReview()")
+    class DeletePlayLogReview {
+
+        @Test
+        @DisplayName("Should delete the review of a play log")
+        void deletePlayLogReview_shouldDeleteReview() {
+            // Given
+            Review existingReview = new Review("Some review", false, testUser, testGame, testPlayLog);
+            existingReview.setId(UUID.randomUUID());
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.of(existingReview));
+
+            // When
+            reviewService.deletePlayLogReview(testUser.getEmail(), playId);
+
+            // Then
+            verify(reviewRepository).delete(existingReview);
+        }
+
+        @Test
+        @DisplayName("Should throw ReviewNotFoundException when no review exists for play log")
+        void deletePlayLogReview_shouldThrowWhenReviewNotFound() {
+            // Given
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.deletePlayLogReview(testUser.getEmail(), playId))
+                    .isInstanceOf(ReviewNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("getPlayLogReview()")
+    class GetPlayLogReview {
+
+        @Test
+        @DisplayName("Should return the review of a play log")
+        void getPlayLogReview_shouldReturnReview() {
+            // Given
+            Review review = new Review("Great game!", false, testUser, testGame, testPlayLog);
+            review.setId(UUID.randomUUID());
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.of(review));
+
+            ReviewResponseDto responseDto = new ReviewResponseDto(
+                    review.getId(), "Great game!", false,
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    playId, "PC", PlayStatus.COMPLETED, false);
+            when(reviewMapper.toDto(review)).thenReturn(responseDto);
+
+            // When
+            ReviewResponseDto result = reviewService.getPlayLogReview(
+                    testUser.getEmail(), playId);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.content()).isEqualTo("Great game!");
+            assertThat(result.playLogId()).isEqualTo(playId);
+        }
+
+        @Test
+        @DisplayName("Should throw ReviewNotFoundException when no review exists for play log")
+        void getPlayLogReview_shouldThrowWhenReviewNotFound() {
+            // Given
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(playId)).thenReturn(Optional.of(testPlayLog));
+            when(reviewRepository.findByUserGamePlayId(playId)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> reviewService.getPlayLogReview(testUser.getEmail(), playId))
+                    .isInstanceOf(ReviewNotFoundException.class);
         }
     }
 }
