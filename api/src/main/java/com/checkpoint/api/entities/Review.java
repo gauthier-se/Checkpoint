@@ -18,9 +18,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "reviews")
+@Table(name = "reviews", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "user_game_play_id")
+})
 public class Review {
 
     @Id
@@ -48,6 +51,11 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_game_id", nullable = false)
     private VideoGame videoGame;
+
+    // Relationship: Review is optionally tied to a play log entry
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_game_play_id")
+    private UserGamePlay userGamePlay;
 
     // Relationship: Review can have multiple comments
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,6 +87,14 @@ public class Review {
         this.haveSpoilers = haveSpoilers;
         this.user = user;
         this.videoGame = videoGame;
+    }
+
+    public Review(String content, Boolean haveSpoilers, User user, VideoGame videoGame, UserGamePlay userGamePlay) {
+        this.content = content;
+        this.haveSpoilers = haveSpoilers;
+        this.user = user;
+        this.videoGame = videoGame;
+        this.userGamePlay = userGamePlay;
     }
 
     public UUID getId() {
@@ -135,6 +151,14 @@ public class Review {
 
     public void setVideoGame(VideoGame videoGame) {
         this.videoGame = videoGame;
+    }
+
+    public UserGamePlay getUserGamePlay() {
+        return userGamePlay;
+    }
+
+    public void setUserGamePlay(UserGamePlay userGamePlay) {
+        this.userGamePlay = userGamePlay;
     }
 
     public Set<Comment> getComments() {

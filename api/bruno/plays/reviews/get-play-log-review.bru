@@ -1,0 +1,19 @@
+meta {
+  name: Get Play Log Review
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/me/plays/:playId/review
+  body: none
+  auth: bearer
+}
+
+params:path {
+  playId: b4c0be35-1759-4db2-ad35-57e56406078c
+}
+
+auth:bearer {
+  token: {{token}}
+}

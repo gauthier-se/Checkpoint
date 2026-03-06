@@ -90,7 +90,7 @@ class GamePlayLogServiceImplTest {
                 testPlayLog.getId(), testGame.getId(), testGame.getTitle(), null,
                 testPlatform.getId(), testPlatform.getName(), PlayStatus.COMPLETED,
                 false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                LocalDateTime.now(), LocalDateTime.now()
+                LocalDateTime.now(), LocalDateTime.now(), null, null
         );
 
         testRequestDto = new GamePlayLogRequestDto(

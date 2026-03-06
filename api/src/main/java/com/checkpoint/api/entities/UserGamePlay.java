@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.checkpoint.api.enums.PlayStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -70,6 +72,10 @@ public class UserGamePlay {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "platform_id", nullable = false)
     private Platform platform;
+
+    // Relationship: UserGamePlay can have one optional review
+    @OneToOne(mappedBy = "userGamePlay", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Review review;
 
     @PrePersist
     protected void onCreate() {
@@ -191,5 +197,13 @@ public class UserGamePlay {
 
     public void setPlatform(Platform platform) {
         this.platform = platform;
+    }
+
+    public Review getReview() {
+        return review;
+    }
+
+    public void setReview(Review review) {
+        this.review = review;
     }
 }

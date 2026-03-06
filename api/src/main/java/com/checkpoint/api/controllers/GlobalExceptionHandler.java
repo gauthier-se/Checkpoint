@@ -28,6 +28,8 @@ import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.exceptions.RateNotFoundException;
+import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
+import com.checkpoint.api.exceptions.ReviewNotFoundException;
 
 /**
  * Global exception handler for REST controllers.
@@ -258,6 +260,47 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    /**
+     * Handles ReviewNotFoundException when a review is not found for a play log.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReviewNotFound(ReviewNotFoundException ex) {
+        log.warn("Review not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles ReviewAlreadyExistsException when a play log already has a review.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleReviewAlreadyExists(ReviewAlreadyExistsException ex) {
+        log.warn("Review already exists: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     /**
      * Handles RateNotFoundException when a rating is not found for a user and game.
      *

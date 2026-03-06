@@ -34,4 +34,20 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
      */
     Page<Review> findByVideoGameId(UUID videoGameId, Pageable pageable);
 
+    /**
+     * Finds a review by its associated play log ID.
+     *
+     * @param userGamePlayId the play log ID
+     * @return an optional containing the review if found
+     */
+    Optional<Review> findByUserGamePlayId(UUID userGamePlayId);
+
+    /**
+     * Checks whether a review exists for a specific play log.
+     *
+     * @param userGamePlayId the play log ID
+     * @return true if a review exists for the play log
+     */
+    boolean existsByUserGamePlayId(UUID userGamePlayId);
+
 }

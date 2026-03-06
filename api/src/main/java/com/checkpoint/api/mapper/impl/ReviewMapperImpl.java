@@ -6,7 +6,11 @@ import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.catalog.ReviewUserDto;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.entities.UserGamePlay;
+import com.checkpoint.api.enums.PlayStatus;
 import com.checkpoint.api.mapper.ReviewMapper;
+
+import java.util.UUID;
 
 /**
  * Implementation of {@link ReviewMapper}.
@@ -30,13 +34,30 @@ public class ReviewMapperImpl implements ReviewMapper {
             );
         }
 
+        UUID playLogId = null;
+        String platformName = null;
+        PlayStatus playStatus = null;
+        Boolean isReplay = null;
+
+        UserGamePlay playLog = review.getUserGamePlay();
+        if (playLog != null) {
+            playLogId = playLog.getId();
+            platformName = playLog.getPlatform() != null ? playLog.getPlatform().getName() : null;
+            playStatus = playLog.getStatus();
+            isReplay = playLog.getIsReplay();
+        }
+
         return new ReviewResponseDto(
                 review.getId(),
                 review.getContent(),
                 review.getHaveSpoilers(),
                 review.getCreatedAt(),
                 review.getUpdatedAt(),
-                userDto
+                userDto,
+                playLogId,
+                platformName,
+                playStatus,
+                isReplay
         );
     }
 }

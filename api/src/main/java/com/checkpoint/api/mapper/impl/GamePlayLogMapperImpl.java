@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.checkpoint.api.dto.playlog.GamePlayLogRequestDto;
 import com.checkpoint.api.dto.playlog.GamePlayLogResponseDto;
+import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.mapper.GamePlayLogMapper;
 import com.checkpoint.api.enums.PlayStatus;
@@ -15,6 +16,20 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
     public GamePlayLogResponseDto toDto(UserGamePlay playLog) {
         if (playLog == null) {
             return null;
+        }
+
+        Boolean hasReview = null;
+        String reviewPreview = null;
+
+        Review review = playLog.getReview();
+        if (review != null) {
+            hasReview = true;
+            String content = review.getContent();
+            if (content != null && !content.isEmpty()) {
+                reviewPreview = content.length() > 100 ? content.substring(0, 100) : content;
+            }
+        } else {
+            hasReview = false;
         }
 
         return new GamePlayLogResponseDto(
@@ -31,7 +46,9 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
                 playLog.getEndDate(),
                 playLog.getOwnership(),
                 playLog.getCreatedAt(),
-                playLog.getUpdatedAt()
+                playLog.getUpdatedAt(),
+                hasReview,
+                reviewPreview
         );
     }
 
