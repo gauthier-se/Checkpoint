@@ -1,19 +1,12 @@
 import { useEffect } from 'react'
 
-import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
 import { GameQuickActions } from '@/components/games/quick-actions'
-import { ReviewForm } from '@/components/reviews/review-form'
 import { ReviewList } from '@/components/reviews/review-list'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useAuth } from '@/hooks/use-auth'
-import {
-  gameReviewsQueryOptions,
-  userReviewQueryOptions,
-} from '@/queries/review'
+import { gameReviewsQueryOptions } from '@/queries/review'
 import { apiFetch } from '@/services/api'
 
 export const Route = createFileRoute('/_app/games/$gameId')({
@@ -35,13 +28,6 @@ export const Route = createFileRoute('/_app/games/$gameId')({
 function RouteComponent() {
   const game = Route.useLoaderData()
   const router = useRouter()
-  const { user } = useAuth()
-
-  // Fetch user's existing review if authenticated
-  const { data: userReview } = useQuery({
-    ...userReviewQueryOptions(game.id),
-    enabled: !!user,
-  })
 
   useEffect(() => {
     document.title = `${game.title} — Checkpoint`
@@ -165,25 +151,6 @@ function RouteComponent() {
       )}
 
       <Separator className="my-6" />
-
-      {/* Review Form Section */}
-      <div className="mb-10">
-        {!user ? (
-          <div className="bg-muted p-6 rounded-lg border text-center flex flex-col items-center justify-center gap-4">
-            <h3 className="text-lg font-semibold">Write a Review</h3>
-            <p className="text-muted-foreground">
-              Log in to leave a review and a rating for {game.title}.
-            </p>
-            <Button asChild>
-              <Link to="/login" search={{ redirect: `/games/${game.id}` }}>
-                Log in to leave a review
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <ReviewForm gameId={game.id} existingReview={userReview ?? null} />
-        )}
-      </div>
 
       {/* Reviews List */}
       <ReviewList gameId={game.id} />

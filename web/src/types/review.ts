@@ -1,4 +1,5 @@
 import type { PaginationMetadata } from './game'
+import type { PlayStatus } from './interaction'
 
 export interface ReviewUser {
   id: string
@@ -8,12 +9,15 @@ export interface ReviewUser {
 
 export interface Review {
   id: string
-  score: number | null
   content: string
   haveSpoilers: boolean
   createdAt: string
   updatedAt: string
   user: ReviewUser
+  playLogId: string | null
+  platformName: string | null
+  playStatus: PlayStatus | null
+  isReplay: boolean | null
 }
 
 export interface ReviewsResponse {

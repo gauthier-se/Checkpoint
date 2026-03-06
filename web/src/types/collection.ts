@@ -54,6 +54,9 @@ export interface PlayLogResponse {
   ownership: string | null
   createdAt: string
   updatedAt: string
+  hasReview: boolean
+  reviewPreview: string | null
+  score: number | null
 }
 
 export interface PlayLogListResponse {

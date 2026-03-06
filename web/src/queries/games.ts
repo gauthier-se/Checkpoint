@@ -3,6 +3,7 @@ import type {
   GameInteractionStatusDto,
   GamePlayLogRequestDto,
   GamePlayLogResponseDto,
+  RateResponseDto,
 } from '@/types/interaction'
 import type { UserGameRequest } from '@/types/library'
 import { apiFetch } from '@/services/api'
@@ -18,6 +19,45 @@ export function gameInteractionStatusQueryOptions(gameId: string) {
       return res.json() as Promise<GameInteractionStatusDto>
     },
   })
+}
+
+export function userRatingQueryOptions(gameId: string) {
+  return queryOptions({
+    queryKey: ['games', gameId, 'rate'],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/me/games/${gameId}/rate`)
+      if (res.status === 404) {
+        return null
+      }
+      if (!res.ok) {
+        throw new Error('Failed to fetch user rating')
+      }
+      return res.json() as Promise<RateResponseDto>
+    },
+  })
+}
+
+export async function rateGame(gameId: string, score: number) {
+  const res = await apiFetch(`/api/me/games/${gameId}/rate`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ score }),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to rate game')
+  }
+  return res.json() as Promise<RateResponseDto>
+}
+
+export async function removeRating(gameId: string) {
+  const res = await apiFetch(`/api/me/games/${gameId}/rate`, {
+    method: 'DELETE',
+  })
+  if (!res.ok && res.status !== 204) {
+    throw new Error('Failed to remove rating')
+  }
 }
 
 export async function toggleWishlist(gameId: string, currentStatus: boolean) {
@@ -52,14 +92,28 @@ export async function updateLibraryStatus(
       throw new Error('Failed to remove from library')
     }
   } else {
-    // We don't know if it's currently in the library or not strictly from this function signature
-    // but the API supports POST for add and PUT for update.
-    // Wait, the API `UserGameCollectionController` has POST (add) and PUT (update).
-    // If we rely on optimistic updates, the caller might know.
-    // For simplicity, we can do PUT and if it fails with 404, do POST? Or have separate add/update logic.
-    // The issue says: "Library -- dropdown/popover to set library status (PLAYING, COMPLETED, DROPPED) or remove from library."
-    // Let's assume the caller passes whether it's an update or adding.
-    throw new Error('Implemented in caller')
+    let res = await apiFetch(`/api/me/library/${gameId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: request.status }),
+    })
+
+    // If it doesn't exist, POST to create it
+    if (res.status === 404) {
+      res = await apiFetch('/api/me/library', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      })
+    }
+
+    if (!res.ok) {
+      throw new Error('Failed to update library')
+    }
   }
 }
 

@@ -1,3 +1,7 @@
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,10 +21,6 @@ import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
-import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
-import { z } from 'zod'
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   redirectTo?: string
@@ -120,7 +120,11 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>
@@ -151,7 +155,11 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>

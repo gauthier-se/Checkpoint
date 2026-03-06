@@ -8,9 +8,16 @@ export interface GameInteractionStatusDto {
   playCount: number
   userRating: number | null
   hasReview: boolean
+  lastPlayRating: number | null
 }
 
-export type PlayStatus = 'PLAYING' | 'PAUSED' | 'DROPPED' | 'COMPLETED'
+export type PlayStatus =
+  | 'ARE_PLAYING'
+  | 'PLAYED'
+  | 'COMPLETED'
+  | 'RETIRED'
+  | 'SHELVED'
+  | 'ABANDONED'
 
 export interface GamePlayLogRequestDto {
   videoGameId: string
@@ -21,18 +28,33 @@ export interface GamePlayLogRequestDto {
   timePlayed?: number
   ownership?: string
   isReplay?: boolean
+  score?: number
 }
 
 export interface GamePlayLogResponseDto {
   id: string
   videoGameId: string
+  title: string
+  coverUrl: string | null
   platformId: string
+  platformName: string | null
   status: PlayStatus
+  isReplay: boolean
+  timePlayed: number | null
   startDate: string | null
   endDate: string | null
-  timePlayed: number
   ownership: string | null
-  isReplay: boolean
+  createdAt: string
+  updatedAt: string
+  hasReview: boolean
+  reviewPreview: string | null
+  score: number | null
+}
+
+export interface RateResponseDto {
+  id: string
+  score: number
+  videoGameId: string
   createdAt: string
   updatedAt: string
 }
