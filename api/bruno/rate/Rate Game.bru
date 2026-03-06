@@ -1,0 +1,64 @@
+meta {
+  name: Rate Game
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/me/games/:videoGameId/rate
+  body: json
+  auth: bearer
+}
+
+params:path {
+  videoGameId: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "score": 5
+  }
+}
+
+docs {
+  # Rate Game
+
+  Creates or updates the authenticated user's rating for a specific video game.
+  If the user has already rated this game, the existing rating is updated.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **videoGameId**: The UUID of the video game to rate
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | score | Integer | Yes | Rating score from 1 to 5 |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "score": 5,
+    "videoGameId": "uuid",
+    "createdAt": "2025-06-01T10:00:00",
+    "updatedAt": "2025-06-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Missing or invalid score (must be between 1 and 5)
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Video game does not exist
+}

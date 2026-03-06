@@ -1,0 +1,50 @@
+meta {
+  name: Get My Rating
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/me/games/:videoGameId/rate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  videoGameId: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get My Rating
+
+  Retrieves the authenticated user's rating for a specific video game.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **videoGameId**: The UUID of the video game
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "score": 5,
+    "videoGameId": "uuid",
+    "createdAt": "2025-06-01T10:00:00",
+    "updatedAt": "2025-06-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: No rating found for this game
+}

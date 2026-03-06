@@ -1,0 +1,42 @@
+meta {
+  name: Remove Rating
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/me/games/:videoGameId/rate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  videoGameId: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Remove Rating
+
+  Removes the authenticated user's rating for a specific video game.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **videoGameId**: The UUID of the video game
+
+  ## Response (204 No Content)
+
+  Empty response body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: No rating found for this game
+}

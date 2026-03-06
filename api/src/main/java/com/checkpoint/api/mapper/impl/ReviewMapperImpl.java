@@ -8,11 +8,14 @@ import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.mapper.ReviewMapper;
 
+/**
+ * Implementation of {@link ReviewMapper}.
+ */
 @Component
 public class ReviewMapperImpl implements ReviewMapper {
 
     @Override
-    public ReviewResponseDto toDto(Review review, Integer score) {
+    public ReviewResponseDto toDto(Review review) {
         if (review == null) {
             return null;
         }
@@ -29,7 +32,6 @@ public class ReviewMapperImpl implements ReviewMapper {
 
         return new ReviewResponseDto(
                 review.getId(),
-                score,
                 review.getContent(),
                 review.getHaveSpoilers(),
                 review.getCreatedAt(),

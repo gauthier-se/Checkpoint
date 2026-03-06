@@ -16,6 +16,15 @@ import com.checkpoint.api.entities.Rate;
 public interface RateRepository extends JpaRepository<Rate, UUID> {
 
     /**
+     * Finds a user's rate for a specific video game by user email.
+     *
+     * @param email the user's email
+     * @param videoGameId the video game ID
+     * @return an optional containing the rate if found
+     */
+    Optional<Rate> findByUserEmailAndVideoGameId(String email, UUID videoGameId);
+
+    /**
      * Finds a user's rate for a specific video game.
      *
      * @param pseudo the user's pseudo

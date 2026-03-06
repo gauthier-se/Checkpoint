@@ -24,7 +24,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.checkpoint.api.config.SecurityConfig;
 import com.checkpoint.api.dto.catalog.ReviewRequestDto;
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
@@ -33,7 +32,7 @@ import com.checkpoint.api.services.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = ReviewController.class)
-@AutoConfigureMockMvc(addFilters = false) // Disable security filters for unit testing controller logic
+@AutoConfigureMockMvc(addFilters = false)
 class ReviewControllerTest {
 
     @Autowired
@@ -57,7 +56,7 @@ class ReviewControllerTest {
     @BeforeEach
     void setUp() {
         gameId = UUID.randomUUID();
-        reviewResponseDto = new ReviewResponseDto(UUID.randomUUID(), 5, "Great game!", false, null, null, null);
+        reviewResponseDto = new ReviewResponseDto(UUID.randomUUID(), "Great game!", false, null, null, null);
     }
 
     @Test
@@ -70,7 +69,6 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(get("/api/games/{gameId}/reviews", gameId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].score").value(5))
                 .andExpect(jsonPath("$.content[0].content").value("Great game!"));
     }
 
@@ -79,7 +77,7 @@ class ReviewControllerTest {
     @DisplayName("POST /api/games/{gameId}/reviews should return 201 Created")
     void shouldSubmitReview() throws Exception {
         // Given
-        ReviewRequestDto request = new ReviewRequestDto(5, "Great game!", false);
+        ReviewRequestDto request = new ReviewRequestDto("Great game!", false);
         when(reviewService.addOrUpdateReview(any(), eq(gameId), any())).thenReturn(reviewResponseDto);
 
         // When & Then
@@ -87,7 +85,6 @@ class ReviewControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.score").value(5))
                 .andExpect(jsonPath("$.content").value("Great game!"));
     }
 
@@ -111,7 +108,6 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(get("/api/games/{gameId}/reviews/me", gameId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.score").value(5))
                 .andExpect(jsonPath("$.content").value("Great game!"));
     }
 
