@@ -15,6 +15,7 @@ import type { GameDetail } from '@/types/game'
 import type { GameInteractionStatusDto } from '@/types/interaction'
 import type { GameStatus } from '@/types/library'
 import { PlayLogDialog } from '@/components/games/play-log-dialog'
+import { StarRating } from '@/components/games/star-rating'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -288,6 +289,11 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
           <Gamepad2 className="w-4 h-4" />
           Log Play
         </Button>
+
+        {/* Rating Widget */}
+        <div className="flex items-center ml-4 pl-4 border-l">
+          <StarRating game={game} currentRating={status?.userRating ?? null} />
+        </div>
       </div>
     )
 

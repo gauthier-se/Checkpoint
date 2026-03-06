@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Star } from 'lucide-react'
+import { Gamepad2, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 
+import type { PlayStatus } from '@/types/interaction'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,13 +19,41 @@ interface ReviewListProps {
   gameId: string
 }
 
+const PLAY_STATUS_LABELS: Record<PlayStatus, string> = {
+  ARE_PLAYING: 'Playing',
+  PLAYED: 'Played',
+  COMPLETED: 'Completed',
+  RETIRED: 'Retired',
+  SHELVED: 'Shelved',
+  ABANDONED: 'Abandoned',
+}
+
+const PLAY_STATUS_COLORS: Record<PlayStatus, string> = {
+  ARE_PLAYING: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+  PLAYED: 'bg-violet-500/15 text-violet-400 border-violet-500/20',
+  COMPLETED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+  RETIRED: 'bg-slate-500/15 text-slate-400 border-slate-500/20',
+  SHELVED: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+  ABANDONED: 'bg-red-500/15 text-red-400 border-red-500/20',
+}
+
 export function ReviewList({ gameId }: ReviewListProps) {
   const [page, setPage] = useState(0)
+  const [revealedSpoilers, setRevealedSpoilers] = useState<
+    Record<string, boolean>
+  >({})
   const size = 10
 
   const { data, isLoading, isError } = useQuery(
     gameReviewsQueryOptions(gameId, page, size),
   )
+
+  const toggleSpoilers = (reviewId: string) => {
+    setRevealedSpoilers((prev) => ({
+      ...prev,
+      [reviewId]: !prev[reviewId],
+    }))
+  }
 
   if (isLoading) {
     return (
@@ -71,38 +101,76 @@ export function ReviewList({ gameId }: ReviewListProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-base flex items-center gap-2">
                       {review.user.pseudo}
+                      {review.playStatus && (
+                        <Badge
+                          className={`${PLAY_STATUS_COLORS[review.playStatus]} text-[10px] h-5 px-1.5`}
+                        >
+                          {PLAY_STATUS_LABELS[review.playStatus]}
+                        </Badge>
+                      )}
+                      {review.isReplay && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] h-5 px-1.5 gap-1"
+                        >
+                          <RefreshCw className="size-2.5" />
+                          Replay
+                        </Badge>
+                      )}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="flex items-center gap-2 mt-0.5">
                       {new Date(review.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
                       })}
+                      {review.platformName && (
+                        <>
+                          <span className="text-muted-foreground/30">•</span>
+                          <span className="flex items-center gap-1 text-xs">
+                            <Gamepad2 className="size-3" />
+                            {review.platformName}
+                          </span>
+                        </>
+                      )}
                     </CardDescription>
                   </div>
                 </div>
-                {review.score != null && (
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= review.score!
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-muted-foreground'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
             </CardHeader>
             <CardContent className="py-0">
-              <p className="text-sm leading-relaxed whitespace-pre-line mt-2">
-                {review.content}
-              </p>
+              {review.haveSpoilers && !revealedSpoilers[review.id] ? (
+                <div className="mt-3 p-4 border rounded-md bg-muted/50 flex flex-col items-center justify-center gap-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    This review contains spoilers
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleSpoilers(review.id)}
+                  >
+                    Show Spoilers
+                  </Button>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {review.content}
+                  </p>
+                  {review.haveSpoilers && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 h-7 px-2 text-xs text-muted-foreground"
+                      onClick={() => toggleSpoilers(review.id)}
+                    >
+                      Hide Spoilers
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

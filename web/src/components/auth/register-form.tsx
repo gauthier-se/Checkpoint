@@ -1,3 +1,7 @@
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -15,10 +19,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/services/api'
-import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { toast } from 'sonner'
-import { z } from 'zod'
 
 export function RegisterForm({
   className,
@@ -103,7 +103,11 @@ export function RegisterForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>
@@ -127,7 +131,11 @@ export function RegisterForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>
@@ -152,7 +160,11 @@ export function RegisterForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>
@@ -179,7 +191,11 @@ export function RegisterForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>

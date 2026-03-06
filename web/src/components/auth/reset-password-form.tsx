@@ -103,7 +103,11 @@ export function ResetPasswordForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>
@@ -130,7 +134,11 @@ export function ResetPasswordForm({
                     />
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm text-destructive">
-                        {field.state.meta.errors.join(', ')}
+                        {field.state.meta.errors
+                          .map((e) =>
+                            typeof e === 'string' ? e : (e as any).message,
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </Field>

@@ -10,7 +10,9 @@ import {
   Calendar,
   Clock,
   Gamepad2,
+  MessageSquare,
   RefreshCw,
+  Star,
   Trash2,
 } from 'lucide-react'
 import type { PlayLogListResponse, PlayStatus } from '@/types/collection'
@@ -178,6 +180,15 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
                       Replay
                     </Badge>
                   )}
+                  {entry.score != null && (
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 text-[11px] bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20"
+                    >
+                      <Star className="size-2.5 fill-current" />
+                      {entry.score}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -203,6 +214,14 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
                   </span>
                 )}
               </div>
+
+              {/* Review preview */}
+              {entry.hasReview && entry.reviewPreview && (
+                <div className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground italic bg-muted/30 p-2 rounded-md border border-muted">
+                  <MessageSquare className="size-3.5 mt-0.5 shrink-0" />
+                  <span className="line-clamp-2">"{entry.reviewPreview}"</span>
+                </div>
+              )}
             </div>
 
             {/* Delete action */}
