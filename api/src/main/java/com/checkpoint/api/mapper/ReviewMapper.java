@@ -9,11 +9,10 @@ import com.checkpoint.api.entities.Review;
 public interface ReviewMapper {
 
     /**
-     * Maps a Review entity and its associated score to a ReviewResponseDto.
+     * Maps a Review entity to a ReviewResponseDto.
      *
      * @param review the review entity
-     * @param score the numeric score
      * @return the review response DTO
      */
-    ReviewResponseDto toDto(Review review, Integer score);
+    ReviewResponseDto toDto(Review review);
 }

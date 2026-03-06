@@ -8,7 +8,6 @@ import java.util.UUID;
  */
 public record ReviewResponseDto(
     UUID id,
-    Integer score,
     String content,
     Boolean haveSpoilers,
     LocalDateTime createdAt,

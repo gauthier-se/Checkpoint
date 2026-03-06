@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
+import com.checkpoint.api.exceptions.IgdbApiException;
 import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
 import com.checkpoint.api.exceptions.GameAlreadyInLibraryException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
@@ -26,6 +27,7 @@ import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
+import com.checkpoint.api.exceptions.RateNotFoundException;
 
 /**
  * Global exception handler for REST controllers.
@@ -85,6 +87,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExternalApiUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleExternalApiUnavailable(ExternalApiUnavailableException ex) {
         log.error("External API unavailable: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "Service Unavailable",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
+    /**
+     * Handles IgdbApiException as a safety net when the exception is not caught
+     * and re-wrapped by a service layer.
+     *
+     * @param ex the exception
+     * @return error response with 503 status
+     */
+    @ExceptionHandler(IgdbApiException.class)
+    public ResponseEntity<ErrorResponse> handleIgdbApiException(IgdbApiException ex) {
+        log.error("IGDB API error: {}", ex.getMessage());
 
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
@@ -235,6 +258,26 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+    /**
+     * Handles RateNotFoundException when a rating is not found for a user and game.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(RateNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRateNotFound(RateNotFoundException ex) {
+        log.warn("Rating not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     /**
      * Handles missing required request parameters.
      *

@@ -82,7 +82,7 @@ public class ReviewController {
      *
      * @param userDetails the authenticated user principal
      * @param gameId the video game ID
-     * @param request the review request body containing score and content
+     * @param request the review request body containing content and spoiler flag
      * @return the created or updated review
      */
     @PostMapping
@@ -91,9 +91,7 @@ public class ReviewController {
             @PathVariable UUID gameId,
             @Valid @RequestBody ReviewRequestDto request) {
 
-        log.info("POST /api/games/{}/reviews - user: {}, score: {}", gameId, userDetails.getUsername(), request.score());
-
-        // Because UserDetails username is mapped to the email. Wait, in UserGameCollection it passes username.
+        log.info("POST /api/games/{}/reviews - user: {}", gameId, userDetails.getUsername());
         ReviewResponseDto response = reviewService.addOrUpdateReview(userDetails.getUsername(), gameId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -162,7 +160,6 @@ public class ReviewController {
         return switch (field.toLowerCase()) {
             case "createdat", "created_at" -> "createdAt";
             case "updatedat", "updated_at" -> "updatedAt";
-            case "score", "rating" -> "score";
             default -> "createdAt";
         };
     }
