@@ -17,11 +17,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.checkpoint.api.dto.collection.GameInteractionStatusDto;
 import com.checkpoint.api.entities.Rate;
-import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
+import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.enums.GameStatus;
+import com.checkpoint.api.enums.PlayStatus;
 import com.checkpoint.api.repositories.BacklogRepository;
 import com.checkpoint.api.repositories.RateRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
@@ -78,7 +79,9 @@ class GameInteractionServiceImplTest {
         // Given
         UserGame userGame = new UserGame(testUser, testGame, GameStatus.PLAYING);
         Rate rate = new Rate(testUser, testGame, 5);
-        Review review = new Review();
+
+        UserGamePlay mostRecentScoredPlay = new UserGamePlay(testUser, testGame, null, PlayStatus.COMPLETED);
+        mostRecentScoredPlay.setScore(4);
 
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
         when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
@@ -86,7 +89,9 @@ class GameInteractionServiceImplTest {
         when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.of(userGame));
         when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(3L);
         when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.of(rate));
-        when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.of(review));
+        when(reviewRepository.existsByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(true);
+        when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                .thenReturn(Optional.of(mostRecentScoredPlay));
 
         // When
         GameInteractionStatusDto result = gameInteractionService.getGameInteractionStatus(testUser.getEmail(), testGame.getId());
@@ -100,6 +105,7 @@ class GameInteractionServiceImplTest {
         assertThat(result.playCount()).isEqualTo(3);
         assertThat(result.userRating()).isEqualTo(5);
         assertThat(result.hasReview()).isTrue();
+        assertThat(result.lastPlayRating()).isEqualTo(4);
     }
 
     @Test
@@ -112,7 +118,8 @@ class GameInteractionServiceImplTest {
         when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
         when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(0L);
         when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.empty());
-        when(reviewRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.empty());
+        when(reviewRepository.existsByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(false);
+        when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
 
         // When
         GameInteractionStatusDto result = gameInteractionService.getGameInteractionStatus(testUser.getEmail(), testGame.getId());
@@ -126,6 +133,7 @@ class GameInteractionServiceImplTest {
         assertThat(result.playCount()).isEqualTo(0);
         assertThat(result.userRating()).isNull();
         assertThat(result.hasReview()).isFalse();
+        assertThat(result.lastPlayRating()).isNull();
     }
 
     @Test

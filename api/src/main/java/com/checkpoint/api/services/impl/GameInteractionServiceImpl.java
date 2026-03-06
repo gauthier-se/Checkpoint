@@ -12,6 +12,7 @@ import com.checkpoint.api.dto.collection.GameInteractionStatusDto;
 import com.checkpoint.api.entities.Rate;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
+import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.enums.GameStatus;
 import com.checkpoint.api.repositories.BacklogRepository;
 import com.checkpoint.api.repositories.RateRepository;
@@ -72,7 +73,11 @@ public class GameInteractionServiceImpl implements GameInteractionService {
         Optional<Rate> rateOpt = rateRepository.findByUserPseudoAndVideoGameId(user.getPseudo(), videoGameId);
         Integer userRating = rateOpt.map(Rate::getScore).orElse(null);
 
-        boolean hasReview = reviewRepository.findByUserPseudoAndVideoGameId(user.getPseudo(), videoGameId).isPresent();
+        boolean hasReview = reviewRepository.existsByUserPseudoAndVideoGameId(user.getPseudo(), videoGameId);
+
+        Optional<UserGamePlay> mostRecentScoredPlay = userGamePlayRepository
+                .findMostRecentScoredPlay(user.getId(), videoGameId);
+        Integer lastPlayRating = mostRecentScoredPlay.map(UserGamePlay::getScore).orElse(null);
 
         return new GameInteractionStatusDto(
                 inWishlist,
@@ -81,7 +86,8 @@ public class GameInteractionServiceImpl implements GameInteractionService {
                 libraryStatus,
                 playCount,
                 userRating,
-                hasReview
+                hasReview,
+                lastPlayRating
         );
     }
 }
