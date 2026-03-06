@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -40,6 +40,7 @@ import com.checkpoint.api.repositories.PlatformRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
+import com.checkpoint.api.services.RateService;
 
 @ExtendWith(MockitoExtension.class)
 class GamePlayLogServiceImplTest {
@@ -59,7 +60,9 @@ class GamePlayLogServiceImplTest {
     @Mock
     private GamePlayLogMapper gamePlayLogMapper;
 
-    @InjectMocks
+    @Mock
+    private RateService rateService;
+
     private GamePlayLogServiceImpl gamePlayLogService;
 
     private User testUser;
@@ -71,6 +74,15 @@ class GamePlayLogServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        gamePlayLogService = new GamePlayLogServiceImpl(
+                userGamePlayRepository,
+                userRepository,
+                videoGameRepository,
+                platformRepository,
+                gamePlayLogMapper,
+                rateService
+        );
+
         testUser = new User();
         testUser.setId(UUID.randomUUID());
         testUser.setEmail("user@example.com");
@@ -85,17 +97,18 @@ class GamePlayLogServiceImplTest {
 
         testPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
         testPlayLog.setId(UUID.randomUUID());
+        testPlayLog.setCreatedAt(LocalDateTime.now());
 
         testResponseDto = new GamePlayLogResponseDto(
                 testPlayLog.getId(), testGame.getId(), testGame.getTitle(), null,
                 testPlatform.getId(), testPlatform.getName(), PlayStatus.COMPLETED,
                 false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                LocalDateTime.now(), LocalDateTime.now(), null, null
+                LocalDateTime.now(), LocalDateTime.now(), null, null, null
         );
 
         testRequestDto = new GamePlayLogRequestDto(
                 testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                LocalDate.now(), LocalDate.now(), 2000, "owned", false
+                LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
         );
     }
 
@@ -145,6 +158,47 @@ class GamePlayLogServiceImplTest {
             assertThatThrownBy(() -> gamePlayLogService.logPlay(testUser.getEmail(), testRequestDto))
                     .isInstanceOf(GameNotFoundException.class);
         }
+
+        @Test
+        @DisplayName("should sync global rating when logging with score")
+        void shouldSyncGlobalRatingWhenLoggingWithScore() {
+            // Given
+            GamePlayLogRequestDto requestWithScore = new GamePlayLogRequestDto(
+                    testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 4
+            );
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(videoGameRepository.findById(testGame.getId())).thenReturn(Optional.of(testGame));
+            when(platformRepository.findById(testPlatform.getId())).thenReturn(Optional.of(testPlatform));
+            when(gamePlayLogMapper.toEntity(requestWithScore)).thenReturn(testPlayLog);
+            when(userGamePlayRepository.save(any(UserGamePlay.class))).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+
+            // When
+            gamePlayLogService.logPlay(testUser.getEmail(), requestWithScore);
+
+            // Then
+            verify(rateService).rateGame(testUser.getEmail(), testGame.getId(), 4);
+        }
+
+        @Test
+        @DisplayName("should not sync global rating when logging without score")
+        void shouldNotSyncRatingWhenLoggingWithoutScore() {
+            // Given
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(videoGameRepository.findById(testGame.getId())).thenReturn(Optional.of(testGame));
+            when(platformRepository.findById(testPlatform.getId())).thenReturn(Optional.of(testPlatform));
+            when(gamePlayLogMapper.toEntity(testRequestDto)).thenReturn(testPlayLog);
+            when(userGamePlayRepository.save(any(UserGamePlay.class))).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+
+            // When
+            gamePlayLogService.logPlay(testUser.getEmail(), testRequestDto);
+
+            // Then
+            verify(rateService, never()).rateGame(any(), any(), any());
+        }
     }
 
     @Nested
@@ -184,6 +238,113 @@ class GamePlayLogServiceImplTest {
             assertThatThrownBy(() -> gamePlayLogService.updatePlayLog(testUser.getEmail(), testPlayLog.getId(), testRequestDto))
                     .isInstanceOf(PlayLogNotFoundException.class);
         }
+
+        @Test
+        @DisplayName("should update global rating when updating most recent log score")
+        void shouldUpdateGlobalRatingWhenUpdatingMostRecentScore() {
+            // Given
+            testPlayLog.setScore(3);
+            GamePlayLogRequestDto requestWithNewScore = new GamePlayLogRequestDto(
+                    testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5
+            );
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.save(testPlayLog)).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(testPlayLog));
+
+            // When
+            gamePlayLogService.updatePlayLog(testUser.getEmail(), testPlayLog.getId(), requestWithNewScore);
+
+            // Then
+            verify(rateService).rateGame(testUser.getEmail(), testGame.getId(), 5);
+        }
+
+        @Test
+        @DisplayName("should not update global rating when updating non-latest log score")
+        void shouldNotUpdateGlobalRatingWhenUpdatingNonLatestLog() {
+            // Given
+            testPlayLog.setScore(3);
+            GamePlayLogRequestDto requestWithNewScore = new GamePlayLogRequestDto(
+                    testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5
+            );
+
+            UserGamePlay moreRecentPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
+            moreRecentPlayLog.setId(UUID.randomUUID());
+            moreRecentPlayLog.setScore(4);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.save(testPlayLog)).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(moreRecentPlayLog));
+
+            // When
+            gamePlayLogService.updatePlayLog(testUser.getEmail(), testPlayLog.getId(), requestWithNewScore);
+
+            // Then
+            verify(rateService, never()).rateGame(any(), any(), any());
+            verify(rateService, never()).removeRating(any(), any());
+        }
+
+        @Test
+        @DisplayName("should recalculate global rating when clearing score from most recent log")
+        void shouldRecalculateRatingWhenClearingScoreFromMostRecentLog() {
+            // Given
+            testPlayLog.setScore(4);
+            GamePlayLogRequestDto requestWithNoScore = new GamePlayLogRequestDto(
+                    testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
+            );
+
+            UserGamePlay olderScoredPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
+            olderScoredPlayLog.setId(UUID.randomUUID());
+            olderScoredPlayLog.setScore(3);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.save(testPlayLog)).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+            // First call: the updated play log now has no score, so it won't be returned
+            // The most recent scored log is now the older one
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(olderScoredPlayLog));
+
+            // When
+            gamePlayLogService.updatePlayLog(testUser.getEmail(), testPlayLog.getId(), requestWithNoScore);
+
+            // Then
+            verify(rateService).rateGame(testUser.getEmail(), testGame.getId(), 3);
+        }
+
+        @Test
+        @DisplayName("should remove global rating when clearing last scored log")
+        void shouldRemoveGlobalRatingWhenClearingLastScoredLog() {
+            // Given
+            testPlayLog.setScore(4);
+            GamePlayLogRequestDto requestWithNoScore = new GamePlayLogRequestDto(
+                    testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
+            );
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.save(testPlayLog)).thenReturn(testPlayLog);
+            when(gamePlayLogMapper.toDto(testPlayLog)).thenReturn(testResponseDto);
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.empty());
+
+            // When
+            gamePlayLogService.updatePlayLog(testUser.getEmail(), testPlayLog.getId(), requestWithNoScore);
+
+            // Then
+            verify(rateService).removeRating(testUser.getEmail(), testGame.getId());
+        }
     }
 
     @Nested
@@ -202,6 +363,65 @@ class GamePlayLogServiceImplTest {
 
             // Then
             verify(userGamePlayRepository).delete(testPlayLog);
+        }
+
+        @Test
+        @DisplayName("should recalculate global rating when deleting most recent scored log")
+        void shouldRecalculateRatingWhenDeletingMostRecentScoredLog() {
+            // Given
+            testPlayLog.setScore(5);
+            UserGamePlay olderScoredPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
+            olderScoredPlayLog.setId(UUID.randomUUID());
+            olderScoredPlayLog.setScore(3);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(olderScoredPlayLog));
+
+            // When
+            gamePlayLogService.deletePlayLog(testUser.getEmail(), testPlayLog.getId());
+
+            // Then
+            verify(userGamePlayRepository).delete(testPlayLog);
+            verify(rateService).rateGame(testUser.getEmail(), testGame.getId(), 3);
+        }
+
+        @Test
+        @DisplayName("should remove global rating when deleting last scored log")
+        void shouldRemoveGlobalRatingWhenDeletingLastScoredLog() {
+            // Given
+            testPlayLog.setScore(4);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+            when(userGamePlayRepository.findMostRecentScoredPlay(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.empty());
+
+            // When
+            gamePlayLogService.deletePlayLog(testUser.getEmail(), testPlayLog.getId());
+
+            // Then
+            verify(userGamePlayRepository).delete(testPlayLog);
+            verify(rateService).removeRating(testUser.getEmail(), testGame.getId());
+        }
+
+        @Test
+        @DisplayName("should not affect rating when deleting unscored log")
+        void shouldNotAffectRatingWhenDeletingUnscoredLog() {
+            // Given
+            testPlayLog.setScore(null);
+
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(userGamePlayRepository.findById(testPlayLog.getId())).thenReturn(Optional.of(testPlayLog));
+
+            // When
+            gamePlayLogService.deletePlayLog(testUser.getEmail(), testPlayLog.getId());
+
+            // Then
+            verify(userGamePlayRepository).delete(testPlayLog);
+            verify(rateService, never()).rateGame(any(), any(), any());
+            verify(rateService, never()).removeRating(any(), any());
         }
     }
 

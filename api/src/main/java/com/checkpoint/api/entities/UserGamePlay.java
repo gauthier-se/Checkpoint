@@ -21,6 +21,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 /**
  * Association entity between User and VideoGame.
@@ -51,6 +53,11 @@ public class UserGamePlay {
     private LocalDate endDate;
 
     private String ownership; // e.g., "owned", "borrowed", "subscription", "pirated"
+
+    @Column(name = "score")
+    @Min(1)
+    @Max(5)
+    private Integer score;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -157,6 +164,14 @@ public class UserGamePlay {
 
     public void setOwnership(String ownership) {
         this.ownership = ownership;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
     }
 
     public LocalDateTime getCreatedAt() {
