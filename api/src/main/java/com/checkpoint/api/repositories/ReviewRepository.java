@@ -6,8 +6,6 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.checkpoint.api.entities.Review;
 
@@ -17,13 +15,14 @@ import com.checkpoint.api.entities.Review;
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     /**
-     * Finds a user's review for a specific video game.
+     * Checks whether any review exists for a given user and video game.
+     * A user may have multiple reviews for the same game (one per playthrough).
      *
-     * @param pseudo the user's pseudo
+     * @param pseudo      the user's pseudo
      * @param videoGameId the video game ID
-     * @return an optional containing the review if found
+     * @return true if at least one review exists
      */
-    Optional<Review> findByUserPseudoAndVideoGameId(String pseudo, UUID videoGameId);
+    boolean existsByUserPseudoAndVideoGameId(String pseudo, UUID videoGameId);
 
     /**
      * Finds all reviews for a specific video game.
