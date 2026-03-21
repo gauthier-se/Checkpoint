@@ -24,7 +24,9 @@ import org.springframework.web.client.RestClient;
         "spring.datasource.url=jdbc:h2:mem:igdbtest;DB_CLOSE_DELAY=-1",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+        "spring.jpa.properties.hibernate.search.backend.type=lucene",
+        "spring.jpa.properties.hibernate.search.backend.directory.type=local-heap"
 })
 @EnabledIfEnvironmentVariable(named = "IGDB_CLIENT_ID", matches = ".+")
 class IgdbClientIntegrationTest {

@@ -16,36 +16,36 @@ headers {
 
 body:json {
   {
-    "email": "admin@example.com",
-    "password": "password123"
+    "email": "admin@checkpoint.com",
+    "password": "admin123"
   }
 }
 
 docs {
   # Login (Desktop - JWT)
-
+  
   Authenticate a user via the unified login endpoint with the `X-Client-Type: Desktop` header.
   Returns a JWT token in the response body.
-
+  
   ## Headers
-
+  
   - **X-Client-Type**: `Desktop` (triggers JWT response instead of session)
-
+  
   ## Request Body
-
+  
   - **email** (required): User's email address
   - **password** (required): User's password
-
+  
   ## Response (200 OK)
-
+  
   ```json
   {
     "token": "eyJhbGciOiJIUzI1NiIs..."
   }
   ```
-
+  
   ## Errors
-
+  
   - **400 Bad Request**: Missing or invalid email/password
   - **401 Unauthorized**: Invalid credentials
 }

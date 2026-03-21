@@ -102,7 +102,7 @@ class GameImportServiceImplTest {
         assertThat(result).hasSize(1);
         verify(gameMapper).toEntity(dto);
         verify(gameMapper, never()).updateEntity(any(), any());
-        verify(videoGameRepository).save(any(VideoGame.class));
+        verify(videoGameRepository, times(2)).save(any(VideoGame.class));
     }
 
     @Test
@@ -131,7 +131,7 @@ class GameImportServiceImplTest {
         assertThat(result).hasSize(1);
         verify(gameMapper, never()).toEntity(any());
         verify(gameMapper).updateEntity(dto, existingEntity);
-        verify(videoGameRepository).save(existingEntity);
+        verify(videoGameRepository, times(2)).save(existingEntity);
     }
 
     @Test
@@ -209,7 +209,7 @@ class GameImportServiceImplTest {
         // Then
         assertThat(result).hasSize(2);
         verify(igdbApiClient).fetchGamesByIds(ids);
-        verify(videoGameRepository, times(2)).save(any());
+        verify(videoGameRepository, times(4)).save(any());
     }
 
     @Test
