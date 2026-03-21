@@ -144,7 +144,10 @@ public class GameImportServiceImpl implements GameImportService {
             videoGame = gameMapper.toEntity(dto);
         }
 
-        // Resolve and set relationships
+        // Save first to generate UUID (required by Hibernate Search indexing)
+        videoGame = videoGameRepository.save(videoGame);
+
+        // Resolve and set relationships (now that the entity has an ID)
         resolveAndSetGenres(dto, videoGame);
         resolveAndSetPlatforms(dto, videoGame);
         resolveAndSetCompanies(dto, videoGame);

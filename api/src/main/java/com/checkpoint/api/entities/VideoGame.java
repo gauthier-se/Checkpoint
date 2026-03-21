@@ -6,6 +6,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +27,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
+@Indexed
 @Table(name = "video_games")
 public class VideoGame {
 
@@ -36,9 +41,11 @@ public class VideoGame {
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
 
+    @FullTextField
     @Column(nullable = false)
     private String title;
 
+    @FullTextField
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -69,6 +76,7 @@ public class VideoGame {
     private Set<Review> reviews = new HashSet<>();
 
     // Relationship: VideoGame can be available on multiple platforms (ManyToMany)
+    @IndexedEmbedded
     @ManyToMany
     @JoinTable(
         name = "video_game_platforms",
@@ -78,6 +86,7 @@ public class VideoGame {
     private Set<Platform> platforms = new HashSet<>();
 
     // Relationship: VideoGame can have multiple genres (ManyToMany)
+    @IndexedEmbedded
     @ManyToMany
     @JoinTable(
         name = "video_game_genres",

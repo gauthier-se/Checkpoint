@@ -1,6 +1,8 @@
 package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,6 +32,7 @@ import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.GameCatalogService;
+import com.checkpoint.api.services.GameSearchService;
 
 /**
  * Unit tests for {@link GameController}.
@@ -43,6 +46,9 @@ class GameControllerTest {
 
     @MockitoBean
     private GameCatalogService gameCatalogService;
+
+    @MockitoBean
+    private GameSearchService gameSearchService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -147,5 +153,68 @@ class GameControllerTest {
         mockMvc.perform(get("/api/games")
                         .param("size", "500"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/games/search should return search results")
+    void searchGames_shouldReturnResults() throws Exception {
+        // Given
+        UUID gameId = UUID.randomUUID();
+        List<GameCardDto> results = List.of(
+                new GameCardDto(gameId, "The Witcher 3", "cover.jpg", LocalDate.of(2015, 5, 19), 4.8, 1500L)
+        );
+
+        when(gameSearchService.searchGames(eq("Witchr"), isNull(), isNull())).thenReturn(results);
+
+        // When / Then
+        mockMvc.perform(get("/api/games/search")
+                        .param("q", "Witchr"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].title").value("The Witcher 3"))
+                .andExpect(jsonPath("$[0].averageRating").value(4.8));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/search should support genre and platform filters")
+    void searchGames_shouldSupportFilters() throws Exception {
+        // Given
+        UUID gameId = UUID.randomUUID();
+        List<GameCardDto> results = List.of(
+                new GameCardDto(gameId, "The Witcher 3", "cover.jpg", LocalDate.of(2015, 5, 19), 4.8, 1500L)
+        );
+
+        when(gameSearchService.searchGames(eq("Witcher"), eq("RPG"), eq("PC"))).thenReturn(results);
+
+        // When / Then
+        mockMvc.perform(get("/api/games/search")
+                        .param("q", "Witcher")
+                        .param("genre", "RPG")
+                        .param("platform", "PC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].title").value("The Witcher 3"));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/search should return empty list when no matches")
+    void searchGames_shouldReturnEmptyListWhenNoMatches() throws Exception {
+        // Given
+        when(gameSearchService.searchGames(eq("nonexistent"), isNull(), isNull())).thenReturn(List.of());
+
+        // When / Then
+        mockMvc.perform(get("/api/games/search")
+                        .param("q", "nonexistent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/games/search should return 400 when query parameter is missing")
+    void searchGames_shouldReturn400WhenQueryMissing() throws Exception {
+        // When / Then
+        mockMvc.perform(get("/api/games/search"))
+                .andExpect(status().isBadRequest());
     }
 }

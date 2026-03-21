@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.hibernate.annotations.Formula;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +28,7 @@ public class Platform {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @KeywordField
     @Column(nullable = false, unique = true)
     private String name;
 

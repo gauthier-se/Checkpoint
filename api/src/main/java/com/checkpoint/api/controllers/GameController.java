@@ -1,5 +1,6 @@
 package com.checkpoint.api.controllers;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import com.checkpoint.api.dto.catalog.GameCardDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.services.GameCatalogService;
+import com.checkpoint.api.services.GameSearchService;
 
 /**
  * REST controller for public game catalog endpoints.
@@ -36,9 +38,11 @@ public class GameController {
     private static final String DEFAULT_SORT = "releaseDate,desc";
 
     private final GameCatalogService gameCatalogService;
+    private final GameSearchService gameSearchService;
 
-    public GameController(GameCatalogService gameCatalogService) {
+    public GameController(GameCatalogService gameCatalogService, GameSearchService gameSearchService) {
         this.gameCatalogService = gameCatalogService;
+        this.gameSearchService = gameSearchService;
     }
 
     /**
@@ -65,6 +69,27 @@ public class GameController {
         Page<GameCardDto> gamePage = gameCatalogService.getGameCatalog(pageable);
 
         return ResponseEntity.ok(PagedResponseDto.from(gamePage));
+    }
+
+    /**
+     * Searches for games using full-text search with fuzzy matching.
+     * Results are sorted by relevance score.
+     *
+     * @param q        the search query
+     * @param genre    optional genre filter
+     * @param platform optional platform filter
+     * @return list of matching games sorted by relevance
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<GameCardDto>> searchGames(
+            @RequestParam String q,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String platform) {
+
+        log.info("GET /api/games/search - q: '{}', genre: '{}', platform: '{}'", q, genre, platform);
+
+        List<GameCardDto> results = gameSearchService.searchGames(q, genre, platform);
+        return ResponseEntity.ok(results);
     }
 
     /**

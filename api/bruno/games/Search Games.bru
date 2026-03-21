@@ -1,0 +1,60 @@
+meta {
+  name: Search Games
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/games/search?q=zlda
+  body: none
+  auth: none
+}
+
+params:query {
+  q: zlda
+  ~genre: RPG
+  ~platform: PC
+}
+
+docs {
+  # Search Games
+  
+  Full-text search for games with fuzzy matching on title and description.
+  Results are sorted by relevance score.
+  
+  ## Query Parameters
+  
+  | Parameter | Required | Description |
+  |-----------|----------|-------------|
+  | q | Yes | Search query (supports fuzzy matching, e.g. "Witchr" finds "The Witcher") |
+  | genre | No | Filter by genre name (exact match) |
+  | platform | No | Filter by platform name (exact match) |
+  
+  ## Response (200 OK)
+  
+  ```json
+  [
+    {
+      "id": "uuid",
+      "title": "The Witcher 3: Wild Hunt",
+      "coverUrl": "https://images.igdb.com/...",
+      "releaseDate": "2015-05-19",
+      "averageRating": 4.8,
+      "ratingCount": 1500
+    }
+  ]
+  ```
+  
+  ## Error Response (400 Bad Request)
+  
+  Returned when the `q` parameter is missing.
+  
+  ```json
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Required parameter 'q' is missing",
+    "timestamp": "2025-01-15T10:30:00"
+  }
+  ```
+}
