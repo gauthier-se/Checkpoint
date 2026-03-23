@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +16,7 @@ import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGamePlay;
+import com.checkpoint.api.events.ReviewCreatedEvent;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
@@ -41,6 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final UserGamePlayRepository userGamePlayRepository;
     private final ReviewMapper reviewMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Constructs a new ReviewServiceImpl.
@@ -50,17 +53,20 @@ public class ReviewServiceImpl implements ReviewService {
      * @param userRepository         the user repository
      * @param userGamePlayRepository the play log repository
      * @param reviewMapper           the review mapper
+     * @param eventPublisher         the application event publisher
      */
     public ReviewServiceImpl(ReviewRepository reviewRepository,
                              VideoGameRepository videoGameRepository,
                              UserRepository userRepository,
                              UserGamePlayRepository userGamePlayRepository,
-                             ReviewMapper reviewMapper) {
+                             ReviewMapper reviewMapper,
+                             ApplicationEventPublisher eventPublisher) {
         this.reviewRepository = reviewRepository;
         this.videoGameRepository = videoGameRepository;
         this.userRepository = userRepository;
         this.userGamePlayRepository = userGamePlayRepository;
         this.reviewMapper = reviewMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -100,6 +106,8 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review savedReview = reviewRepository.save(review);
         log.info("Created review for play log {} by user {}", playId, user.getPseudo());
+
+        eventPublisher.publishEvent(new ReviewCreatedEvent(user.getId()));
 
         return reviewMapper.toDto(savedReview);
     }

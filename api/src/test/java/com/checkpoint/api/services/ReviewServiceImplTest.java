@@ -3,6 +3,7 @@ package com.checkpoint.api.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +38,7 @@ import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
+import com.checkpoint.api.events.ReviewCreatedEvent;
 import com.checkpoint.api.mapper.ReviewMapper;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
@@ -64,6 +67,9 @@ class ReviewServiceImplTest {
     @Mock
     private ReviewMapper reviewMapper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private ReviewServiceImpl reviewService;
 
     private User testUser;
@@ -77,7 +83,7 @@ class ReviewServiceImplTest {
     void setUp() {
         reviewService = new ReviewServiceImpl(
                 reviewRepository, videoGameRepository, userRepository,
-                userGamePlayRepository, reviewMapper);
+                userGamePlayRepository, reviewMapper, eventPublisher);
 
         gameId = UUID.randomUUID();
         playId = UUID.randomUUID();
@@ -176,6 +182,7 @@ class ReviewServiceImplTest {
             assertThat(result.content()).isEqualTo("Great game!");
             assertThat(result.playLogId()).isEqualTo(playId);
             verify(reviewRepository).save(any(Review.class));
+            verify(eventPublisher).publishEvent(any(ReviewCreatedEvent.class));
         }
 
         @Test
