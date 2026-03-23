@@ -1,0 +1,49 @@
+meta {
+  name: Toggle Follow
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/users/:userId/follow
+  body: none
+  auth: bearer
+}
+
+params:path {
+  userId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Toggle Follow
+
+  Toggles the follow status between the authenticated user and the target user.
+  If the user is already following the target, they will unfollow. Otherwise, they will follow.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **userId**: The UUID of the user to follow/unfollow
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "following": true,
+    "message": "Successfully followed username"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Trying to follow yourself
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Target user does not exist
+}
