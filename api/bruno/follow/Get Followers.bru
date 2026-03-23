@@ -1,0 +1,71 @@
+meta {
+  name: Get Followers
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/users/:userId/followers
+  body: none
+  auth: none
+}
+
+params:path {
+  userId: 00000000-0000-0000-0000-000000000000
+}
+
+params:query {
+  page: 0
+  size: 20
+  sort: pseudo,asc
+}
+
+docs {
+  # Get Followers
+
+  Returns a paginated list of users who follow the specified user.
+
+  ## Authentication
+
+  No authentication required.
+
+  ## Path Parameters
+
+  - **userId**: The UUID of the user whose followers to retrieve
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | page | Integer | 0 | Page number (0-based) |
+  | size | Integer | 20 | Page size (max 100) |
+  | sort | String | pseudo,asc | Sort criteria (field,direction) |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "pseudo": "username",
+        "picture": "url"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: User does not exist
+}
