@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,7 @@ import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.enums.PlayStatus;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
+import com.checkpoint.api.events.GameFinishedEvent;
 import com.checkpoint.api.mapper.GamePlayLogMapper;
 import com.checkpoint.api.repositories.PlatformRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
@@ -63,6 +65,9 @@ class GamePlayLogServiceImplTest {
     @Mock
     private RateService rateService;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private GamePlayLogServiceImpl gamePlayLogService;
 
     private User testUser;
@@ -80,7 +85,8 @@ class GamePlayLogServiceImplTest {
                 videoGameRepository,
                 platformRepository,
                 gamePlayLogMapper,
-                rateService
+                rateService,
+                eventPublisher
         );
 
         testUser = new User();
@@ -134,6 +140,7 @@ class GamePlayLogServiceImplTest {
             assertThat(result).isNotNull();
             assertThat(result.id()).isEqualTo(testPlayLog.getId());
             verify(userGamePlayRepository).save(any(UserGamePlay.class));
+            verify(eventPublisher).publishEvent(any(GameFinishedEvent.class));
         }
 
         @Test

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,6 +20,8 @@ import com.checkpoint.api.entities.Platform;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.PlayStatus;
+import com.checkpoint.api.events.GameFinishedEvent;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.mapper.GamePlayLogMapper;
@@ -45,6 +48,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
     private final PlatformRepository platformRepository;
     private final GamePlayLogMapper gamePlayLogMapper;
     private final RateService rateService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public GamePlayLogServiceImpl(
             UserGamePlayRepository userGamePlayRepository,
@@ -52,7 +56,8 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
             VideoGameRepository videoGameRepository,
             PlatformRepository platformRepository,
             GamePlayLogMapper gamePlayLogMapper,
-            RateService rateService
+            RateService rateService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.userGamePlayRepository = userGamePlayRepository;
         this.userRepository = userRepository;
@@ -60,6 +65,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         this.platformRepository = platformRepository;
         this.gamePlayLogMapper = gamePlayLogMapper;
         this.rateService = rateService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -88,6 +94,10 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         if (request.score() != null) {
             log.info("Syncing global rating for game {} with score {} from new play log", request.videoGameId(), request.score());
             rateService.rateGame(userEmail, request.videoGameId(), request.score());
+        }
+
+        if (PlayStatus.COMPLETED.equals(savedPlayLog.getStatus())) {
+            eventPublisher.publishEvent(new GameFinishedEvent(user.getId()));
         }
 
         return gamePlayLogMapper.toDto(savedPlayLog);
@@ -125,12 +135,17 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         }
 
         Integer previousScore = playLog.getScore();
+        PlayStatus previousStatus = playLog.getStatus();
         gamePlayLogMapper.updateEntityFromDto(request, playLog);
 
         UserGamePlay updatedPlayLog = userGamePlayRepository.save(playLog);
 
         syncGlobalRatingAfterUpdate(userEmail, user.getId(), playLog.getVideoGame().getId(),
                 updatedPlayLog, previousScore, request.score());
+
+        if (PlayStatus.COMPLETED.equals(updatedPlayLog.getStatus()) && !PlayStatus.COMPLETED.equals(previousStatus)) {
+            eventPublisher.publishEvent(new GameFinishedEvent(user.getId()));
+        }
 
         return gamePlayLogMapper.toDto(updatedPlayLog);
     }
