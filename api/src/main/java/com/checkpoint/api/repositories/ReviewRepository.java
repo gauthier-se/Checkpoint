@@ -50,6 +50,23 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     boolean existsByUserGamePlayId(UUID userGamePlayId);
 
     /**
+     * Finds all reviews written by a user with the given pseudo.
+     *
+     * @param pseudo   the user's pseudo
+     * @param pageable pagination and sorting details
+     * @return a page of reviews
+     */
+    Page<Review> findByUserPseudo(String pseudo, Pageable pageable);
+
+    /**
+     * Counts the number of reviews written by a user with the given pseudo.
+     *
+     * @param pseudo the user's pseudo
+     * @return the review count
+     */
+    long countByUserPseudo(String pseudo);
+
+    /**
      * Finds all reviews that have at least one report.
      *
      * @param pageable pagination and sorting details

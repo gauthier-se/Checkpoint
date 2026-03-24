@@ -61,6 +61,41 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Page<User> findFollowingByUserId(@Param("userId") UUID userId, Pageable pageable);
 
     /**
+     * Finds a user by their pseudo (display name).
+     *
+     * @param pseudo the pseudo
+     * @return an optional containing the user if found
+     */
+    Optional<User> findByPseudo(String pseudo);
+
+    /**
+     * Finds a user by their pseudo, eagerly fetching badges.
+     *
+     * @param pseudo the pseudo
+     * @return an optional containing the user with badges loaded
+     */
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.badges WHERE u.pseudo = :pseudo")
+    Optional<User> findByPseudoWithBadges(@Param("pseudo") String pseudo);
+
+    /**
+     * Counts the number of followers for a given user.
+     *
+     * @param userId the user's ID
+     * @return the follower count
+     */
+    @Query("SELECT COUNT(u) FROM User u JOIN u.following f WHERE f.id = :userId")
+    long countFollowersByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Counts the number of users that the given user follows.
+     *
+     * @param userId the user's ID
+     * @return the following count
+     */
+    @Query("SELECT COUNT(f) FROM User u JOIN u.following f WHERE u.id = :userId")
+    long countFollowingByUserId(@Param("userId") UUID userId);
+
+    /**
      * Checks if a follower is following a target user.
      *
      * @param followerId  the ID of the potential follower

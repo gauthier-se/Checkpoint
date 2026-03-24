@@ -1,0 +1,44 @@
+meta {
+  name: Get User Profile (Authenticated)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/users/:username
+  body: none
+  auth: bearer
+}
+
+params:path {
+  username: gamer123
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get User Profile (Authenticated)
+
+  Retrieves the public profile with `isFollowing` and `isOwner` context for the authenticated viewer.
+
+  ## Path Parameters
+
+  - **username**: The user's display name (pseudo)
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Response (200 OK)
+
+  Same as the public endpoint, but `isFollowing` and `isOwner` are populated:
+
+  ```json
+  {
+    "isFollowing": true,
+    "isOwner": false
+  }
+  ```
+}
