@@ -6,7 +6,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,8 +22,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
+import com.checkpoint.api.entities.Report;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
@@ -91,6 +95,42 @@ class AdminReviewServiceImplTest {
 
         assertThat(result.metadata().totalElements()).isEqualTo(1);
         verify(reviewRepository).findAll(pageable);
+    }
+
+    @Test
+    @DisplayName("getReportedReviews should return paginated list of reported reviews with report counts")
+    void getReportedReviews_shouldReturnPaginatedReportedReviews() {
+        // Given
+        UUID id1 = UUID.randomUUID();
+        User user1 = createUser("bob");
+        VideoGame game1 = createGame("Game X");
+        Review review1 = createReview(id1, "Offensive content", false, user1, game1);
+
+        Report report1 = new Report("Spam", user1);
+        Report report2 = new Report("Inappropriate", user1);
+        Set<Report> reports = new HashSet<>();
+        reports.add(report1);
+        reports.add(report2);
+        review1.setReports(reports);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Review> reviewPage = new PageImpl<>(List.of(review1), pageable, 1);
+        when(reviewRepository.findByReportsIsNotEmpty(pageable)).thenReturn(reviewPage);
+
+        // When
+        PagedResponseDto<AdminReportedReviewDto> result = adminReviewService.getReportedReviews(pageable);
+
+        // Then
+        assertThat(result.content()).hasSize(1);
+        AdminReportedReviewDto dto = result.content().getFirst();
+        assertThat(dto.id()).isEqualTo(id1);
+        assertThat(dto.content()).isEqualTo("Offensive content");
+        assertThat(dto.authorUsername()).isEqualTo("bob");
+        assertThat(dto.gameTitle()).isEqualTo("Game X");
+        assertThat(dto.reportCount()).isEqualTo(2);
+
+        assertThat(result.metadata().totalElements()).isEqualTo(1);
+        verify(reviewRepository).findByReportsIsNotEmpty(pageable);
     }
 
     @Test

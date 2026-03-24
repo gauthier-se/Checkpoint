@@ -167,6 +167,37 @@ public class ApiService {
     }
 
     /**
+     * Fetches a paginated list of reported reviews from the admin API.
+     *
+     * @param page the page number (0-based)
+     * @param size number of items per page
+     * @return the paginated reported reviews
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public PagedResponse<ReviewResult> getReportedReviews(int page, int size) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/reviews/reported?page=" + page + "&size=" + size;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch reported reviews with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), new TypeReference<PagedResponse<ReviewResult>>() {});
+    }
+
+    /**
      * Deletes a review using the admin API.
      *
      * @param id the review ID

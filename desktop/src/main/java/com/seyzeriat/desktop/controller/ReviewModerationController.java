@@ -23,11 +23,10 @@ import javafx.scene.control.TableView;
 public class ReviewModerationController {
 
     @FXML private TableView<ReviewResult> reviewsTable;
-    @FXML private TableColumn<ReviewResult, String> authorColumn;
+    @FXML private TableColumn<ReviewResult, String> reportCountColumn;
     @FXML private TableColumn<ReviewResult, String> gameColumn;
+    @FXML private TableColumn<ReviewResult, String> authorColumn;
     @FXML private TableColumn<ReviewResult, String> contentColumn;
-    @FXML private TableColumn<ReviewResult, String> spoilersColumn;
-    @FXML private TableColumn<ReviewResult, String> dateColumn;
     @FXML private TableColumn<ReviewResult, Void> actionColumn;
 
     @FXML private Label statusLabel;
@@ -48,24 +47,14 @@ public class ReviewModerationController {
         loadingIndicator.setVisible(false);
 
         // Configure table columns
-        authorColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getAuthorUsername()));
+        reportCountColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(String.valueOf(cellData.getValue().getReportCount())));
         gameColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getGameTitle()));
+        authorColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getAuthorUsername()));
         contentColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getContent()));
-        spoilersColumn.setCellValueFactory(cellData -> {
-            Boolean hasSpoilers = cellData.getValue().getHaveSpoilers();
-            return new SimpleStringProperty(hasSpoilers != null && hasSpoilers ? "Oui" : "Non");
-        });
-
-        dateColumn.setCellValueFactory(cellData -> {
-            String date = cellData.getValue().getCreatedAt();
-            if (date != null && date.length() >= 10) {
-                return new SimpleStringProperty(date.substring(0, 10)); // just display YYYY-MM-DD
-            }
-            return new SimpleStringProperty(date);
-        });
 
         setupActionColumn();
 
@@ -119,12 +108,12 @@ public class ReviewModerationController {
 
     private void fetchReviews(int page) {
         setLoading(true);
-        statusLabel.setText("Chargement des avis...");
+        statusLabel.setText("Chargement des avis signalés...");
 
         Task<PagedResponse<ReviewResult>> fetchTask = new Task<>() {
             @Override
             protected PagedResponse<ReviewResult> call() throws Exception {
-                return apiService.getReviews(page, PAGE_SIZE);
+                return apiService.getReportedReviews(page, PAGE_SIZE);
             }
         };
 
@@ -140,7 +129,7 @@ public class ReviewModerationController {
             nextButton.setDisable(currentPage >= response.getMetadata().getTotalPages() - 1);
             pageLabel.setText("Page " + (currentPage + 1) + " / " + Math.max(1, response.getMetadata().getTotalPages()));
 
-            statusLabel.setText(response.getMetadata().getTotalElements() + " avis total.");
+            statusLabel.setText(response.getMetadata().getTotalElements() + " avis signalé(s).");
         }));
 
         fetchTask.setOnFailed(event -> Platform.runLater(() -> {
@@ -153,7 +142,7 @@ public class ReviewModerationController {
             statusLabel.setText("Erreur : " + ex.getMessage());
         }));
 
-        new Thread(fetchTask, "fetch-reviews-thread").start();
+        new Thread(fetchTask, "fetch-reported-reviews-thread").start();
     }
 
     private void confirmAndDelete(ReviewResult review) {
@@ -182,7 +171,7 @@ public class ReviewModerationController {
 
         deleteTask.setOnSucceeded(event -> Platform.runLater(() -> {
             statusLabel.setText("Avis supprimé avec succès.");
-            fetchReviews(currentPage); // reload current page
+            fetchReviews(currentPage); // reload current page (auto-refresh)
         }));
 
         deleteTask.setOnFailed(event -> Platform.runLater(() -> {

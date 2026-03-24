@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.entities.Review;
@@ -40,6 +41,25 @@ public class AdminReviewServiceImpl implements AdminReviewService {
                 review.getHaveSpoilers(),
                 review.getUser() != null ? review.getUser().getPseudo() : null,
                 review.getVideoGame() != null ? review.getVideoGame().getTitle() : null,
+                review.getCreatedAt()
+        ));
+
+        return PagedResponseDto.from(dtoPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponseDto<AdminReportedReviewDto> getReportedReviews(Pageable pageable) {
+        log.info("Fetching reported reviews for admin (pageable = {})", pageable);
+
+        Page<Review> reviewsPage = reviewRepository.findByReportsIsNotEmpty(pageable);
+
+        Page<AdminReportedReviewDto> dtoPage = reviewsPage.map(review -> new AdminReportedReviewDto(
+                review.getId(),
+                review.getContent(),
+                review.getUser() != null ? review.getUser().getPseudo() : null,
+                review.getVideoGame() != null ? review.getVideoGame().getTitle() : null,
+                review.getReports().size(),
                 review.getCreatedAt()
         ));
 

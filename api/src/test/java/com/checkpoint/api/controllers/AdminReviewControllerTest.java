@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
@@ -67,6 +68,32 @@ class AdminReviewControllerTest {
                 .andExpect(jsonPath("$.content[0].gameTitle").value("Game 1"));
 
         verify(adminReviewService).getAllReviews(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/reviews/reported should return paginated reported reviews")
+    void getReportedReviews_shouldReturnPaginatedList() throws Exception {
+        // Given
+        UUID id1 = UUID.randomUUID();
+        AdminReportedReviewDto dto1 = new AdminReportedReviewDto(id1, "Offensive review", "user1", "Game 1", 3, LocalDateTime.now());
+        PagedResponseDto.PageMetadata meta = new PagedResponseDto.PageMetadata(0, 20, 1, 1, true, true, false, false);
+        PagedResponseDto<AdminReportedReviewDto> response = new PagedResponseDto<>(List.of(dto1), meta);
+
+        when(adminReviewService.getReportedReviews(any(Pageable.class))).thenReturn(response);
+
+        // When / Then
+        mockMvc.perform(get("/api/admin/reviews/reported")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(id1.toString()))
+                .andExpect(jsonPath("$.content[0].content").value("Offensive review"))
+                .andExpect(jsonPath("$.content[0].authorUsername").value("user1"))
+                .andExpect(jsonPath("$.content[0].gameTitle").value("Game 1"))
+                .andExpect(jsonPath("$.content[0].reportCount").value(3));
+
+        verify(adminReviewService).getReportedReviews(any(Pageable.class));
     }
 
     @Test
