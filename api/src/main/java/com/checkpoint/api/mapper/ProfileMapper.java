@@ -1,0 +1,36 @@
+package com.checkpoint.api.mapper;
+
+import com.checkpoint.api.dto.profile.BadgeDto;
+import com.checkpoint.api.dto.profile.UserProfileDto;
+import com.checkpoint.api.entities.Badge;
+import com.checkpoint.api.entities.User;
+
+/**
+ * Mapper for converting User entities to profile DTOs.
+ */
+public interface ProfileMapper {
+
+    /**
+     * Maps a User entity and computed stats to a UserProfileDto.
+     *
+     * @param user           the user entity (with badges loaded)
+     * @param followerCount  the number of followers
+     * @param followingCount the number of users being followed
+     * @param reviewCount    the number of reviews written
+     * @param wishlistCount  the number of games in the wishlist
+     * @param isFollowing    whether the viewer is following this user (null if not authenticated)
+     * @param isOwner        whether the viewer is the profile owner
+     * @return the user profile DTO
+     */
+    UserProfileDto toUserProfileDto(User user, Long followerCount, Long followingCount,
+                                     Long reviewCount, Long wishlistCount,
+                                     Boolean isFollowing, Boolean isOwner);
+
+    /**
+     * Maps a Badge entity to a BadgeDto.
+     *
+     * @param badge the badge entity
+     * @return the badge DTO
+     */
+    BadgeDto toBadgeDto(Badge badge);
+}

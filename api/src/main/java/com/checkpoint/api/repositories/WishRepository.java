@@ -39,6 +39,28 @@ public interface WishRepository extends JpaRepository<Wish, UUID> {
     Page<Wish> findByUserIdWithVideoGame(@Param("userId") UUID userId, Pageable pageable);
 
     /**
+     * Returns all games in a user's wishlist by pseudo (paginated), with video game eagerly fetched.
+     *
+     * @param pseudo   the user's pseudo
+     * @param pageable pagination parameters
+     * @return a page of wishes
+     */
+    @Query("""
+            SELECT w FROM Wish w
+            JOIN FETCH w.videoGame
+            WHERE w.user.pseudo = :pseudo
+            """)
+    Page<Wish> findByUserPseudoWithVideoGame(@Param("pseudo") String pseudo, Pageable pageable);
+
+    /**
+     * Counts the number of wishes for a user with the given pseudo.
+     *
+     * @param pseudo the user's pseudo
+     * @return the wish count
+     */
+    long countByUserPseudo(String pseudo);
+
+    /**
      * Deletes a wish by user ID and video game ID.
      */
     void deleteByUserIdAndVideoGameId(UUID userId, UUID videoGameId);

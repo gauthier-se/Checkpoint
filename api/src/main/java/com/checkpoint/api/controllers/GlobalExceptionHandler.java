@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
+import com.checkpoint.api.exceptions.ProfilePrivateException;
 import com.checkpoint.api.exceptions.IgdbApiException;
 import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
 import com.checkpoint.api.exceptions.GameAlreadyInLibraryException;
@@ -341,6 +342,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles ProfilePrivateException when a non-owner tries to access private profile data.
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(ProfilePrivateException.class)
+    public ResponseEntity<ErrorResponse> handleProfilePrivate(ProfilePrivateException ex) {
+        log.warn("Private profile access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

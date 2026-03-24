@@ -14,6 +14,16 @@ public class UserNotFoundException extends RuntimeException {
         this.userId = userId;
     }
 
+    /**
+     * Constructs a new UserNotFoundException for a lookup by username.
+     *
+     * @param username the username that was not found
+     */
+    public UserNotFoundException(String username) {
+        super("User not found with username: " + username);
+        this.userId = null;
+    }
+
     public UUID getUserId() {
         return userId;
     }

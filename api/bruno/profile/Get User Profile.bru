@@ -1,0 +1,62 @@
+meta {
+  name: Get User Profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users/:username
+  body: none
+  auth: none
+}
+
+params:path {
+  username: gamer123
+}
+
+docs {
+  # Get User Profile
+
+  Retrieves the public profile for a user by username.
+  Returns avatar, bio, level, XP, badges, follower/following counts, and review/wishlist counts.
+
+  When accessed by an authenticated user, the response includes `isFollowing` and `isOwner` flags.
+
+  ## Path Parameters
+
+  - **username**: The user's display name (pseudo)
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "username": "gamer123",
+    "bio": "I love video games",
+    "picture": null,
+    "level": 3,
+    "xpPoint": 2500,
+    "xpThreshold": 3000,
+    "isPrivate": false,
+    "badges": [
+      {
+        "id": "uuid",
+        "name": "First Review",
+        "picture": null,
+        "description": "Write your first review"
+      }
+    ],
+    "followerCount": 10,
+    "followingCount": 5,
+    "reviewCount": 3,
+    "wishlistCount": 7,
+    "isFollowing": null,
+    "isOwner": false,
+    "createdAt": "2025-01-15T10:30:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: User does not exist
+}
