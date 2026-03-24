@@ -1,0 +1,73 @@
+meta {
+  name: Get Reported Reviews
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/admin/reviews/reported?page=0&size=20
+  body: none
+  auth: bearer
+}
+
+query {
+  page: 0
+  size: 20
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Reported Reviews
+
+  Retrieves a paginated list of reviews that have been reported at least once. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Response
+
+  Returns a paginated JSON response `PagedResponseDto<AdminReportedReviewDto>` containing reported reviews:
+  - `id`: Review UUID
+  - `content`: Review content
+  - `authorUsername`: User pseudo of the author
+  - `gameTitle`: Title of the game
+  - `reportCount`: Number of reports filed against this review
+  - `createdAt`: Date of review creation
+
+  ## Example Response
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "content": "Offensive review content",
+        "authorUsername": "john_doe",
+        "gameTitle": "Super Mario Odyssey",
+        "reportCount": 3,
+        "createdAt": "2023-10-15T12:00:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+}

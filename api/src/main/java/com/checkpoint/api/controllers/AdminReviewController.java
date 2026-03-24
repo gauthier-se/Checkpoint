@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.services.AdminReviewService;
@@ -63,6 +64,31 @@ public class AdminReviewController {
 
         Pageable pageable = createPageable(validatedPage, validatedSize, sort);
         PagedResponseDto<AdminReviewDto> reviews = adminReviewService.getAllReviews(pageable);
+
+        return ResponseEntity.ok(reviews);
+    }
+
+    /**
+     * Retrieves a paginated list of reported reviews (reviews with at least one report).
+     *
+     * @param page the page number (0-based)
+     * @param size the page size
+     * @param sort the sorting parameters
+     * @return the paginated reported reviews
+     */
+    @GetMapping("/reported")
+    public ResponseEntity<PagedResponseDto<AdminReportedReviewDto>> getReportedReviews(
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
+
+        log.info("Admin request: fetching reported reviews. Page: {}, Size: {}, Sort: {}", page, size, sort);
+
+        int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
+        int validatedPage = Math.max(0, page);
+
+        Pageable pageable = createPageable(validatedPage, validatedSize, sort);
+        PagedResponseDto<AdminReportedReviewDto> reviews = adminReviewService.getReportedReviews(pageable);
 
         return ResponseEntity.ok(reviews);
     }

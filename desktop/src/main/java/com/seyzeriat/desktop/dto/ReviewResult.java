@@ -13,6 +13,7 @@ public class ReviewResult {
     private String authorUsername;
     private String gameTitle;
     private String createdAt;
+    private long reportCount;
 
     public ReviewResult() {}
 
@@ -33,4 +34,7 @@ public class ReviewResult {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public long getReportCount() { return reportCount; }
+    public void setReportCount(long reportCount) { this.reportCount = reportCount; }
 }

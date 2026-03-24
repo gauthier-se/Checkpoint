@@ -49,4 +49,12 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
      */
     boolean existsByUserGamePlayId(UUID userGamePlayId);
 
+    /**
+     * Finds all reviews that have at least one report.
+     *
+     * @param pageable pagination and sorting details
+     * @return a page of reported reviews
+     */
+    Page<Review> findByReportsIsNotEmpty(Pageable pageable);
+
 }
