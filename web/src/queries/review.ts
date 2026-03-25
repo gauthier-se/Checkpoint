@@ -43,3 +43,29 @@ export const submitPlayLogReview = async (
   }
   return res.json()
 }
+
+export interface ReportResponse {
+  id: string
+  content: string
+  createdAt: string
+}
+
+export const reportReview = async (
+  reviewId: string,
+  payload: { content: string },
+): Promise<ReportResponse> => {
+  const res = await apiFetch(`/api/reviews/${reviewId}/report`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  if (res.status === 409) {
+    throw new Error('You have already reported this review')
+  }
+  if (!res.ok) {
+    throw new Error('Failed to report review')
+  }
+  return res.json()
+}

@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Gamepad2, RefreshCw } from 'lucide-react'
+import { Flag, Gamepad2, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 
 import type { PlayStatus } from '@/types/interaction'
+import { ReportReviewDialog } from '@/components/reviews/report-review-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
 import { gameReviewsQueryOptions } from '@/queries/review'
 
 interface ReviewListProps {
@@ -38,10 +40,14 @@ const PLAY_STATUS_COLORS: Record<PlayStatus, string> = {
 }
 
 export function ReviewList({ gameId }: ReviewListProps) {
+  const { user } = useAuth()
   const [page, setPage] = useState(0)
   const [revealedSpoilers, setRevealedSpoilers] = useState<
     Record<string, boolean>
   >({})
+  const [reportingReviewId, setReportingReviewId] = useState<string | null>(
+    null,
+  )
   const size = 10
 
   const { data, isLoading, isError } = useQuery(
@@ -138,6 +144,16 @@ export function ReviewList({ gameId }: ReviewListProps) {
                     </CardDescription>
                   </div>
                 </div>
+                {user && user.id !== review.user.id && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => setReportingReviewId(review.id)}
+                  >
+                    <Flag className="size-4" />
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="py-0">
@@ -175,6 +191,16 @@ export function ReviewList({ gameId }: ReviewListProps) {
           </Card>
         ))}
       </div>
+
+      {reportingReviewId && (
+        <ReportReviewDialog
+          reviewId={reportingReviewId}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setReportingReviewId(null)
+          }}
+        />
+      )}
 
       {/* Pagination Controls */}
       {metadata.totalPages > 1 && (
