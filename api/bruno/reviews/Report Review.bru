@@ -1,0 +1,25 @@
+meta {
+  name: Report Review
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/reviews/:reviewId/report
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "This review contains inappropriate language"
+  }
+}
+
+params:path {
+  reviewId: ad3b5b63-bf94-4945-b0bf-f1c62d8c3107
+}

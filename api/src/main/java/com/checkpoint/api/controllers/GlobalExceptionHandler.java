@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.checkpoint.api.exceptions.DuplicateReportException;
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
 import com.checkpoint.api.exceptions.ProfilePrivateException;
 import com.checkpoint.api.exceptions.IgdbApiException;
@@ -42,6 +43,26 @@ import com.checkpoint.api.exceptions.UserNotFoundException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
+     * Handles DuplicateReportException when a user tries to report a review they already reported.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(DuplicateReportException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateReport(DuplicateReportException ex) {
+        log.warn("Duplicate report: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 
     /**
      * Handles GameNotFoundException.
