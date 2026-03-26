@@ -1,0 +1,38 @@
+meta {
+  name: Get All Platforms
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/platforms
+  body: none
+  auth: none
+}
+
+docs {
+  # Get All Platforms
+
+  Retrieves all platforms sorted alphabetically by name, with the count of video games on each platform.
+
+  ## Authentication
+
+  None required — this is a public endpoint.
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Nintendo Switch",
+      "videoGamesCount": 12
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "PlayStation 5",
+      "videoGamesCount": 30
+    }
+  ]
+  ```
+}
