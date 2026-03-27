@@ -4,18 +4,51 @@ import { queryOptions, useQuery } from '@tanstack/react-query'
 import { Loader2, Search, X } from 'lucide-react'
 import type { Game, GamesResponse } from '@/types/game'
 import { GameGrid } from '@/components/games/game-grid'
+import { CatalogFilters } from '@/components/games/catalog-filters'
 import { GamesPagination } from '@/components/games/pagination'
-import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
+import { genresQueryOptions, platformsQueryOptions } from '@/queries/catalog'
 
 const PAGE_SIZE = 32
 
-type GamesSearchParams = {
+const VALID_SORTS = [
+  'releaseDate,desc',
+  'releaseDate,asc',
+  'title,asc',
+  'title,desc',
+  'rating,desc',
+  'rating,asc',
+] as const
+
+export type GamesSearchParams = {
   page: number
   q?: string
+  genre?: string
+  platform?: string
+  yearMin?: number
+  yearMax?: number
+  ratingMin?: number
+  ratingMax?: number
+  sort?: string
+}
+
+function parseOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined
+}
+
+function parseOptionalNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const n = Number(value)
+  return Number.isFinite(n) ? n : undefined
+}
+
+function parseSort(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  return (VALID_SORTS as ReadonlyArray<string>).includes(value)
+    ? value
+    : undefined
 }
 
 function searchGamesQuery(q: string) {
@@ -29,27 +62,50 @@ function searchGamesQuery(q: string) {
   })
 }
 
+function buildCatalogUrl(params: GamesSearchParams): string {
+  const qs = new URLSearchParams()
+  qs.set('page', String(params.page - 1))
+  qs.set('size', String(PAGE_SIZE))
+  qs.set('sort', params.sort ?? 'releaseDate,desc')
+  if (params.genre) qs.set('genre', params.genre)
+  if (params.platform) qs.set('platform', params.platform)
+  if (params.yearMin != null) qs.set('yearMin', String(params.yearMin))
+  if (params.yearMax != null) qs.set('yearMax', String(params.yearMax))
+  if (params.ratingMin != null) qs.set('ratingMin', String(params.ratingMin))
+  if (params.ratingMax != null) qs.set('ratingMax', String(params.ratingMax))
+  return `/api/games?${qs.toString()}`
+}
+
 export const Route = createFileRoute('/_app/games/')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): GamesSearchParams => ({
     page: Math.max(1, Math.floor(Number(search.page ?? 1)) || 1),
-    q:
-      typeof search.q === 'string' && search.q.length > 0
-        ? search.q
-        : undefined,
+    q: parseOptionalString(search.q),
+    genre: parseOptionalString(search.genre),
+    platform: parseOptionalString(search.platform),
+    yearMin: parseOptionalNumber(search.yearMin),
+    yearMax: parseOptionalNumber(search.yearMax),
+    ratingMin: parseOptionalNumber(search.ratingMin),
+    ratingMax: parseOptionalNumber(search.ratingMax),
+    sort: parseSort(search.sort),
   }),
-  loaderDeps: ({ search: { page } }) => ({ page }),
-  loader: async ({ deps: { page } }): Promise<GamesResponse> => {
-    const apiPage = page - 1 // API is 0-based, URL is 1-based
-    const res = await apiFetch(`/api/games?page=${apiPage}&size=${PAGE_SIZE}`)
-    const data: GamesResponse = await res.json()
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps, context }): Promise<GamesResponse> => {
+    const [data] = await Promise.all([
+      apiFetch(buildCatalogUrl(deps)).then(
+        (res): Promise<GamesResponse> => res.json(),
+      ),
+      context.queryClient.ensureQueryData(genresQueryOptions()),
+      context.queryClient.ensureQueryData(platformsQueryOptions()),
+    ])
     return data
   },
 })
 
 function RouteComponent() {
   const data = Route.useLoaderData()
-  const { page, q } = Route.useSearch()
+  const search = Route.useSearch()
+  const { page, q } = search
   const navigate = useNavigate({ from: '/games' })
 
   const [inputValue, setInputValue] = useState(q ?? '')
@@ -82,7 +138,7 @@ function RouteComponent() {
     if (q && q !== inputValue) {
       setInputValue(q)
     }
-  }, [q])  
+  }, [q])
 
   function clearSearch() {
     setInputValue('')
@@ -95,16 +151,7 @@ function RouteComponent() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mt-10 py-2 text-muted-foreground font-semibold flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <p>Browse by</p>
-          <ButtonGroup>
-            <Button variant="outline">Year</Button>
-            <Button variant="outline">Rating</Button>
-            <Button variant="outline">Genre</Button>
-            <Button variant="outline">Platform</Button>
-            <Button variant="outline">Other</Button>
-          </ButtonGroup>
-        </div>
+        <CatalogFilters />
         <div className="flex items-center gap-4">
           <p className="min-w-fit">Find a game</p>
           <div className="relative">
@@ -184,6 +231,7 @@ function RouteComponent() {
                 totalPages={data.metadata.totalPages}
                 hasNext={data.metadata.hasNext}
                 hasPrevious={data.metadata.hasPrevious}
+                search={search}
               />
             </>
           ) : (

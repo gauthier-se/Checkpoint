@@ -11,6 +11,7 @@ interface GamesPaginationProps {
   totalPages: number
   hasNext: boolean
   hasPrevious: boolean
+  search: Record<string, unknown>
 }
 
 export function GamesPagination({
@@ -18,12 +19,13 @@ export function GamesPagination({
   totalPages,
   hasNext,
   hasPrevious,
+  search,
 }: GamesPaginationProps) {
   return (
     <div className="flex items-center justify-between mt-6 mb-10">
       <Link
         to="/games"
-        search={{ page: page - 1 }}
+        search={{ ...search, page: page - 1 }}
         hash={CATALOG_HASH}
         disabled={!hasPrevious}
       >
@@ -39,7 +41,7 @@ export function GamesPagination({
               ...
             </Button>
           ) : (
-            <Link key={p} to="/games" search={{ page: p }} hash={CATALOG_HASH}>
+            <Link key={p} to="/games" search={{ ...search, page: p }} hash={CATALOG_HASH}>
               <Button variant={p === page ? 'default' : 'outline'}>{p}</Button>
             </Link>
           ),
@@ -47,7 +49,7 @@ export function GamesPagination({
       </ButtonGroup>
       <Link
         to="/games"
-        search={{ page: page + 1 }}
+        search={{ ...search, page: page + 1 }}
         hash={CATALOG_HASH}
         disabled={!hasNext}
       >

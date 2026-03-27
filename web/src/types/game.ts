@@ -10,11 +10,13 @@ export interface Game {
 export interface Genre {
   id: string
   name: string
+  videoGamesCount?: number
 }
 
 export interface Platform {
   id: string
   name: string
+  videoGamesCount?: number
 }
 
 export interface Company {
