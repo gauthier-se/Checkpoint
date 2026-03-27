@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { MessageSquare, Lock } from 'lucide-react'
-import { userReviewsQueryOptions } from '@/queries/profile'
+import { Lock, MessageSquare } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { userReviewsQueryOptions } from '@/queries/profile'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface ProfileReviewsTabProps {
   profile: UserProfile

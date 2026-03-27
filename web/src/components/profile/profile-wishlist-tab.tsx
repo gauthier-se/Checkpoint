@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Heart, Lock } from 'lucide-react'
-import { userWishlistQueryOptions } from '@/queries/profile'
 import type { UserProfile } from '@/types/profile'
+import { userWishlistQueryOptions } from '@/queries/profile'
 
 interface ProfileWishlistTabProps {
   profile: UserProfile
