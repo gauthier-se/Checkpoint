@@ -3,6 +3,7 @@ package com.checkpoint.api.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -66,7 +67,9 @@ class GameControllerTest {
         );
         Page<GameCardDto> page = new PageImpl<>(cards);
 
-        when(gameCatalogService.getGameCatalog(any(Pageable.class))).thenReturn(page);
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(page);
 
         // When / Then
         mockMvc.perform(get("/api/games"))
@@ -83,7 +86,9 @@ class GameControllerTest {
     void getGames_shouldAcceptPaginationParameters() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
-        when(gameCatalogService.getGameCatalog(any(Pageable.class))).thenReturn(emptyPage);
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(emptyPage);
 
         // When / Then
         mockMvc.perform(get("/api/games")
@@ -147,12 +152,113 @@ class GameControllerTest {
     void getGames_shouldLimitPageSizeToMax() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
-        when(gameCatalogService.getGameCatalog(any(Pageable.class))).thenReturn(emptyPage);
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(emptyPage);
 
         // When / Then - requesting size 500 should be capped
         mockMvc.perform(get("/api/games")
                         .param("size", "500"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/games?genre=RPG should pass genre filter to service")
+    void getGames_shouldPassGenreFilter() throws Exception {
+        // Given
+        Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                eq("RPG"), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(emptyPage);
+
+        // When / Then
+        mockMvc.perform(get("/api/games")
+                        .param("genre", "RPG"))
+                .andExpect(status().isOk());
+
+        verify(gameCatalogService).getGameCatalog(any(Pageable.class),
+                eq("RPG"), isNull(), isNull(), isNull(), isNull(), isNull());
+    }
+
+    @Test
+    @DisplayName("GET /api/games?platform=PC should pass platform filter to service")
+    void getGames_shouldPassPlatformFilter() throws Exception {
+        // Given
+        Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), eq("PC"), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(emptyPage);
+
+        // When / Then
+        mockMvc.perform(get("/api/games")
+                        .param("platform", "PC"))
+                .andExpect(status().isOk());
+
+        verify(gameCatalogService).getGameCatalog(any(Pageable.class),
+                isNull(), eq("PC"), isNull(), isNull(), isNull(), isNull());
+    }
+
+    @Test
+    @DisplayName("GET /api/games?yearMin=2020&yearMax=2023 should pass year range filters to service")
+    void getGames_shouldPassYearRangeFilters() throws Exception {
+        // Given
+        Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), eq(2020), eq(2023), isNull(), isNull()))
+                .thenReturn(emptyPage);
+
+        // When / Then
+        mockMvc.perform(get("/api/games")
+                        .param("yearMin", "2020")
+                        .param("yearMax", "2023"))
+                .andExpect(status().isOk());
+
+        verify(gameCatalogService).getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), eq(2020), eq(2023), isNull(), isNull());
+    }
+
+    @Test
+    @DisplayName("GET /api/games?ratingMin=4.0&ratingMax=5.0 should pass rating range filters to service")
+    void getGames_shouldPassRatingRangeFilters() throws Exception {
+        // Given
+        Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), isNull(), isNull(), eq(4.0), eq(5.0)))
+                .thenReturn(emptyPage);
+
+        // When / Then
+        mockMvc.perform(get("/api/games")
+                        .param("ratingMin", "4.0")
+                        .param("ratingMax", "5.0"))
+                .andExpect(status().isOk());
+
+        verify(gameCatalogService).getGameCatalog(any(Pageable.class),
+                isNull(), isNull(), isNull(), isNull(), eq(4.0), eq(5.0));
+    }
+
+    @Test
+    @DisplayName("GET /api/games should support combining multiple filters")
+    void getGames_shouldSupportCombinedFilters() throws Exception {
+        // Given
+        UUID gameId = UUID.randomUUID();
+        List<GameCardDto> cards = List.of(
+                new GameCardDto(gameId, "Elden Ring", "cover.jpg", LocalDate.of(2022, 2, 25), 4.9, 2000L)
+        );
+        Page<GameCardDto> page = new PageImpl<>(cards);
+
+        when(gameCatalogService.getGameCatalog(any(Pageable.class),
+                eq("RPG"), eq("PC"), eq(2020), isNull(), eq(4.0), isNull()))
+                .thenReturn(page);
+
+        // When / Then
+        mockMvc.perform(get("/api/games")
+                        .param("genre", "RPG")
+                        .param("platform", "PC")
+                        .param("yearMin", "2020")
+                        .param("ratingMin", "4.0")
+                        .param("sort", "rating,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Elden Ring"));
     }
 
     @Test

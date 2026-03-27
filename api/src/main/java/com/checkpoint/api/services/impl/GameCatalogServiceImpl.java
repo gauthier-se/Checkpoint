@@ -37,11 +37,20 @@ public class GameCatalogServiceImpl implements GameCatalogService {
     }
 
     @Override
-    public Page<GameCardDto> getGameCatalog(Pageable pageable) {
-        log.debug("Fetching game catalog - page: {}, size: {}, sort: {}",
-                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+    public Page<GameCardDto> getGameCatalog(Pageable pageable,
+                                             String genre,
+                                             String platform,
+                                             Integer yearMin,
+                                             Integer yearMax,
+                                             Double ratingMin,
+                                             Double ratingMax) {
+        log.debug("Fetching game catalog - page: {}, size: {}, sort: {}, genre: {}, platform: {}, "
+                + "yearMin: {}, yearMax: {}, ratingMin: {}, ratingMax: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort(),
+                genre, platform, yearMin, yearMax, ratingMin, ratingMax);
 
-        return videoGameRepository.findAllAsGameCards(pageable);
+        return videoGameRepository.findAllAsGameCardsWithFilters(
+                pageable, genre, platform, yearMin, yearMax, ratingMin, ratingMax);
     }
 
     @Override

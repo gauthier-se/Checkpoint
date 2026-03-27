@@ -50,7 +50,7 @@ class GameCatalogServiceImplTest {
     }
 
     @Test
-    @DisplayName("getGameCatalog should return paginated game cards")
+    @DisplayName("getGameCatalog should return paginated game cards without filters")
     void getGameCatalog_shouldReturnPaginatedGameCards() {
         // Given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "releaseDate"));
@@ -61,16 +61,41 @@ class GameCatalogServiceImplTest {
         );
         Page<GameCardDto> expectedPage = new PageImpl<>(cards, pageable, 2);
 
-        when(videoGameRepository.findAllAsGameCards(pageable)).thenReturn(expectedPage);
+        when(videoGameRepository.findAllAsGameCardsWithFilters(pageable,
+                null, null, null, null, null, null))
+                .thenReturn(expectedPage);
 
         // When
-        Page<GameCardDto> result = gameCatalogService.getGameCatalog(pageable);
+        Page<GameCardDto> result = gameCatalogService.getGameCatalog(
+                pageable, null, null, null, null, null, null);
 
         // Then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent().get(0).title()).isEqualTo("Game 1");
         assertThat(result.getTotalElements()).isEqualTo(2);
-        verify(videoGameRepository).findAllAsGameCards(pageable);
+        verify(videoGameRepository).findAllAsGameCardsWithFilters(pageable,
+                null, null, null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("getGameCatalog should pass filter parameters to repository")
+    void getGameCatalog_shouldPassFiltersToRepository() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "releaseDate"));
+        Page<GameCardDto> expectedPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(videoGameRepository.findAllAsGameCardsWithFilters(pageable,
+                "RPG", "PC", 2020, 2023, 4.0, 5.0))
+                .thenReturn(expectedPage);
+
+        // When
+        Page<GameCardDto> result = gameCatalogService.getGameCatalog(
+                pageable, "RPG", "PC", 2020, 2023, 4.0, 5.0);
+
+        // Then
+        assertThat(result.getContent()).isEmpty();
+        verify(videoGameRepository).findAllAsGameCardsWithFilters(pageable,
+                "RPG", "PC", 2020, 2023, 4.0, 5.0);
     }
 
     @Test
