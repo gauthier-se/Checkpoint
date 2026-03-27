@@ -17,7 +17,7 @@ import com.checkpoint.api.entities.VideoGame;
  * Repository for VideoGame entity.
  */
 @Repository
-public interface VideoGameRepository extends JpaRepository<VideoGame, UUID> {
+public interface VideoGameRepository extends JpaRepository<VideoGame, UUID>, VideoGameRepositoryCustom {
 
     /**
      * Finds a video game by its IGDB external ID.

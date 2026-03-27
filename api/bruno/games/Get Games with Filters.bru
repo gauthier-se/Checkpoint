@@ -1,0 +1,49 @@
+meta {
+  name: Get Games with Filters
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/games
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+  ~sort: releaseDate,desc
+  ~genre: RPG
+  ~platform: PC
+  ~yearMin: 2020
+  ~yearMax: 2023
+  ~ratingMin: 4.0
+  ~ratingMax: 5.0
+}
+
+docs {
+  # Get Games with Filters
+
+  Retrieves a paginated list of games with optional filters.
+
+  ## Filter Parameters
+
+  | Parameter | Type | Description |
+  |-----------|------|-------------|
+  | genre | String | Genre name (case-insensitive exact match) |
+  | platform | String | Platform name (case-insensitive exact match) |
+  | yearMin | Integer | Minimum release year (inclusive) |
+  | yearMax | Integer | Maximum release year (inclusive) |
+  | ratingMin | Double | Minimum average rating (inclusive) |
+  | ratingMax | Double | Maximum average rating (inclusive) |
+
+  All filter parameters are optional and can be combined.
+
+  ## Examples
+
+  - `?genre=RPG` — Only RPG games
+  - `?platform=PC&yearMin=2020` — PC games from 2020 onwards
+  - `?ratingMin=4.0&ratingMax=5.0&sort=rating,desc` — Top rated games
+  - `?genre=Action&yearMin=2020&yearMax=2023&platform=PlayStation 5` — Combined filters
+}

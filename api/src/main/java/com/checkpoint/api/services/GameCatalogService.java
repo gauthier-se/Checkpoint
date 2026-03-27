@@ -15,12 +15,24 @@ import com.checkpoint.api.dto.catalog.GameDetailDto;
 public interface GameCatalogService {
 
     /**
-     * Retrieves a paginated list of games for the catalog.
+     * Retrieves a paginated list of games for the catalog with optional filters.
      *
-     * @param pageable pagination and sorting parameters
-     * @return page of game cards
+     * @param pageable   pagination and sorting parameters
+     * @param genre      optional genre name filter (case-insensitive exact match)
+     * @param platform   optional platform name filter (case-insensitive exact match)
+     * @param yearMin    optional minimum release year (inclusive)
+     * @param yearMax    optional maximum release year (inclusive)
+     * @param ratingMin  optional minimum average rating (inclusive)
+     * @param ratingMax  optional maximum average rating (inclusive)
+     * @return page of game cards matching the filters
      */
-    Page<GameCardDto> getGameCatalog(Pageable pageable);
+    Page<GameCardDto> getGameCatalog(Pageable pageable,
+                                      String genre,
+                                      String platform,
+                                      Integer yearMin,
+                                      Integer yearMax,
+                                      Double ratingMin,
+                                      Double ratingMax);
 
     /**
      * Retrieves detailed information about a specific game.

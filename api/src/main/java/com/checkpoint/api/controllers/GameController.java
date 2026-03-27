@@ -46,27 +46,42 @@ public class GameController {
     }
 
     /**
-     * Retrieves a paginated list of games.
+     * Retrieves a paginated list of games with optional filters.
      *
-     * @param page the page number (0-based, default 0)
-     * @param size the page size (default 20, max 100)
-     * @param sort the sort criteria (e.g., "releaseDate,desc" or "title,asc")
-     * @return paginated list of game cards
+     * @param page      the page number (0-based, default 0)
+     * @param size      the page size (default 20, max 100)
+     * @param sort      the sort criteria (e.g., "releaseDate,desc" or "title,asc")
+     * @param genre     optional genre name filter (case-insensitive exact match)
+     * @param platform  optional platform name filter (case-insensitive exact match)
+     * @param yearMin   optional minimum release year (inclusive)
+     * @param yearMax   optional maximum release year (inclusive)
+     * @param ratingMin optional minimum average rating (inclusive)
+     * @param ratingMax optional maximum average rating (inclusive)
+     * @return paginated list of game cards matching the filters
      */
     @GetMapping
     public ResponseEntity<PagedResponseDto<GameCardDto>> getGames(
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
-            @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
+            @RequestParam(defaultValue = DEFAULT_SORT) String sort,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String platform,
+            @RequestParam(required = false) Integer yearMin,
+            @RequestParam(required = false) Integer yearMax,
+            @RequestParam(required = false) Double ratingMin,
+            @RequestParam(required = false) Double ratingMax) {
 
-        log.info("GET /api/games - page: {}, size: {}, sort: {}", page, size, sort);
+        log.info("GET /api/games - page: {}, size: {}, sort: {}, genre: {}, platform: {}, "
+                + "yearMin: {}, yearMax: {}, ratingMin: {}, ratingMax: {}",
+                page, size, sort, genre, platform, yearMin, yearMax, ratingMin, ratingMax);
 
         // Validate and sanitize inputs
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
 
         Pageable pageable = createPageable(validatedPage, validatedSize, sort);
-        Page<GameCardDto> gamePage = gameCatalogService.getGameCatalog(pageable);
+        Page<GameCardDto> gamePage = gameCatalogService.getGameCatalog(
+                pageable, genre, platform, yearMin, yearMax, ratingMin, ratingMax);
 
         return ResponseEntity.ok(PagedResponseDto.from(gamePage));
     }
