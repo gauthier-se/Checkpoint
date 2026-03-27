@@ -14,7 +14,7 @@ export interface UserProfile {
   xpPoint: number
   xpThreshold: number
   isPrivate: boolean
-  badges: BadgeDto[]
+  badges: Array<BadgeDto>
   followerCount: number
   followingCount: number
   reviewCount: number

@@ -2,10 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Heart, MessageSquare, Users } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
 import {
+  userFollowingQueryOptions,
   userProfileQueryOptions,
   userReviewsQueryOptions,
   userWishlistQueryOptions,
-  userFollowingQueryOptions,
 } from '@/queries/profile'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProfileHeader } from '@/components/profile/profile-header'

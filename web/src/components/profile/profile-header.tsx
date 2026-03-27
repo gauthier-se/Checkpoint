@@ -1,12 +1,12 @@
-import { Calendar, Pencil, UserPlus, UserMinus } from 'lucide-react'
+import { Calendar, Pencil, UserMinus, UserPlus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { XpProgressBar } from './xp-progress-bar'
+import { BadgeGrid } from './badge-grid'
 import type { UserProfile } from '@/types/profile'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { XpProgressBar } from './xp-progress-bar'
-import { BadgeGrid } from './badge-grid'
 import { toggleFollowMutation } from '@/queries/profile'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -38,7 +38,10 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       {/* Top section: Avatar + Info + Actions */}
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <Avatar className="size-24 text-2xl">
-          <AvatarImage src={profile.picture ?? undefined} alt={profile.username} />
+          <AvatarImage
+            src={profile.picture ?? undefined}
+            alt={profile.username}
+          />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
 

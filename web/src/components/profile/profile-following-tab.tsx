@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Users } from 'lucide-react'
-import { userFollowingQueryOptions } from '@/queries/profile'
 import type { UserProfile } from '@/types/profile'
+import { userFollowingQueryOptions } from '@/queries/profile'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface ProfileFollowingTabProps {
@@ -23,7 +23,10 @@ export function ProfileFollowingTab({
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-lg border p-4">
+          <div
+            key={i}
+            className="flex items-center gap-3 rounded-lg border p-4"
+          >
             <div className="bg-muted size-10 animate-pulse rounded-full" />
             <div className="bg-muted h-4 w-24 animate-pulse rounded" />
           </div>
@@ -47,7 +50,9 @@ export function ProfileFollowingTab({
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
         <Users className="text-muted-foreground size-12" />
-        <p className="text-muted-foreground text-lg">Not following anyone yet</p>
+        <p className="text-muted-foreground text-lg">
+          Not following anyone yet
+        </p>
       </div>
     )
   }
