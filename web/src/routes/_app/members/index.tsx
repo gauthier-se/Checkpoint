@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
 import {
-  popularMembersQueryOptions,
-  topReviewersMembersQueryOptions,
-  suggestedMembersQueryOptions,
   browseMembersQueryOptions,
+  popularMembersQueryOptions,
+  suggestedMembersQueryOptions,
+  topReviewersMembersQueryOptions,
 } from '@/queries/members'
 import { useAuth } from '@/hooks/use-auth'
 

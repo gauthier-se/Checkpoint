@@ -1,0 +1,300 @@
+import { useDeferredValue, useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Gamepad2, Loader2, Monitor, Tag, Users } from 'lucide-react'
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  genresQueryOptions,
+  platformsQueryOptions,
+  searchGamesQueryOptions,
+} from '@/queries/catalog'
+import { searchMembersQueryOptions } from '@/queries/members'
+
+type SearchTab = 'all' | 'games' | 'members' | 'genres' | 'platforms'
+
+interface SearchCommandProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  const [tab, setTab] = useState<SearchTab>('all')
+  const deferredQuery = useDeferredValue(query)
+  const isSearchActive = deferredQuery.length >= 2
+
+  const showGames = tab === 'all' || tab === 'games'
+  const showMembers = tab === 'all' || tab === 'members'
+  const showGenres = tab === 'all' || tab === 'genres'
+  const showPlatforms = tab === 'all' || tab === 'platforms'
+
+  const { data: games, isLoading: isLoadingGames } = useQuery({
+    ...searchGamesQueryOptions(deferredQuery),
+    enabled: isSearchActive && showGames,
+  })
+
+  const { data: membersResponse, isLoading: isLoadingMembers } = useQuery({
+    ...searchMembersQueryOptions(deferredQuery),
+    enabled: isSearchActive && showMembers,
+  })
+
+  const { data: genres } = useQuery(genresQueryOptions())
+  const { data: platforms } = useQuery(platformsQueryOptions())
+
+  const members = membersResponse?.content
+
+  const filteredGenres =
+    isSearchActive && showGenres
+      ? genres?.filter((g) =>
+          g.name.toLowerCase().includes(deferredQuery.toLowerCase()),
+        )
+      : undefined
+
+  const filteredPlatforms =
+    isSearchActive && showPlatforms
+      ? platforms?.filter((p) =>
+          p.name.toLowerCase().includes(deferredQuery.toLowerCase()),
+        )
+      : undefined
+
+  const isLoading =
+    isSearchActive &&
+    ((showGames && isLoadingGames) || (showMembers && isLoadingMembers))
+
+  const hasResults =
+    (showGames && games && games.length > 0) ||
+    (showMembers && members && members.length > 0) ||
+    (showGenres && filteredGenres && filteredGenres.length > 0) ||
+    (showPlatforms && filteredPlatforms && filteredPlatforms.length > 0)
+
+  // Reset query and tab when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setQuery('')
+      setTab('all')
+    }
+  }, [open])
+
+  function handleSelect(callback: () => void) {
+    onOpenChange(false)
+    callback()
+  }
+
+  const gamesResults = showGames && games && games.length > 0 && (
+    <CommandGroup heading="Games">
+      {games.slice(0, 5).map((game) => (
+        <CommandItem
+          key={game.id}
+          value={`game-${game.title}`}
+          onSelect={() =>
+            handleSelect(() =>
+              navigate({
+                to: '/games/$gameId',
+                params: { gameId: game.id },
+              }),
+            )
+          }
+        >
+          <Gamepad2 />
+          <div className="flex items-center gap-3">
+            {game.coverUrl && (
+              <img
+                src={game.coverUrl}
+                alt=""
+                className="h-8 w-6 rounded-sm object-cover"
+              />
+            )}
+            <div>
+              <p className="font-medium">{game.title}</p>
+              {game.releaseDate && (
+                <p className="text-xs text-muted-foreground">
+                  {new Date(game.releaseDate).getFullYear()}
+                </p>
+              )}
+            </div>
+          </div>
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  )
+
+  const membersResults = showMembers && members && members.length > 0 && (
+    <CommandGroup heading="Members">
+      {members.map((member) => (
+        <CommandItem
+          key={member.id}
+          value={`member-${member.pseudo}`}
+          onSelect={() =>
+            handleSelect(() =>
+              navigate({
+                to: '/profile/$username',
+                params: { username: member.pseudo },
+              }),
+            )
+          }
+        >
+          <Users />
+          <div className="flex items-center gap-3">
+            {member.picture && (
+              <img
+                src={member.picture}
+                alt=""
+                className="size-6 rounded-full object-cover"
+              />
+            )}
+            <div>
+              <p className="font-medium">{member.pseudo}</p>
+              <p className="text-xs text-muted-foreground">
+                Level {member.level}
+              </p>
+            </div>
+          </div>
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  )
+
+  const genresResults = showGenres &&
+    filteredGenres &&
+    filteredGenres.length > 0 && (
+      <CommandGroup heading="Genres">
+        {filteredGenres.slice(0, 5).map((genre) => (
+          <CommandItem
+            key={genre.id}
+            value={`genre-${genre.name}`}
+            onSelect={() =>
+              handleSelect(() =>
+                navigate({
+                  to: '/games',
+                  search: { page: 1, genre: genre.id },
+                }),
+              )
+            }
+          >
+            <Tag />
+            <span>{genre.name}</span>
+            {genre.videoGamesCount !== undefined && (
+              <span className="ml-auto text-xs text-muted-foreground">
+                {genre.videoGamesCount} games
+              </span>
+            )}
+          </CommandItem>
+        ))}
+      </CommandGroup>
+    )
+
+  const platformsResults = showPlatforms &&
+    filteredPlatforms &&
+    filteredPlatforms.length > 0 && (
+      <CommandGroup heading="Platforms">
+        {filteredPlatforms.slice(0, 5).map((platform) => (
+          <CommandItem
+            key={platform.id}
+            value={`platform-${platform.name}`}
+            onSelect={() =>
+              handleSelect(() =>
+                navigate({
+                  to: '/games',
+                  search: { page: 1, platform: platform.id },
+                }),
+              )
+            }
+          >
+            <Monitor />
+            <span>{platform.name}</span>
+            {platform.videoGamesCount !== undefined && (
+              <span className="ml-auto text-xs text-muted-foreground">
+                {platform.videoGamesCount} games
+              </span>
+            )}
+          </CommandItem>
+        ))}
+      </CommandGroup>
+    )
+
+  return (
+    <CommandDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Search"
+      description="Search for games, members, genres, and platforms"
+      showCloseButton={false}
+    >
+      <CommandInput
+        placeholder="Search games, members, genres..."
+        value={query}
+        onValueChange={setQuery}
+      />
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as SearchTab)}
+        className="gap-0"
+      >
+        <TabsList className="w-full justify-start rounded-none border-b px-2">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="games">
+            <Gamepad2 className="size-3.5" />
+            Games
+          </TabsTrigger>
+          <TabsTrigger value="members">
+            <Users className="size-3.5" />
+            Members
+          </TabsTrigger>
+          <TabsTrigger value="genres">
+            <Tag className="size-3.5" />
+            Genres
+          </TabsTrigger>
+          <TabsTrigger value="platforms">
+            <Monitor className="size-3.5" />
+            Platforms
+          </TabsTrigger>
+        </TabsList>
+        <CommandList>
+          {isLoading && (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!isLoading && isSearchActive && !hasResults && (
+            <CommandEmpty>No results found.</CommandEmpty>
+          )}
+
+          {!isSearchActive && (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Type at least 2 characters to search...
+            </div>
+          )}
+
+          <TabsContent value="all" className="mt-0">
+            {gamesResults}
+            {membersResults}
+            {genresResults}
+            {platformsResults}
+          </TabsContent>
+          <TabsContent value="games" className="mt-0">
+            {gamesResults}
+          </TabsContent>
+          <TabsContent value="members" className="mt-0">
+            {membersResults}
+          </TabsContent>
+          <TabsContent value="genres" className="mt-0">
+            {genresResults}
+          </TabsContent>
+          <TabsContent value="platforms" className="mt-0">
+            {platformsResults}
+          </TabsContent>
+        </CommandList>
+      </Tabs>
+    </CommandDialog>
+  )
+}

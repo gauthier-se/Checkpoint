@@ -11,6 +11,7 @@ import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { HotkeysProvider } from '@tanstack/react-hotkeys'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -58,6 +59,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         ></script>
       </head>
       <body>
+        <HotkeysProvider>
         <TooltipProvider>
           {children}
           <Toaster richColors closeButton position="top-right" />
@@ -74,6 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           />
           <Scripts />
         </TooltipProvider>
+        </HotkeysProvider>
       </body>
     </html>
   )

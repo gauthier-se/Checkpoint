@@ -1,7 +1,8 @@
-import { type KeyboardEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
+import type { KeyboardEvent } from 'react'
 import { genresQueryOptions, platformsQueryOptions } from '@/queries/catalog'
 import { Route } from '@/routes/_app/games/index'
 import { Badge } from '@/components/ui/badge'
@@ -104,15 +105,37 @@ export function CatalogFilters() {
   }
 
   const activeFilterBadges: Array<{ label: string; key: string }> = []
-  if (search.genre) activeFilterBadges.push({ label: `Genre: ${search.genre}`, key: 'genre' })
-  if (search.platform) activeFilterBadges.push({ label: `Platform: ${search.platform}`, key: 'platform' })
-  if (search.yearMin != null) activeFilterBadges.push({ label: `Year from: ${search.yearMin}`, key: 'yearMin' })
-  if (search.yearMax != null) activeFilterBadges.push({ label: `Year to: ${search.yearMax}`, key: 'yearMax' })
-  if (search.ratingMin != null) activeFilterBadges.push({ label: `Rating min: ${search.ratingMin}`, key: 'ratingMin' })
-  if (search.ratingMax != null) activeFilterBadges.push({ label: `Rating max: ${search.ratingMax}`, key: 'ratingMax' })
+  if (search.genre)
+    activeFilterBadges.push({ label: `Genre: ${search.genre}`, key: 'genre' })
+  if (search.platform)
+    activeFilterBadges.push({
+      label: `Platform: ${search.platform}`,
+      key: 'platform',
+    })
+  if (search.yearMin != null)
+    activeFilterBadges.push({
+      label: `Year from: ${search.yearMin}`,
+      key: 'yearMin',
+    })
+  if (search.yearMax != null)
+    activeFilterBadges.push({
+      label: `Year to: ${search.yearMax}`,
+      key: 'yearMax',
+    })
+  if (search.ratingMin != null)
+    activeFilterBadges.push({
+      label: `Rating min: ${search.ratingMin}`,
+      key: 'ratingMin',
+    })
+  if (search.ratingMax != null)
+    activeFilterBadges.push({
+      label: `Rating max: ${search.ratingMax}`,
+      key: 'ratingMax',
+    })
   if (search.sort) {
     const sortLabel = SORT_OPTIONS.find((o) => o.value === search.sort)?.label
-    if (sortLabel) activeFilterBadges.push({ label: `Sort: ${sortLabel}`, key: 'sort' })
+    if (sortLabel)
+      activeFilterBadges.push({ label: `Sort: ${sortLabel}`, key: 'sort' })
   }
 
   function removeFilter(key: string) {
@@ -182,9 +205,7 @@ export function CatalogFilters() {
             placeholder="Year from"
             value={yearMin}
             onChange={(e) => setYearMin(e.target.value)}
-            onBlur={() =>
-              applyNumberFilter('yearMin', yearMin, search.yearMin)
-            }
+            onBlur={() => applyNumberFilter('yearMin', yearMin, search.yearMin)}
             onKeyDown={(e) =>
               handleNumberKeyDown(e, 'yearMin', yearMin, search.yearMin)
             }
@@ -196,9 +217,7 @@ export function CatalogFilters() {
             placeholder="Year to"
             value={yearMax}
             onChange={(e) => setYearMax(e.target.value)}
-            onBlur={() =>
-              applyNumberFilter('yearMax', yearMax, search.yearMax)
-            }
+            onBlur={() => applyNumberFilter('yearMax', yearMax, search.yearMax)}
             onKeyDown={(e) =>
               handleNumberKeyDown(e, 'yearMax', yearMax, search.yearMax)
             }

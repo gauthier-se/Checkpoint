@@ -41,7 +41,12 @@ export function GamesPagination({
               ...
             </Button>
           ) : (
-            <Link key={p} to="/games" search={{ ...search, page: p }} hash={CATALOG_HASH}>
+            <Link
+              key={p}
+              to="/games"
+              search={{ ...search, page: p }}
+              hash={CATALOG_HASH}
+            >
               <Button variant={p === page ? 'default' : 'outline'}>{p}</Button>
             </Link>
           ),
