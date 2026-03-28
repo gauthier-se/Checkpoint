@@ -1,0 +1,61 @@
+meta {
+  name: Browse Members
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/members
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+}
+
+docs {
+  # Browse Members
+
+  Returns a paginated list of all members sorted alphabetically by pseudo.
+
+  ## Authentication
+
+  No authentication required. If authenticated, `isFollowing` will be populated.
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | page | Integer | 0 | Page number (0-based) |
+  | size | Integer | 20 | Page size (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "pseudo": "username",
+        "picture": "url",
+        "level": 1,
+        "followerCount": 10,
+        "reviewCount": 5,
+        "isFollowing": null
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 50,
+      "totalPages": 3,
+      "first": true,
+      "last": false,
+      "hasNext": true,
+      "hasPrevious": false
+    }
+  }
+  ```
+}

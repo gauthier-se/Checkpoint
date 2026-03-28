@@ -1,0 +1,47 @@
+meta {
+  name: Get Top Reviewers
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/members/top-reviewers
+  body: none
+  auth: none
+}
+
+params:query {
+  size: 10
+}
+
+docs {
+  # Get Top Reviewers
+
+  Returns the top reviewers ranked by review count (descending).
+
+  ## Authentication
+
+  No authentication required. If authenticated, `isFollowing` will be populated.
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | size | Integer | 10 | Number of members to return (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "pseudo": "username",
+      "picture": "url",
+      "level": 3,
+      "followerCount": 10,
+      "reviewCount": 50,
+      "isFollowing": null
+    }
+  ]
+  ```
+}
