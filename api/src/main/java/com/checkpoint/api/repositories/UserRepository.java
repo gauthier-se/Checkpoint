@@ -1,5 +1,6 @@
 package com.checkpoint.api.repositories;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -104,4 +105,58 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.following f WHERE u.id = :followerId AND f.id = :followingId")
     boolean isFollowing(@Param("followerId") UUID followerId, @Param("followingId") UUID followingId);
+
+    /**
+     * Finds users ranked by follower count (descending).
+     * Returns each user alongside their follower count.
+     *
+     * @param pageable pagination parameters
+     * @return a page of Object[] where [0] = User, [1] = follower count (Long)
+     */
+    @Query("SELECT u, COUNT(f) AS fc FROM User u LEFT JOIN u.followers f GROUP BY u ORDER BY fc DESC")
+    Page<Object[]> findPopularMembers(Pageable pageable);
+
+    /**
+     * Finds users ranked by review count (descending).
+     * Returns each user alongside their review count.
+     *
+     * @param pageable pagination parameters
+     * @return a page of Object[] where [0] = User, [1] = review count (Long)
+     */
+    @Query("SELECT u, COUNT(r) AS rc FROM User u LEFT JOIN u.reviews r GROUP BY u ORDER BY rc DESC")
+    Page<Object[]> findTopReviewers(Pageable pageable);
+
+    /**
+     * Finds suggested members for a given user based on shared games.
+     * Excludes the user themselves and users they already follow.
+     * Ranked by the number of shared games (descending).
+     *
+     * @param userId the authenticated user's ID
+     * @param pageable pagination parameters
+     * @return a page of Object[] where [0] = User, [1] = shared game count (Long)
+     */
+    @Query("SELECT u, COUNT(ug.videoGame.id) AS shared FROM User u JOIN u.userGames ug "
+            + "WHERE ug.videoGame.id IN (SELECT ug2.videoGame.id FROM UserGame ug2 WHERE ug2.user.id = :userId) "
+            + "AND u.id <> :userId "
+            + "AND u NOT IN (SELECT f FROM User cu JOIN cu.following f WHERE cu.id = :userId) "
+            + "GROUP BY u ORDER BY shared DESC")
+    Page<Object[]> findSuggestedMembers(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
+     * Searches users by pseudo with case-insensitive partial matching.
+     *
+     * @param pseudo the search term
+     * @param pageable pagination parameters
+     * @return a page of matching users
+     */
+    Page<User> findByPseudoContainingIgnoreCase(String pseudo, Pageable pageable);
+
+    /**
+     * Finds the IDs of all users that the given user follows.
+     *
+     * @param userId the user's ID
+     * @return a list of followed user IDs
+     */
+    @Query("SELECT f.id FROM User u JOIN u.following f WHERE u.id = :userId")
+    List<UUID> findFollowingIdsByUserId(@Param("userId") UUID userId);
 }

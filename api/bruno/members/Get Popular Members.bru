@@ -1,0 +1,47 @@
+meta {
+  name: Get Popular Members
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/members/popular
+  body: none
+  auth: none
+}
+
+params:query {
+  size: 10
+}
+
+docs {
+  # Get Popular Members
+
+  Returns the most popular members ranked by follower count (descending).
+
+  ## Authentication
+
+  No authentication required. If authenticated, `isFollowing` will be populated.
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | size | Integer | 10 | Number of members to return (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "pseudo": "username",
+      "picture": "url",
+      "level": 5,
+      "followerCount": 100,
+      "reviewCount": 10,
+      "isFollowing": null
+    }
+  ]
+  ```
+}

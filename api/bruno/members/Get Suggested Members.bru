@@ -1,0 +1,56 @@
+meta {
+  name: Get Suggested Members
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/members/suggested
+  body: none
+  auth: bearer
+}
+
+params:query {
+  size: 10
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Suggested Members
+
+  Returns personalized member suggestions based on shared games in the user's library.
+  Excludes users already followed by the authenticated user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | size | Integer | 10 | Number of suggestions to return (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "pseudo": "username",
+      "picture": "url",
+      "level": 2,
+      "followerCount": 20,
+      "reviewCount": 8,
+      "isFollowing": false
+    }
+  ]
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}
