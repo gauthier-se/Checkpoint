@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import type { Game, Genre, Platform } from '@/types/game'
+import type { Game, GameDetail, Genre, Platform } from '@/types/game'
 import { apiFetch } from '@/services/api'
 
 export function searchGamesQueryOptions(query: string) {
@@ -14,6 +14,18 @@ export function searchGamesQueryOptions(query: string) {
     },
     staleTime: 30 * 1000,
     enabled: query.length >= 2,
+  })
+}
+
+export function gameDetailQueryOptions(gameId: string) {
+  return queryOptions({
+    queryKey: ['games', gameId, 'detail'],
+    queryFn: async (): Promise<GameDetail> => {
+      const res = await apiFetch(`/api/games/${gameId}`)
+      if (!res.ok) throw new Error('Failed to fetch game details')
+      return res.json()
+    },
+    staleTime: 60 * 1000,
   })
 }
 
