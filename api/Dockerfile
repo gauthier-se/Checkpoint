@@ -25,6 +25,8 @@ WORKDIR /app
 
 COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
 
+RUN mkdir -p /app/data/search-index && chown spring:spring /app/data/search-index
+
 USER spring
 
 EXPOSE 8080
