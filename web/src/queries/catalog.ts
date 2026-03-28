@@ -1,6 +1,21 @@
 import { queryOptions } from '@tanstack/react-query'
-import type { Genre, Platform } from '@/types/game'
+import type { Game, Genre, Platform } from '@/types/game'
 import { apiFetch } from '@/services/api'
+
+export function searchGamesQueryOptions(query: string) {
+  return queryOptions({
+    queryKey: ['games', 'search', query],
+    queryFn: async (): Promise<Array<Game>> => {
+      const res = await apiFetch(
+        `/api/games/search?q=${encodeURIComponent(query)}`,
+      )
+      if (!res.ok) throw new Error('Failed to search games')
+      return res.json()
+    },
+    staleTime: 30 * 1000,
+    enabled: query.length >= 2,
+  })
+}
 
 export function genresQueryOptions() {
   return queryOptions({

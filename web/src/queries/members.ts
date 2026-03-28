@@ -38,6 +38,23 @@ export function suggestedMembersQueryOptions(size: number = 10) {
   })
 }
 
+export function searchMembersQueryOptions(query: string) {
+  return queryOptions({
+    queryKey: ['members', 'search', query],
+    queryFn: async (): Promise<MembersResponse> => {
+      const qs = new URLSearchParams()
+      qs.set('page', '0')
+      qs.set('size', '5')
+      qs.set('search', query)
+      const res = await apiFetch(`/api/members?${qs.toString()}`)
+      if (!res.ok) throw new Error('Failed to search members')
+      return res.json()
+    },
+    staleTime: 30 * 1000,
+    enabled: query.length >= 2,
+  })
+}
+
 export function browseMembersQueryOptions(
   page: number = 0,
   size: number = 20,

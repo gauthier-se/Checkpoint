@@ -34,10 +34,7 @@ export function MemberCard({ member }: MemberCardProps) {
         className="flex flex-col items-center gap-3"
       >
         <Avatar className="size-16">
-          <AvatarImage
-            src={member.picture ?? undefined}
-            alt={member.pseudo}
-          />
+          <AvatarImage src={member.picture ?? undefined} alt={member.pseudo} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="text-center">
