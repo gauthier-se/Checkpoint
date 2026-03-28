@@ -1,0 +1,59 @@
+import { queryOptions } from '@tanstack/react-query'
+import type { MemberCard, MembersResponse } from '@/types/member'
+import { apiFetch } from '@/services/api'
+
+export function popularMembersQueryOptions(size: number = 10) {
+  return queryOptions({
+    queryKey: ['members', 'popular', size],
+    queryFn: async (): Promise<Array<MemberCard>> => {
+      const res = await apiFetch(`/api/members/popular?size=${size}`)
+      if (!res.ok) throw new Error('Failed to fetch popular members')
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+export function topReviewersMembersQueryOptions(size: number = 10) {
+  return queryOptions({
+    queryKey: ['members', 'top-reviewers', size],
+    queryFn: async (): Promise<Array<MemberCard>> => {
+      const res = await apiFetch(`/api/members/top-reviewers?size=${size}`)
+      if (!res.ok) throw new Error('Failed to fetch top reviewers')
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+export function suggestedMembersQueryOptions(size: number = 10) {
+  return queryOptions({
+    queryKey: ['members', 'suggested', size],
+    queryFn: async (): Promise<Array<MemberCard>> => {
+      const res = await apiFetch(`/api/members/suggested?size=${size}`)
+      if (!res.ok) throw new Error('Failed to fetch suggested members')
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+export function browseMembersQueryOptions(
+  page: number = 0,
+  size: number = 20,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['members', 'browse', search, page, size],
+    queryFn: async (): Promise<MembersResponse> => {
+      const qs = new URLSearchParams()
+      qs.set('page', String(page))
+      qs.set('size', String(size))
+      if (search) qs.set('search', search)
+      const res = await apiFetch(`/api/members?${qs.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch members')
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
