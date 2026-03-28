@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useHotkey } from '@tanstack/react-hotkeys'
-import { Command, LogIn, Plus, Search } from 'lucide-react'
+import { Command, Plus, Search, User } from 'lucide-react'
 import { Button } from '../ui/button'
 import { SearchCommand } from '../search/search-command'
+import { QuickLogModal } from '../log/quick-log-modal'
 import { AvatarDropdown } from './avatar-dropdown'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -15,10 +16,15 @@ function useIsMac() {
 export const Header = () => {
   const { user, isLoading } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [quickLogOpen, setQuickLogOpen] = useState(false)
   const isMac = useIsMac()
 
   useHotkey('Mod+K', () => {
     setSearchOpen((prev) => !prev)
+  })
+
+  useHotkey('Mod+J', () => {
+    if (user) setQuickLogOpen(true)
   })
 
   return (
@@ -54,19 +60,25 @@ export const Header = () => {
           </kbd>
         </button>
         <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
-        <Button asChild size="sm">
-          <Link to="/" className="text-muted-foreground font-semibold">
-            <Plus />
-            Log
-          </Link>
-        </Button>
+        {user && (
+          <>
+            <Button size="sm" onClick={() => setQuickLogOpen(true)}>
+              <Plus />
+              Log
+            </Button>
+            <QuickLogModal
+              open={quickLogOpen}
+              onOpenChange={setQuickLogOpen}
+            />
+          </>
+        )}
         {!isLoading &&
           (user ? (
             <AvatarDropdown user={user} />
           ) : (
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/login" className="text-muted-foreground font-semibold">
-                <LogIn />
+            <Button asChild size="sm">
+              <Link to="/login">
+                <User />
                 Sign in
               </Link>
             </Button>
