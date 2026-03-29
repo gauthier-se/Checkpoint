@@ -1,0 +1,50 @@
+meta {
+  name: Create List
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/me/lists
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "My Favorite RPGs",
+    "description": "A curated list of the best RPGs I've played",
+    "isPrivate": false
+  }
+}
+
+docs {
+  # Create List
+
+  Creates a new game list for the authenticated user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | title | String | Yes | The list title (must not be blank) |
+  | description | String | No | Optional description |
+  | isPrivate | Boolean | No | Whether the list is private (default: false) |
+
+  ## Response (201 Created)
+
+  Returns the created list as a detail DTO.
+
+  ## Error Responses
+
+  - **400 Bad Request**: Title is missing or blank
+  - **401 Unauthorized**: Not authenticated
+}

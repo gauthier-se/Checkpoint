@@ -1,0 +1,60 @@
+meta {
+  name: Update List
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/me/lists/:listId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Updated List Title",
+    "description": "Updated description",
+    "isPrivate": true
+  }
+}
+
+docs {
+  # Update List
+
+  Updates an existing game list. Only the owner can update.
+  All fields are optional — only non-null values are applied.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | title | String | No | New title |
+  | description | String | No | New description |
+  | isPrivate | Boolean | No | New visibility |
+
+  ## Response (200 OK)
+
+  Returns the updated list detail DTO.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the list owner
+  - **404 Not Found**: List does not exist
+}

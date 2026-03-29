@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.collection.WishResponseDto;
+import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.exceptions.ProfilePrivateException;
@@ -19,6 +20,7 @@ import com.checkpoint.api.mapper.WishMapper;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.WishRepository;
+import com.checkpoint.api.services.GameListService;
 import com.checkpoint.api.services.ProfileService;
 
 /**
@@ -34,6 +36,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final WishRepository wishRepository;
+    private final GameListService gameListService;
     private final ProfileMapper profileMapper;
     private final ReviewMapper reviewMapper;
     private final WishMapper wishMapper;
@@ -44,6 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param userRepository   the user repository
      * @param reviewRepository the review repository
      * @param wishRepository   the wish repository
+     * @param gameListService  the game list service
      * @param profileMapper    the profile mapper
      * @param reviewMapper     the review mapper
      * @param wishMapper       the wish mapper
@@ -51,12 +55,14 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileServiceImpl(UserRepository userRepository,
                                ReviewRepository reviewRepository,
                                WishRepository wishRepository,
+                               GameListService gameListService,
                                ProfileMapper profileMapper,
                                ReviewMapper reviewMapper,
                                WishMapper wishMapper) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.wishRepository = wishRepository;
+        this.gameListService = gameListService;
         this.profileMapper = profileMapper;
         this.reviewMapper = reviewMapper;
         this.wishMapper = wishMapper;
@@ -123,6 +129,20 @@ public class ProfileServiceImpl implements ProfileService {
 
         return wishRepository.findByUserPseudoWithVideoGame(username, pageable)
                 .map(wishMapper::toResponseDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page<GameListCardDto> getUserLists(String username, Pageable pageable) {
+        log.info("Fetching game lists for user: {}", username);
+
+        // Verify user exists
+        userRepository.findByPseudo(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+
+        return gameListService.getUserPublicLists(username, pageable);
     }
 
     /**

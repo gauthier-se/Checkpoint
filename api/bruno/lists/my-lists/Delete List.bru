@@ -1,0 +1,43 @@
+meta {
+  name: Delete List
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/me/lists/:listId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Delete List
+
+  Deletes a game list. Only the owner can delete.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Response (204 No Content)
+
+  Empty response body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the list owner
+  - **404 Not Found**: List does not exist
+}

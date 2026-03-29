@@ -142,10 +142,6 @@ public class VideoGame {
     @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Like> likes = new HashSet<>();
 
-    // Relationship: VideoGame can be in multiple lists (ManyToMany)
-    @ManyToMany(mappedBy = "videoGames")
-    private Set<GameList> gameLists = new HashSet<>();
-
     // Relationship: VideoGame can be in multiple user libraries
     @OneToMany(mappedBy = "videoGame", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserGame> userGames = new HashSet<>();
@@ -396,14 +392,6 @@ public class VideoGame {
 
     public void setLikes(Set<Like> likes) {
         this.likes = likes;
-    }
-
-    public Set<GameList> getGameLists() {
-        return gameLists;
-    }
-
-    public void setGameLists(Set<GameList> gameLists) {
-        this.gameLists = gameLists;
     }
 
     public Set<UserGame> getUserGames() {

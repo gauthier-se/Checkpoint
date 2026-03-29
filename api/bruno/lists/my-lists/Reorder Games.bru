@@ -1,0 +1,60 @@
+meta {
+  name: Reorder Games
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/me/lists/:listId/games/reorder
+  body: json
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "orderedVideoGameIds": [
+      "98b9126c-c6a5-4c53-9d41-ff990e116c49",
+      "ad3b5b63-bf94-4945-b0bf-f1c62d8c3107",
+      "b4c0be35-1759-4db2-ad35-57e56406078c"
+    ]
+  }
+}
+
+docs {
+  # Reorder Games
+
+  Reorders games in a list. The position is inferred from the index in the array.
+  Only the owner can reorder.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | orderedVideoGameIds | List<UUID> | Yes | Video game IDs in desired order |
+
+  ## Response (200 OK)
+
+  Returns the updated list detail DTO with entries in the new order.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the list owner
+  - **404 Not Found**: List does not exist or a game ID is not in the list
+}
