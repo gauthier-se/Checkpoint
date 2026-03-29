@@ -1,0 +1,45 @@
+meta {
+  name: Remove Game from List
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/me/lists/:listId/games/:videoGameId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+  videoGameId: 98b9126c-c6a5-4c53-9d41-ff990e116c49
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Remove Game from List
+
+  Removes a video game from a list and re-indexes remaining positions. Only the owner can remove games.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+  - **videoGameId**: The UUID of the video game to remove
+
+  ## Response (204 No Content)
+
+  Empty response body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the list owner
+  - **404 Not Found**: List does not exist or game not in list
+}

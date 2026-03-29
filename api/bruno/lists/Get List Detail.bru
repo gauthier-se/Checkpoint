@@ -1,0 +1,59 @@
+meta {
+  name: Get List Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/lists/:listId
+  body: none
+  auth: none
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+docs {
+  # Get List Detail
+
+  Retrieves the full detail of a game list by ID. Private lists return 403 for non-owners.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "title": "Top RPGs",
+    "description": "My favorite RPGs",
+    "isPrivate": false,
+    "videoGamesCount": 3,
+    "likesCount": 10,
+    "authorPseudo": "gamer123",
+    "authorPicture": null,
+    "entries": [
+      {
+        "videoGameId": "uuid",
+        "title": "The Witcher 3",
+        "coverUrl": "https://...",
+        "releaseDate": "2015-05-19",
+        "position": 0,
+        "addedAt": "2026-03-01T10:00:00"
+      }
+    ],
+    "isOwner": false,
+    "hasLiked": false,
+    "createdAt": "2026-03-01T10:00:00",
+    "updatedAt": "2026-03-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: List does not exist
+  - **403 Forbidden**: List is private and viewer is not the owner
+}

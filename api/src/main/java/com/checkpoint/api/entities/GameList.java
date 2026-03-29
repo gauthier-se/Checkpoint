@@ -1,7 +1,9 @@
 package com.checkpoint.api.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,10 +17,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -34,6 +35,12 @@ public class GameList {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "is_private", nullable = false)
+    private Boolean isPrivate = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -41,7 +48,7 @@ public class GameList {
     private LocalDateTime updatedAt;
 
     // Computed field: count of video games in this list
-    @Formula("(SELECT COUNT(*) FROM list_video_games lvg WHERE lvg.list_id = id)")
+    @Formula("(SELECT COUNT(*) FROM game_list_entries gle WHERE gle.list_id = id)")
     private Integer videoGamesCount;
 
     // Relationship: List is created by one user
@@ -49,14 +56,10 @@ public class GameList {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Relationship: List can contain multiple video games (ManyToMany)
-    @ManyToMany
-    @JoinTable(
-        name = "list_video_games",
-        joinColumns = @JoinColumn(name = "list_id"),
-        inverseJoinColumns = @JoinColumn(name = "video_game_id")
-    )
-    private Set<VideoGame> videoGames = new HashSet<>();
+    // Relationship: List contains ordered entries (replaces ManyToMany)
+    @OneToMany(mappedBy = "gameList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private List<GameListEntry> entries = new ArrayList<>();
 
     // Relationship: List can have multiple comments
     @OneToMany(mappedBy = "gameList", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -84,17 +87,6 @@ public class GameList {
         this.user = user;
     }
 
-    // Helper methods for managing video games
-    public void addVideoGame(VideoGame videoGame) {
-        this.videoGames.add(videoGame);
-        videoGame.getGameLists().add(this);
-    }
-
-    public void removeVideoGame(VideoGame videoGame) {
-        this.videoGames.remove(videoGame);
-        videoGame.getGameLists().remove(this);
-    }
-
     public UUID getId() {
         return id;
     }
@@ -109,6 +101,22 @@ public class GameList {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Boolean getIsPrivate() {
+        return isPrivate;
+    }
+
+    public void setIsPrivate(Boolean isPrivate) {
+        this.isPrivate = isPrivate;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -135,12 +143,12 @@ public class GameList {
         this.user = user;
     }
 
-    public Set<VideoGame> getVideoGames() {
-        return videoGames;
+    public List<GameListEntry> getEntries() {
+        return entries;
     }
 
-    public void setVideoGames(Set<VideoGame> videoGames) {
-        this.videoGames = videoGames;
+    public void setEntries(List<GameListEntry> entries) {
+        this.entries = entries;
     }
 
     public Set<Comment> getComments() {

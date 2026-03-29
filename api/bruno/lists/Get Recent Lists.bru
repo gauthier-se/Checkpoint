@@ -1,0 +1,60 @@
+meta {
+  name: Get Recent Lists
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/lists
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+}
+
+docs {
+  # Get Recent Lists
+
+  Retrieves a paginated list of recent public game lists.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "title": "Top RPGs",
+        "description": "My favorite RPGs of all time",
+        "isPrivate": false,
+        "videoGamesCount": 10,
+        "likesCount": 42,
+        "authorPseudo": "gamer123",
+        "authorPicture": "https://...",
+        "coverUrls": ["cover1.jpg", "cover2.jpg"],
+        "createdAt": "2026-03-01T10:00:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 50,
+      "totalPages": 3,
+      "first": true,
+      "last": false,
+      "hasNext": true,
+      "hasPrevious": false
+    }
+  }
+  ```
+}

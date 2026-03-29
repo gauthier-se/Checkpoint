@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.collection.WishResponseDto;
+import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 import com.checkpoint.api.services.ProfileService;
 
@@ -129,6 +130,33 @@ public class ProfileController {
         Page<WishResponseDto> wishlist = profileService.getUserWishlist(username, viewerEmail, pageable);
 
         return ResponseEntity.ok(PagedResponseDto.from(wishlist));
+    }
+
+    /**
+     * Returns a paginated list of public game lists for the given user.
+     *
+     * @param username the user's display name (pseudo)
+     * @param page     the page number (0-based, default 0)
+     * @param size     the page size (default 20, max 100)
+     * @param sort     the sort criteria (e.g., "createdAt,desc")
+     * @return paginated list of game list card DTOs
+     */
+    @GetMapping("/{username}/lists")
+    public ResponseEntity<PagedResponseDto<GameListCardDto>> getUserLists(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
+
+        log.info("GET /api/users/{}/lists - page: {}, size: {}", username, page, size);
+
+        int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
+        int validatedPage = Math.max(0, page);
+
+        Pageable pageable = createPageable(validatedPage, validatedSize, sort);
+        Page<GameListCardDto> lists = profileService.getUserLists(username, pageable);
+
+        return ResponseEntity.ok(PagedResponseDto.from(lists));
     }
 
     /**

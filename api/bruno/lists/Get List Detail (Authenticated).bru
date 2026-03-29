@@ -1,0 +1,41 @@
+meta {
+  name: Get List Detail (Authenticated)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/lists/:listId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get List Detail (Authenticated)
+
+  Retrieves the full detail of a game list with owner and like context.
+
+  When authenticated, the response includes:
+  - `isOwner`: true if the viewer owns this list
+  - `hasLiked`: true if the viewer has liked this list
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Response (200 OK)
+
+  Same as unauthenticated detail, but `isOwner` and `hasLiked` are populated.
+}

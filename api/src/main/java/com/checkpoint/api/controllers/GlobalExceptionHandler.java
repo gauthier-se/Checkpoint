@@ -14,6 +14,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.checkpoint.api.exceptions.GameAlreadyInListException;
+import com.checkpoint.api.exceptions.GameListNotFoundException;
+import com.checkpoint.api.exceptions.GameNotInListException;
 import com.checkpoint.api.exceptions.DuplicateReportException;
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
 import com.checkpoint.api.exceptions.ProfilePrivateException;
@@ -33,6 +36,7 @@ import com.checkpoint.api.exceptions.RateNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.exceptions.SelfFollowException;
+import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 
 /**
@@ -43,6 +47,86 @@ import com.checkpoint.api.exceptions.UserNotFoundException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
+     * Handles GameListNotFoundException when a game list is not found.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(GameListNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleGameListNotFound(GameListNotFoundException ex) {
+        log.warn("Game list not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles GameAlreadyInListException when a game is already present in a list.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(GameAlreadyInListException.class)
+    public ResponseEntity<ErrorResponse> handleGameAlreadyInList(GameAlreadyInListException ex) {
+        log.warn("Game already in list: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handles GameNotInListException when a game is not found in a list.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(GameNotInListException.class)
+    public ResponseEntity<ErrorResponse> handleGameNotInList(GameNotInListException ex) {
+        log.warn("Game not in list: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles UnauthorizedListAccessException when a user tries to access or modify a list they do not own.
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(UnauthorizedListAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedListAccess(UnauthorizedListAccessException ex) {
+        log.warn("Unauthorized list access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
 
     /**
      * Handles DuplicateReportException when a user tries to report a review they already reported.

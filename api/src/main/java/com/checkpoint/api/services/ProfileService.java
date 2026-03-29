@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.collection.WishResponseDto;
+import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 
 /**
@@ -46,4 +47,13 @@ public interface ProfileService {
      * @return a page of wish DTOs
      */
     Page<WishResponseDto> getUserWishlist(String username, String viewerEmail, Pageable pageable);
+
+    /**
+     * Retrieves a paginated list of public game lists for the given user.
+     *
+     * @param username the profile owner's username (pseudo)
+     * @param pageable pagination parameters
+     * @return a page of game list card DTOs
+     */
+    Page<GameListCardDto> getUserLists(String username, Pageable pageable);
 }

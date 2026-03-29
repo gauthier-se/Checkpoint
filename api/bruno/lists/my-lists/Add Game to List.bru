@@ -1,0 +1,57 @@
+meta {
+  name: Add Game to List
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/me/lists/:listId/games
+  body: json
+  auth: bearer
+}
+
+params:path {
+  listId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "videoGameId": "98b9126c-c6a5-4c53-9d41-ff990e116c49"
+  }
+}
+
+docs {
+  # Add Game to List
+
+  Adds a video game to a list at the last position. Only the owner can add games.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | videoGameId | UUID | Yes | The ID of the video game to add |
+
+  ## Response (201 Created)
+
+  Returns the updated list detail DTO.
+
+  ## Error Responses
+
+  - **400 Bad Request**: Missing video game ID
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the list owner
+  - **404 Not Found**: List or video game does not exist
+  - **409 Conflict**: Game already in the list
+}

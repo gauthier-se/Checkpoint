@@ -38,6 +38,7 @@ import com.checkpoint.api.mapper.impl.ProfileMapperImpl;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.WishRepository;
+import com.checkpoint.api.services.GameListService;
 
 /**
  * Unit tests for {@link ProfileServiceImpl}.
@@ -60,6 +61,9 @@ class ProfileServiceImplTest {
     @Mock
     private WishMapper wishMapper;
 
+    @Mock
+    private GameListService gameListService;
+
     private ProfileMapper profileMapper;
     private ProfileServiceImpl profileService;
 
@@ -71,7 +75,7 @@ class ProfileServiceImplTest {
         profileMapper = new ProfileMapperImpl();
         profileService = new ProfileServiceImpl(
                 userRepository, reviewRepository, wishRepository,
-                profileMapper, reviewMapper, wishMapper);
+                gameListService, profileMapper, reviewMapper, wishMapper);
 
         profileUser = new User();
         profileUser.setId(UUID.randomUUID());
