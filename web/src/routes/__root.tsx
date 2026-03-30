@@ -7,11 +7,11 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
+import { HotkeysProvider } from '@tanstack/react-hotkeys'
 import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { HotkeysProvider } from '@tanstack/react-hotkeys'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -60,22 +60,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <HotkeysProvider>
-        <TooltipProvider>
-          {children}
-          <Toaster richColors closeButton position="top-right" />
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
-          <Scripts />
-        </TooltipProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster richColors closeButton position="top-right" />
+            <TanStackDevtools
+              config={{
+                position: 'bottom-right',
+              }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+              ]}
+            />
+            <Scripts />
+          </TooltipProvider>
         </HotkeysProvider>
       </body>
     </html>

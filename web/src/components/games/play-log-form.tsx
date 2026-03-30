@@ -127,9 +127,7 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
             {field.state.meta.errors.length > 0 ? (
               <p className="text-sm text-destructive">
                 {field.state.meta.errors
-                  .map((e) =>
-                    typeof e === 'string' ? e : (e as any).message,
-                  )
+                  .map((e) => (typeof e === 'string' ? e : (e as any).message))
                   .join(', ')}
               </p>
             ) : null}
@@ -242,9 +240,7 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
       />
 
       <div className="my-6 border-t pt-4">
-        <h3 className="text-md font-medium mb-4">
-          Rating & Review (Optional)
-        </h3>
+        <h3 className="text-md font-medium mb-4">Rating & Review (Optional)</h3>
         <div className="space-y-4">
           <form.Field
             name="score"
