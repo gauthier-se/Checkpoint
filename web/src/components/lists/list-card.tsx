@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { Heart, Gamepad2 } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Gamepad2, Heart } from 'lucide-react'
 import type { GameListCard } from '@/types/list'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface ListCardProps {
   list: GameListCard
@@ -18,12 +18,7 @@ export function ListCard({ list }: ListCardProps) {
     >
       <div className="grid grid-cols-2 gap-1 aspect-[4/3] overflow-hidden rounded-md bg-muted">
         {list.coverUrls.slice(0, 4).map((url, i) => (
-          <img
-            key={i}
-            src={url}
-            alt=""
-            className="size-full object-cover"
-          />
+          <img key={i} src={url} alt="" className="size-full object-cover" />
         ))}
         {list.coverUrls.length === 0 && (
           <div className="col-span-2 flex items-center justify-center">

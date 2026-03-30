@@ -1,5 +1,5 @@
-import type { GameListCard } from '@/types/list'
 import { ListCard } from './list-card'
+import type { GameListCard } from '@/types/list'
 
 interface ListsGridProps {
   lists: Array<GameListCard>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { List, Plus } from 'lucide-react'
 import type { GameListsResponse } from '@/types/list'
@@ -74,7 +74,7 @@ function RouteComponent() {
         <h1 className="text-xl font-bold">Lists</h1>
         {user && (
           <Button asChild size="sm">
-            <Link to="/lists">
+            <Link to="/lists/new">
               <Plus />
               Create a list
             </Link>

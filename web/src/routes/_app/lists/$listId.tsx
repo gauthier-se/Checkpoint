@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowLeft, Gamepad2, Heart, Lock } from 'lucide-react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Gamepad2, Heart, Loader2, Lock, Pencil } from 'lucide-react'
 import { listDetailQueryOptions } from '@/queries/lists'
 import { ListGameItem } from '@/components/lists/list-game-item'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -10,13 +10,47 @@ import { Separator } from '@/components/ui/separator'
 export const Route = createFileRoute('/_app/lists/$listId')({
   component: RouteComponent,
   loader: async ({ params: { listId }, context }) => {
+    // During SSR, cookies aren't forwarded so private lists would fail.
+    // Let the client-side query handle fetching with credentials.
+    if (typeof window === 'undefined') return
     await context.queryClient.ensureQueryData(listDetailQueryOptions(listId))
   },
 })
 
 function RouteComponent() {
   const { listId } = Route.useParams()
-  const { data: list } = useSuspenseQuery(listDetailQueryOptions(listId))
+  const { data: list, isLoading, error } = useQuery(listDetailQueryOptions(listId))
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      </main>
+    )
+  }
+
+  if (error || !list) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <Link
+          to="/lists"
+          search={{ page: 1 }}
+          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back to lists
+        </Link>
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <Lock className="text-muted-foreground size-12" />
+          <p className="text-muted-foreground text-lg">
+            This list is private or does not exist.
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   const initials = list.authorPseudo.slice(0, 2).toUpperCase()
   const createdDate = new Date(list.createdAt).toLocaleDateString('en-US', {
@@ -54,6 +88,14 @@ function RouteComponent() {
               </p>
             )}
           </div>
+          {list.isOwner && (
+            <Button asChild variant="outline" size="sm">
+              <Link to="/lists/$listId/edit" params={{ listId }}>
+                <Pencil className="size-4" />
+                Edit
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

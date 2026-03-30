@@ -1,3 +1,4 @@
+import { PlayLogForm } from './play-log-form'
 import type { GameDetail } from '@/types/game'
 import {
   Dialog,
@@ -6,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { PlayLogForm } from './play-log-form'
 
 interface PlayLogDialogProps {
   game: GameDetail

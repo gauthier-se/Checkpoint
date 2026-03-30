@@ -19,7 +19,12 @@ import { ProfileListsTab } from '@/components/profile/profile-lists-tab'
 
 type ProfileTab = 'reviews' | 'wishlist' | 'lists' | 'following'
 
-const VALID_TABS: Array<ProfileTab> = ['reviews', 'wishlist', 'lists', 'following']
+const VALID_TABS: Array<ProfileTab> = [
+  'reviews',
+  'wishlist',
+  'lists',
+  'following',
+]
 
 type ProfileSearchParams = {
   tab: ProfileTab

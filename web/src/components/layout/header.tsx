@@ -73,10 +73,7 @@ export const Header = () => {
               <Plus />
               Log
             </Button>
-            <QuickLogModal
-              open={quickLogOpen}
-              onOpenChange={setQuickLogOpen}
-            />
+            <QuickLogModal open={quickLogOpen} onOpenChange={setQuickLogOpen} />
           </>
         )}
         {!isLoading &&
