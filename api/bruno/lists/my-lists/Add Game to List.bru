@@ -11,7 +11,7 @@ post {
 }
 
 params:path {
-  listId: 550e8400-e29b-41d4-a716-446655440000
+  listId: 91b247fc-9e48-4729-bbc2-38be22daf27a
 }
 
 auth:bearer {
@@ -20,35 +20,35 @@ auth:bearer {
 
 body:json {
   {
-    "videoGameId": "98b9126c-c6a5-4c53-9d41-ff990e116c49"
+    "videoGameId": "4b2b4ed6-63a8-42c1-91c7-8fd1116e32e1"
   }
 }
 
 docs {
   # Add Game to List
-
+  
   Adds a video game to a list at the last position. Only the owner can add games.
-
+  
   ## Authentication
-
+  
   Requires a valid JWT token in the `Authorization: Bearer` header.
-
+  
   ## Path Parameters
-
+  
   - **listId**: The UUID of the game list
-
+  
   ## Request Body
-
+  
   | Field | Type | Required | Description |
   |-------|------|----------|-------------|
   | videoGameId | UUID | Yes | The ID of the video game to add |
-
+  
   ## Response (201 Created)
-
+  
   Returns the updated list detail DTO.
-
+  
   ## Error Responses
-
+  
   - **400 Bad Request**: Missing video game ID
   - **401 Unauthorized**: Not authenticated
   - **403 Forbidden**: Not the list owner
