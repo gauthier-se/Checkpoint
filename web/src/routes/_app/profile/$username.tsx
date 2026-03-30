@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Heart, MessageSquare, Users } from 'lucide-react'
+import { Heart, List, MessageSquare, Users } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
 import {
   userFollowingQueryOptions,
@@ -7,17 +7,19 @@ import {
   userReviewsQueryOptions,
   userWishlistQueryOptions,
 } from '@/queries/profile'
+import { userListsQueryOptions } from '@/queries/lists'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProfileHeader } from '@/components/profile/profile-header'
 import { ProfileReviewsTab } from '@/components/profile/profile-reviews-tab'
 import { ProfileWishlistTab } from '@/components/profile/profile-wishlist-tab'
 import { ProfileFollowingTab } from '@/components/profile/profile-following-tab'
+import { ProfileListsTab } from '@/components/profile/profile-lists-tab'
 
 // Search params
 
-type ProfileTab = 'reviews' | 'wishlist' | 'following'
+type ProfileTab = 'reviews' | 'wishlist' | 'lists' | 'following'
 
-const VALID_TABS: Array<ProfileTab> = ['reviews', 'wishlist', 'following']
+const VALID_TABS: Array<ProfileTab> = ['reviews', 'wishlist', 'lists', 'following']
 
 type ProfileSearchParams = {
   tab: ProfileTab
@@ -56,6 +58,11 @@ export const Route = createFileRoute('/_app/profile/$username')({
             userWishlistQueryOptions(username, apiPage),
           )
           break
+        case 'lists':
+          void context.queryClient.prefetchQuery(
+            userListsQueryOptions(username, apiPage),
+          )
+          break
         case 'following':
           void context.queryClient.prefetchQuery(
             userFollowingQueryOptions(profile.id, apiPage),
@@ -86,6 +93,11 @@ const TAB_CONFIG: Array<{
     value: 'wishlist',
     label: 'Wishlist',
     icon: <Heart className="size-4" />,
+  },
+  {
+    value: 'lists',
+    label: 'Lists',
+    icon: <List className="size-4" />,
   },
   {
     value: 'following',
@@ -132,6 +144,13 @@ function UserProfilePage() {
           <ProfileWishlistTab
             profile={profile}
             page={tab === 'wishlist' ? page : 1}
+          />
+        </TabsContent>
+
+        <TabsContent value="lists">
+          <ProfileListsTab
+            profile={profile}
+            page={tab === 'lists' ? page : 1}
           />
         </TabsContent>
 

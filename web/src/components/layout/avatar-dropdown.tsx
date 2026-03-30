@@ -47,6 +47,11 @@ export function AvatarDropdown({ user }: { user: User }) {
               My Games
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/lists" search={{ page: 1 }}>
+              My Lists
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

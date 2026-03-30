@@ -42,6 +42,13 @@ export const Header = () => {
           Games
         </Link>
         <Link
+          to="/lists"
+          search={{ page: 1 }}
+          className="text-muted-foreground font-semibold"
+        >
+          Lists
+        </Link>
+        <Link
           to="/members"
           search={{ page: 1 }}
           className="text-muted-foreground font-semibold"
