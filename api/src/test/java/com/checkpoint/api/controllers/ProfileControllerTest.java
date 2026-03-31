@@ -137,7 +137,7 @@ class ProfileControllerTest {
                     UUID.randomUUID(), "Great game!", false,
                     LocalDateTime.now(), LocalDateTime.now(),
                     new ReviewUserDto(UUID.randomUUID(), "testuser", null),
-                    null, null, null, null
+                    null, null, null, null, 0, false
             );
             Page<ReviewResponseDto> page = new PageImpl<>(List.of(review));
 

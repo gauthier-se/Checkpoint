@@ -1,0 +1,48 @@
+meta {
+  name: Toggle Review Like
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/reviews/:reviewId/like
+  body: none
+  auth: bearer
+}
+
+params:path {
+  reviewId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Toggle Review Like
+
+  Toggles a like on a review. If the user already liked the review, the like is removed.
+  Otherwise, a new like is created.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **reviewId**: The UUID of the review to like/unlike
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "liked": true,
+    "likesCount": 5
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Review does not exist
+}

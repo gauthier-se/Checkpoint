@@ -1,11 +1,15 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Gamepad2, Heart, Loader2, Lock, Pencil } from 'lucide-react'
-import { listDetailQueryOptions } from '@/queries/lists'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Gamepad2, Loader2, Lock, Pencil } from 'lucide-react'
+import { toast } from 'sonner'
+import type { GameListDetail } from '@/types/list'
+import { listDetailQueryOptions, toggleListLike } from '@/queries/lists'
 import { ListGameItem } from '@/components/lists/list-game-item'
+import { LikeButton } from '@/components/shared/like-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/hooks/use-auth'
 
 export const Route = createFileRoute('/_app/lists/$listId')({
   component: RouteComponent,
@@ -19,7 +23,41 @@ export const Route = createFileRoute('/_app/lists/$listId')({
 
 function RouteComponent() {
   const { listId } = Route.useParams()
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
   const { data: list, isLoading, error } = useQuery(listDetailQueryOptions(listId))
+
+  const likeMutation = useMutation({
+    mutationFn: () => toggleListLike(listId),
+    onMutate: async () => {
+      const queryKey = listDetailQueryOptions(listId).queryKey
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData<GameListDetail>(queryKey)
+      queryClient.setQueryData<GameListDetail>(queryKey, (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          hasLiked: !old.hasLiked,
+          likesCount: old.hasLiked ? old.likesCount - 1 : old.likesCount + 1,
+        }
+      })
+      return { previous }
+    },
+    onError: (_err, _variables, context) => {
+      toast.error('Failed to update like')
+      if (context?.previous) {
+        queryClient.setQueryData(
+          listDetailQueryOptions(listId).queryKey,
+          context.previous,
+        )
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: listDetailQueryOptions(listId).queryKey,
+      })
+    },
+  })
 
   if (isLoading) {
     return (
@@ -124,12 +162,13 @@ function RouteComponent() {
             {list.videoGamesCount}{' '}
             {list.videoGamesCount === 1 ? 'game' : 'games'}
           </span>
-          <Button variant="ghost" size="sm" className="gap-1" disabled>
-            <Heart
-              className={`size-4 ${list.hasLiked ? 'fill-current text-red-500' : ''}`}
-            />
-            {list.likesCount}
-          </Button>
+          <LikeButton
+            liked={list.hasLiked}
+            likesCount={list.likesCount}
+            onToggle={() => likeMutation.mutate()}
+            disabled={!user}
+            isPending={likeMutation.isPending}
+          />
         </div>
       </div>
 

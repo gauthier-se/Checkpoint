@@ -18,6 +18,13 @@ export interface Review {
   platformName: string | null
   playStatus: PlayStatus | null
   isReplay: boolean | null
+  likesCount: number
+  hasLiked: boolean
+}
+
+export interface LikeResponse {
+  liked: boolean
+  likesCount: number
 }
 
 export interface ReviewsResponse {

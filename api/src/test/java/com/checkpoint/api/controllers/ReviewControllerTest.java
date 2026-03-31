@@ -65,6 +65,8 @@ class ReviewControllerTest {
                 UUID.randomUUID(),
                 "PC",
                 PlayStatus.COMPLETED,
+                false,
+                0,
                 false
         );
     }
@@ -77,7 +79,7 @@ class ReviewControllerTest {
         @DisplayName("should return 200 OK with paginated reviews")
         void getReviews_shouldReturnPaginatedReviews() throws Exception {
             // Given
-            when(reviewService.getGameReviews(eq(gameId), any()))
+            when(reviewService.getGameReviews(eq(gameId), any(), any()))
                     .thenReturn(new PageImpl<>(List.of(reviewResponseDto)));
 
             // When / Then
@@ -93,7 +95,7 @@ class ReviewControllerTest {
         @DisplayName("should return 200 OK with empty page when no reviews exist")
         void getReviews_shouldReturnEmptyPage() throws Exception {
             // Given
-            when(reviewService.getGameReviews(eq(gameId), any()))
+            when(reviewService.getGameReviews(eq(gameId), any(), any()))
                     .thenReturn(new PageImpl<>(List.of()));
 
             // When / Then
@@ -107,7 +109,7 @@ class ReviewControllerTest {
         @DisplayName("should return 404 when game does not exist")
         void getReviews_shouldReturn404WhenGameNotFound() throws Exception {
             // Given
-            when(reviewService.getGameReviews(eq(gameId), any()))
+            when(reviewService.getGameReviews(eq(gameId), any(), any()))
                     .thenThrow(new GameNotFoundException(gameId));
 
             // When / Then
