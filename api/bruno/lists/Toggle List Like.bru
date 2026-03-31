@@ -1,0 +1,48 @@
+meta {
+  name: Toggle List Like
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/lists/:listId/like
+  body: none
+  auth: bearer
+}
+
+params:path {
+  listId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Toggle List Like
+
+  Toggles a like on a game list. If the user already liked the list, the like is removed.
+  Otherwise, a new like is created.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list to like/unlike
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "liked": true,
+    "likesCount": 10
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game list does not exist
+}

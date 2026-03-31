@@ -22,6 +22,7 @@ import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.mapper.ReviewMapper;
+import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
 import com.checkpoint.api.repositories.UserRepository;
@@ -42,6 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final VideoGameRepository videoGameRepository;
     private final UserRepository userRepository;
     private final UserGamePlayRepository userGamePlayRepository;
+    private final LikeRepository likeRepository;
     private final ReviewMapper reviewMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -52,6 +54,7 @@ public class ReviewServiceImpl implements ReviewService {
      * @param videoGameRepository    the video game repository
      * @param userRepository         the user repository
      * @param userGamePlayRepository the play log repository
+     * @param likeRepository         the like repository
      * @param reviewMapper           the review mapper
      * @param eventPublisher         the application event publisher
      */
@@ -59,12 +62,14 @@ public class ReviewServiceImpl implements ReviewService {
                              VideoGameRepository videoGameRepository,
                              UserRepository userRepository,
                              UserGamePlayRepository userGamePlayRepository,
+                             LikeRepository likeRepository,
                              ReviewMapper reviewMapper,
                              ApplicationEventPublisher eventPublisher) {
         this.reviewRepository = reviewRepository;
         this.videoGameRepository = videoGameRepository;
         this.userRepository = userRepository;
         this.userGamePlayRepository = userGamePlayRepository;
+        this.likeRepository = likeRepository;
         this.reviewMapper = reviewMapper;
         this.eventPublisher = eventPublisher;
     }
@@ -74,14 +79,25 @@ public class ReviewServiceImpl implements ReviewService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDto> getGameReviews(UUID videoGameId, Pageable pageable) {
+    public Page<ReviewResponseDto> getGameReviews(UUID videoGameId, String viewerEmail, Pageable pageable) {
         if (!videoGameRepository.existsById(videoGameId)) {
             throw new GameNotFoundException(videoGameId);
         }
 
+        User viewer = null;
+        if (viewerEmail != null) {
+            viewer = userRepository.findByEmail(viewerEmail).orElse(null);
+        }
+
+        User resolvedViewer = viewer;
         Page<Review> reviews = reviewRepository.findByVideoGameId(videoGameId, pageable);
 
-        return reviews.map(reviewMapper::toDto);
+        return reviews.map(review -> {
+            long likesCount = likeRepository.countByReviewId(review.getId());
+            boolean hasLiked = resolvedViewer != null
+                    && likeRepository.existsByUserIdAndReviewId(resolvedViewer.getId(), review.getId());
+            return reviewMapper.toDto(review, likesCount, hasLiked);
+        });
     }
 
     /**

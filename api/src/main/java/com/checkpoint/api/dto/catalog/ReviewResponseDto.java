@@ -21,6 +21,8 @@ public record ReviewResponseDto(
     UUID playLogId,
     String platformName,
     PlayStatus playStatus,
-    Boolean isReplay
+    Boolean isReplay,
+    long likesCount,
+    boolean hasLiked
 ) {
 }

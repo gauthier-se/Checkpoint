@@ -9,6 +9,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,27 +54,33 @@ public class ReviewController {
      * Retrieves a paginated list of all reviews for a specific game.
      * Includes reviews from all users and all their play logs, ordered by date.
      * Accessible to both public and authenticated users.
+     * When authenticated, the response includes whether the viewer has liked each review.
      *
-     * @param gameId the video game ID
-     * @param page   the page number (0-based)
-     * @param size   the page size
-     * @param sort   the sorting parameters
+     * @param gameId      the video game ID
+     * @param userDetails the authenticated user, or null if anonymous
+     * @param page        the page number (0-based)
+     * @param size        the page size
+     * @param sort        the sorting parameters
      * @return the paginated reviews with play context
      */
     @GetMapping
     public ResponseEntity<PagedResponseDto<ReviewResponseDto>> getReviews(
             @PathVariable UUID gameId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/games/{}/reviews - page: {}, size: {}, sort: {}", gameId, page, size, sort);
+        log.info("GET /api/games/{}/reviews - page: {}, size: {}, sort: {}, viewer: {}",
+                gameId, page, size, sort,
+                userDetails != null ? userDetails.getUsername() : "anonymous");
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
 
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(validatedPage, validatedSize, sort);
-        Page<ReviewResponseDto> reviewPage = reviewService.getGameReviews(gameId, pageable);
+        Page<ReviewResponseDto> reviewPage = reviewService.getGameReviews(gameId, viewerEmail, pageable);
 
         return ResponseEntity.ok(PagedResponseDto.from(reviewPage));
     }

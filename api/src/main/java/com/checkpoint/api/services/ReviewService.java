@@ -17,12 +17,14 @@ public interface ReviewService {
     /**
      * Retrieves a paginated list of all reviews for a specific video game.
      * Includes reviews from all users and all their play logs.
+     * When a viewer email is provided, the response includes whether the viewer has liked each review.
      *
      * @param videoGameId the video game ID
+     * @param viewerEmail the authenticated viewer's email, or null if anonymous
      * @param pageable    pagination and sorting details
      * @return a page of reviews
      */
-    Page<ReviewResponseDto> getGameReviews(UUID videoGameId, Pageable pageable);
+    Page<ReviewResponseDto> getGameReviews(UUID videoGameId, String viewerEmail, Pageable pageable);
 
     /**
      * Creates a review attached to a specific play log entry.

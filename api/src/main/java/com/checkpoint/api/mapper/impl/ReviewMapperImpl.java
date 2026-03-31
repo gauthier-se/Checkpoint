@@ -18,8 +18,19 @@ import java.util.UUID;
 @Component
 public class ReviewMapperImpl implements ReviewMapper {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ReviewResponseDto toDto(Review review) {
+        return toDto(review, 0, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ReviewResponseDto toDto(Review review, long likesCount, boolean hasLiked) {
         if (review == null) {
             return null;
         }
@@ -57,7 +68,9 @@ public class ReviewMapperImpl implements ReviewMapper {
                 playLogId,
                 platformName,
                 playStatus,
-                isReplay
+                isReplay,
+                likesCount,
+                hasLiked
         );
     }
 }

@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Flag, Gamepad2, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 import type { PlayStatus } from '@/types/interaction'
+import type { ReviewsResponse } from '@/types/review'
 import { ReportReviewDialog } from '@/components/reviews/report-review-dialog'
+import { LikeButton } from '@/components/shared/like-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
-import { gameReviewsQueryOptions } from '@/queries/review'
+import { gameReviewsQueryOptions, toggleReviewLike } from '@/queries/review'
 
 interface ReviewListProps {
   gameId: string
@@ -50,9 +53,52 @@ export function ReviewList({ gameId }: ReviewListProps) {
   )
   const size = 10
 
+  const queryClient = useQueryClient()
+
   const { data, isLoading, isError } = useQuery(
     gameReviewsQueryOptions(gameId, page, size),
   )
+
+  const likeMutation = useMutation({
+    mutationFn: (reviewId: string) => toggleReviewLike(reviewId),
+    onMutate: async (reviewId) => {
+      const queryKey = gameReviewsQueryOptions(gameId, page, size).queryKey
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData<ReviewsResponse>(queryKey)
+      queryClient.setQueryData<ReviewsResponse>(queryKey, (old) => {
+        if (!old) return old
+        return {
+          ...old,
+          content: old.content.map((r) =>
+            r.id === reviewId
+              ? {
+                  ...r,
+                  hasLiked: !r.hasLiked,
+                  likesCount: r.hasLiked
+                    ? r.likesCount - 1
+                    : r.likesCount + 1,
+                }
+              : r,
+          ),
+        }
+      })
+      return { previous }
+    },
+    onError: (_err, _reviewId, context) => {
+      toast.error('Failed to update like')
+      if (context?.previous) {
+        queryClient.setQueryData(
+          gameReviewsQueryOptions(gameId, page, size).queryKey,
+          context.previous,
+        )
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: gameReviewsQueryOptions(gameId, page, size).queryKey,
+      })
+    },
+  })
 
   const toggleSpoilers = (reviewId: string) => {
     setRevealedSpoilers((prev) => ({
@@ -144,16 +190,25 @@ export function ReviewList({ gameId }: ReviewListProps) {
                     </CardDescription>
                   </div>
                 </div>
-                {user && user.id !== review.user.id && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => setReportingReviewId(review.id)}
-                  >
-                    <Flag className="size-4" />
-                  </Button>
-                )}
+                <div className="flex items-center gap-1">
+                  <LikeButton
+                    liked={review.hasLiked}
+                    likesCount={review.likesCount}
+                    onToggle={() => likeMutation.mutate(review.id)}
+                    disabled={!user}
+                    isPending={likeMutation.isPending}
+                  />
+                  {user && user.id !== review.user.id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setReportingReviewId(review.id)}
+                    >
+                      <Flag className="size-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="py-0">

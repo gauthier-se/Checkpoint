@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import type { Review, ReviewsResponse } from '@/types/review'
+import type { LikeResponse, Review, ReviewsResponse } from '@/types/review'
 import { apiFetch } from '@/services/api'
 
 export const gameReviewsQueryOptions = (
@@ -66,6 +66,18 @@ export const reportReview = async (
   }
   if (!res.ok) {
     throw new Error('Failed to report review')
+  }
+  return res.json()
+}
+
+export const toggleReviewLike = async (
+  reviewId: string,
+): Promise<LikeResponse> => {
+  const res = await apiFetch(`/api/reviews/${reviewId}/like`, {
+    method: 'POST',
+  })
+  if (!res.ok) {
+    throw new Error('Failed to toggle review like')
   }
   return res.json()
 }

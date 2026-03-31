@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { GameListDetail, GameListsResponse } from '@/types/list'
+import type { LikeResponse } from '@/types/review'
 import { apiFetch } from '@/services/api'
 
 export async function createList(data: {
@@ -136,4 +137,16 @@ export function myListsQueryOptions(page: number = 0, size: number = 20) {
     },
     staleTime: 60 * 1000,
   })
+}
+
+export const toggleListLike = async (
+  listId: string,
+): Promise<LikeResponse> => {
+  const res = await apiFetch(`/api/lists/${listId}/like`, {
+    method: 'POST',
+  })
+  if (!res.ok) {
+    throw new Error('Failed to toggle list like')
+  }
+  return res.json()
 }
