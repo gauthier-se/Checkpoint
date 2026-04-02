@@ -4,6 +4,7 @@ import { ArrowLeft, Gamepad2, Loader2, Lock, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import type { GameListDetail } from '@/types/list'
 import { listDetailQueryOptions, toggleListLike } from '@/queries/lists'
+import { CommentSection } from '@/components/comments/comment-section'
 import { ListGameItem } from '@/components/lists/list-game-item'
 import { LikeButton } from '@/components/shared/like-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -188,6 +189,10 @@ function RouteComponent() {
           </p>
         </div>
       )}
+
+      <Separator className="my-6" />
+
+      <CommentSection targetType="list" targetId={listId} />
     </main>
   )
 }

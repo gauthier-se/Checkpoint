@@ -16,25 +16,27 @@ public interface GameListMapper {
     /**
      * Converts a GameList entity to a card DTO for browse/listing views.
      *
-     * @param gameList   the game list entity
-     * @param likesCount the number of likes for this list
-     * @param coverUrls  cover URLs of the first games in the list (max 4)
+     * @param gameList      the game list entity
+     * @param likesCount    the number of likes for this list
+     * @param commentsCount the number of comments for this list
+     * @param coverUrls     cover URLs of the first games in the list (max 4)
      * @return the card DTO
      */
-    GameListCardDto toCardDto(GameList gameList, long likesCount, List<String> coverUrls);
+    GameListCardDto toCardDto(GameList gameList, long likesCount, long commentsCount, List<String> coverUrls);
 
     /**
      * Converts a GameList entity to a detail DTO.
      *
-     * @param gameList   the game list entity
-     * @param entries    the ordered list entries with fetched video games
-     * @param likesCount the number of likes for this list
-     * @param isOwner    whether the viewer owns this list
-     * @param hasLiked   whether the viewer has liked this list
+     * @param gameList      the game list entity
+     * @param entries       the ordered list entries with fetched video games
+     * @param likesCount    the number of likes for this list
+     * @param commentsCount the number of comments for this list
+     * @param isOwner       whether the viewer owns this list
+     * @param hasLiked      whether the viewer has liked this list
      * @return the detail DTO
      */
     GameListDetailDto toDetailDto(GameList gameList, List<GameListEntry> entries,
-                                  long likesCount, boolean isOwner, boolean hasLiked);
+                                  long likesCount, long commentsCount, boolean isOwner, boolean hasLiked);
 
     /**
      * Converts a GameListEntry entity to an entry DTO.

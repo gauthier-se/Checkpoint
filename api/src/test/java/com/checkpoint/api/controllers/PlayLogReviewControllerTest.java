@@ -79,7 +79,8 @@ class PlayLogReviewControllerTest {
                 PlayStatus.COMPLETED,
                 false,
                 0,
-                false
+                false,
+                0
         );
     }
 
@@ -162,7 +163,8 @@ class PlayLogReviewControllerTest {
                     PlayStatus.COMPLETED,
                     false,
                     0,
-                    false
+                    false,
+                    0
             );
             when(reviewService.updatePlayLogReview(eq("user@example.com"), eq(playId), any(ReviewRequestDto.class)))
                     .thenReturn(updatedResponse);

@@ -15,6 +15,7 @@ public record GameListDetailDto(
         Boolean isPrivate,
         Integer videoGamesCount,
         Long likesCount,
+        Long commentsCount,
         String authorPseudo,
         String authorPicture,
         List<GameListEntryDto> entries,

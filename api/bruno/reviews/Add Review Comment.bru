@@ -1,0 +1,71 @@
+meta {
+  name: Add Review Comment
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/reviews/:reviewId/comments
+  body: json
+  auth: bearer
+}
+
+params:path {
+  reviewId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "Great review, I totally agree!"
+  }
+}
+
+docs {
+  # Add Review Comment
+
+  Adds a comment to a review.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **reviewId**: The UUID of the review to comment on
+
+  ## Request Body
+
+  ```json
+  {
+    "content": "Great review, I totally agree!"
+  }
+  ```
+
+  - **content** (required): The comment text (max 5000 characters)
+
+  ## Response (201 Created)
+
+  ```json
+  {
+    "id": "uuid",
+    "content": "Great review, I totally agree!",
+    "user": {
+      "id": "uuid",
+      "pseudo": "gamer123",
+      "picture": null
+    },
+    "createdAt": "2026-04-01T10:00:00",
+    "updatedAt": "2026-04-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Content is blank or exceeds 5000 characters
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Review does not exist
+}

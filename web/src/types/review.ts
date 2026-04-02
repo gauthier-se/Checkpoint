@@ -20,6 +20,7 @@ export interface Review {
   isReplay: boolean | null
   likesCount: number
   hasLiked: boolean
+  commentsCount: number
 }
 
 export interface LikeResponse {

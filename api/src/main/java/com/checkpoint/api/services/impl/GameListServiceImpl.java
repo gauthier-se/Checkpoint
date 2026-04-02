@@ -26,6 +26,7 @@ import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInListException;
 import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
 import com.checkpoint.api.mapper.GameListMapper;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListEntryRepository;
 import com.checkpoint.api.repositories.GameListRepository;
 import com.checkpoint.api.repositories.LikeRepository;
@@ -47,6 +48,7 @@ public class GameListServiceImpl implements GameListService {
     private final UserRepository userRepository;
     private final VideoGameRepository videoGameRepository;
     private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
     private final GameListMapper gameListMapper;
 
     public GameListServiceImpl(GameListRepository gameListRepository,
@@ -54,12 +56,14 @@ public class GameListServiceImpl implements GameListService {
                                UserRepository userRepository,
                                VideoGameRepository videoGameRepository,
                                LikeRepository likeRepository,
+                               CommentRepository commentRepository,
                                GameListMapper gameListMapper) {
         this.gameListRepository = gameListRepository;
         this.gameListEntryRepository = gameListEntryRepository;
         this.userRepository = userRepository;
         this.videoGameRepository = videoGameRepository;
         this.likeRepository = likeRepository;
+        this.commentRepository = commentRepository;
         this.gameListMapper = gameListMapper;
     }
 
@@ -76,7 +80,7 @@ public class GameListServiceImpl implements GameListService {
         GameList saved = gameListRepository.save(gameList);
 
         log.info("List '{}' created with ID {} for user {}", saved.getTitle(), saved.getId(), userEmail);
-        return gameListMapper.toDetailDto(saved, List.of(), 0L, true, false);
+        return gameListMapper.toDetailDto(saved, List.of(), 0L, 0L, true, false);
     }
 
     @Override
@@ -101,8 +105,10 @@ public class GameListServiceImpl implements GameListService {
         List<GameListEntry> entries = gameListEntryRepository.findByGameListIdOrderByPositionAsc(listId);
         long likesCount = likeRepository.countByGameListId(listId);
 
+        long commentsCount = commentRepository.countByGameListId(listId);
+
         log.info("List '{}' updated for user {}", updated.getTitle(), userEmail);
-        return gameListMapper.toDetailDto(updated, entries, likesCount, true, false);
+        return gameListMapper.toDetailDto(updated, entries, likesCount, commentsCount, true, false);
     }
 
     @Override
@@ -150,8 +156,10 @@ public class GameListServiceImpl implements GameListService {
         List<GameListEntry> entries = gameListEntryRepository.findByGameListIdOrderByPositionAsc(listId);
         long likesCount = likeRepository.countByGameListId(listId);
 
+        long commentsCount = commentRepository.countByGameListId(listId);
+
         log.info("Game '{}' added to list '{}' at position {}", videoGame.getTitle(), gameList.getTitle(), entry.getPosition());
-        return gameListMapper.toDetailDto(gameList, entries, likesCount, true, false);
+        return gameListMapper.toDetailDto(gameList, entries, likesCount, commentsCount, true, false);
     }
 
     @Override
@@ -199,8 +207,10 @@ public class GameListServiceImpl implements GameListService {
         List<GameListEntry> entries = gameListEntryRepository.findByGameListIdOrderByPositionAsc(listId);
         long likesCount = likeRepository.countByGameListId(listId);
 
+        long commentsCount = commentRepository.countByGameListId(listId);
+
         log.info("Games reordered in list '{}'", gameList.getTitle());
-        return gameListMapper.toDetailDto(gameList, entries, likesCount, true, false);
+        return gameListMapper.toDetailDto(gameList, entries, likesCount, commentsCount, true, false);
     }
 
     @Override
@@ -249,8 +259,9 @@ public class GameListServiceImpl implements GameListService {
 
         List<GameListEntry> entries = gameListEntryRepository.findByGameListIdOrderByPositionAsc(listId);
         long likesCount = likeRepository.countByGameListId(listId);
+        long commentsCount = commentRepository.countByGameListId(listId);
 
-        return gameListMapper.toDetailDto(gameList, entries, likesCount, isOwner, hasLiked);
+        return gameListMapper.toDetailDto(gameList, entries, likesCount, commentsCount, isOwner, hasLiked);
     }
 
     @Override
@@ -283,11 +294,12 @@ public class GameListServiceImpl implements GameListService {
 
     private GameListCardDto toCardDtoWithLikes(GameList gameList) {
         long likesCount = likeRepository.countByGameListId(gameList.getId());
+        long commentsCount = commentRepository.countByGameListId(gameList.getId());
         List<GameListEntry> entries = gameListEntryRepository.findByGameListIdOrderByPositionAsc(gameList.getId());
         List<String> coverUrls = entries.stream()
                 .limit(4)
                 .map(entry -> entry.getVideoGame().getCoverUrl())
                 .toList();
-        return gameListMapper.toCardDto(gameList, likesCount, coverUrls);
+        return gameListMapper.toCardDto(gameList, likesCount, commentsCount, coverUrls);
     }
 }

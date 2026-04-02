@@ -22,6 +22,7 @@ import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.mapper.ReviewMapper;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
@@ -44,6 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final UserGamePlayRepository userGamePlayRepository;
     private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
     private final ReviewMapper reviewMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -55,6 +57,7 @@ public class ReviewServiceImpl implements ReviewService {
      * @param userRepository         the user repository
      * @param userGamePlayRepository the play log repository
      * @param likeRepository         the like repository
+     * @param commentRepository      the comment repository
      * @param reviewMapper           the review mapper
      * @param eventPublisher         the application event publisher
      */
@@ -63,6 +66,7 @@ public class ReviewServiceImpl implements ReviewService {
                              UserRepository userRepository,
                              UserGamePlayRepository userGamePlayRepository,
                              LikeRepository likeRepository,
+                             CommentRepository commentRepository,
                              ReviewMapper reviewMapper,
                              ApplicationEventPublisher eventPublisher) {
         this.reviewRepository = reviewRepository;
@@ -70,6 +74,7 @@ public class ReviewServiceImpl implements ReviewService {
         this.userRepository = userRepository;
         this.userGamePlayRepository = userGamePlayRepository;
         this.likeRepository = likeRepository;
+        this.commentRepository = commentRepository;
         this.reviewMapper = reviewMapper;
         this.eventPublisher = eventPublisher;
     }
@@ -96,7 +101,8 @@ public class ReviewServiceImpl implements ReviewService {
             long likesCount = likeRepository.countByReviewId(review.getId());
             boolean hasLiked = resolvedViewer != null
                     && likeRepository.existsByUserIdAndReviewId(resolvedViewer.getId(), review.getId());
-            return reviewMapper.toDto(review, likesCount, hasLiked);
+            long commentsCount = commentRepository.countByReviewId(review.getId());
+            return reviewMapper.toDto(review, likesCount, hasLiked, commentsCount);
         });
     }
 

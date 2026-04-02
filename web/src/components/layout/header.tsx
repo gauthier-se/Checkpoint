@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import { Command, Plus, Search, User } from 'lucide-react'
@@ -9,8 +9,11 @@ import { AvatarDropdown } from './avatar-dropdown'
 import { useAuth } from '@/hooks/use-auth'
 
 function useIsMac() {
-  if (typeof navigator === 'undefined') return true
-  return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent)
+  const [isMac, setIsMac] = useState<boolean | null>(null)
+  useEffect(() => {
+    setIsMac(/Mac|iPod|iPhone|iPad/.test(navigator.userAgent))
+  }, [])
+  return isMac
 }
 
 export const Header = () => {
@@ -61,10 +64,12 @@ export const Header = () => {
         >
           <Search className="size-4 shrink-0" />
           <span>Search...</span>
-          <kbd className="pointer-events-none hidden select-none items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground sm:inline-flex">
-            {isMac ? <Command className="size-2.5" /> : <span>Ctrl+</span>}
-            <span>K</span>
-          </kbd>
+          {isMac !== null && (
+            <kbd className="pointer-events-none hidden select-none items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground sm:inline-flex">
+              {isMac ? <Command className="size-2.5" /> : <span>Ctrl+</span>}
+              <span>K</span>
+            </kbd>
+          )}
         </button>
         <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
         {user && (

@@ -14,6 +14,7 @@ public record GameListCardDto(
         Boolean isPrivate,
         Integer videoGamesCount,
         Long likesCount,
+        Long commentsCount,
         String authorPseudo,
         String authorPicture,
         List<String> coverUrls,

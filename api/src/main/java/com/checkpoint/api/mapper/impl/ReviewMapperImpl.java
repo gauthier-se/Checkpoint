@@ -23,14 +23,14 @@ public class ReviewMapperImpl implements ReviewMapper {
      */
     @Override
     public ReviewResponseDto toDto(Review review) {
-        return toDto(review, 0, false);
+        return toDto(review, 0, false, 0);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ReviewResponseDto toDto(Review review, long likesCount, boolean hasLiked) {
+    public ReviewResponseDto toDto(Review review, long likesCount, boolean hasLiked, long commentsCount) {
         if (review == null) {
             return null;
         }
@@ -70,7 +70,8 @@ public class ReviewMapperImpl implements ReviewMapper {
                 playStatus,
                 isReplay,
                 likesCount,
-                hasLiked
+                hasLiked,
+                commentsCount
         );
     }
 }

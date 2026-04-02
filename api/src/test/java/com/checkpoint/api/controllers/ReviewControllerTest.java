@@ -67,7 +67,8 @@ class ReviewControllerTest {
                 PlayStatus.COMPLETED,
                 false,
                 0,
-                false
+                false,
+                0
         );
     }
 

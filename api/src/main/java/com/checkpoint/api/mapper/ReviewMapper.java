@@ -17,12 +17,13 @@ public interface ReviewMapper {
     ReviewResponseDto toDto(Review review);
 
     /**
-     * Maps a Review entity to a ReviewResponseDto with like context.
+     * Maps a Review entity to a ReviewResponseDto with like and comment context.
      *
-     * @param review     the review entity
-     * @param likesCount the number of likes on this review
-     * @param hasLiked   whether the current viewer has liked this review
+     * @param review        the review entity
+     * @param likesCount    the number of likes on this review
+     * @param hasLiked      whether the current viewer has liked this review
+     * @param commentsCount the number of comments on this review
      * @return the review response DTO
      */
-    ReviewResponseDto toDto(Review review, long likesCount, boolean hasLiked);
+    ReviewResponseDto toDto(Review review, long likesCount, boolean hasLiked, long commentsCount);
 }

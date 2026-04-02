@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameAlreadyInListException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInListException;
@@ -36,6 +37,7 @@ import com.checkpoint.api.exceptions.RateNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.exceptions.SelfFollowException;
+import com.checkpoint.api.exceptions.UnauthorizedCommentAccessException;
 import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 
@@ -66,6 +68,46 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles CommentNotFoundException when a comment is not found.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCommentNotFound(CommentNotFoundException ex) {
+        log.warn("Comment not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles UnauthorizedCommentAccessException when a user tries to modify or delete a comment they do not own.
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(UnauthorizedCommentAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedCommentAccess(UnauthorizedCommentAccessException ex) {
+        log.warn("Unauthorized comment access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**
