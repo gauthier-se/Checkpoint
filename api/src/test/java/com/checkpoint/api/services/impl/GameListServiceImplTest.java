@@ -45,6 +45,7 @@ import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInListException;
 import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
 import com.checkpoint.api.mapper.GameListMapper;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListEntryRepository;
 import com.checkpoint.api.repositories.GameListRepository;
 import com.checkpoint.api.repositories.LikeRepository;
@@ -70,6 +71,9 @@ class GameListServiceImplTest {
     private LikeRepository likeRepository;
 
     @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
     private GameListMapper gameListMapper;
 
     private GameListServiceImpl service;
@@ -85,7 +89,7 @@ class GameListServiceImplTest {
         service = new GameListServiceImpl(
                 gameListRepository, gameListEntryRepository,
                 userRepository, videoGameRepository,
-                likeRepository, gameListMapper);
+                likeRepository, commentRepository, gameListMapper);
 
         testUser = new User("testuser", "user@example.com", "password");
         testUser.setId(UUID.randomUUID());
@@ -105,7 +109,7 @@ class GameListServiceImplTest {
 
         testDetailDto = new GameListDetailDto(
                 testList.getId(), testList.getTitle(), null, false,
-                0, 0L, testUser.getPseudo(), null,
+                0, 0L, 0L, testUser.getPseudo(), null,
                 List.of(), true, false,
                 testList.getCreatedAt(), testList.getUpdatedAt());
     }
@@ -121,7 +125,7 @@ class GameListServiceImplTest {
             CreateGameListRequestDto request = new CreateGameListRequestDto("My List", "A description", false);
             when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
             when(gameListRepository.save(any(GameList.class))).thenReturn(testList);
-            when(gameListMapper.toDetailDto(any(GameList.class), eq(List.of()), eq(0L), eq(true), eq(false)))
+            when(gameListMapper.toDetailDto(any(GameList.class), eq(List.of()), eq(0L), eq(0L), eq(true), eq(false)))
                     .thenReturn(testDetailDto);
 
             // When
@@ -139,7 +143,7 @@ class GameListServiceImplTest {
             CreateGameListRequestDto request = new CreateGameListRequestDto("My List", null, null);
             when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
             when(gameListRepository.save(any(GameList.class))).thenReturn(testList);
-            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyBoolean(), anyBoolean()))
+            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
                     .thenReturn(testDetailDto);
 
             // When
@@ -164,7 +168,7 @@ class GameListServiceImplTest {
             when(gameListRepository.save(any(GameList.class))).thenReturn(testList);
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
-            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyBoolean(), anyBoolean()))
+            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
                     .thenReturn(testDetailDto);
 
             // When
@@ -253,7 +257,7 @@ class GameListServiceImplTest {
             when(gameListEntryRepository.save(any(GameListEntry.class))).thenAnswer(inv -> inv.getArgument(0));
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
-            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyBoolean(), anyBoolean()))
+            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
                     .thenReturn(testDetailDto);
 
             // When
@@ -344,7 +348,7 @@ class GameListServiceImplTest {
                     .thenReturn(Optional.of(entry1));
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
-            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyBoolean(), anyBoolean()))
+            when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
                     .thenReturn(testDetailDto);
 
             // When
@@ -383,7 +387,7 @@ class GameListServiceImplTest {
             when(gameListRepository.findById(testList.getId())).thenReturn(Optional.of(testList));
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(5L);
-            when(gameListMapper.toDetailDto(testList, List.of(), 5L, false, false)).thenReturn(testDetailDto);
+            when(gameListMapper.toDetailDto(testList, List.of(), 5L, 0L, false, false)).thenReturn(testDetailDto);
 
             // When
             GameListDetailDto result = service.getListDetail(testList.getId(), null);
@@ -414,7 +418,7 @@ class GameListServiceImplTest {
             when(likeRepository.existsByUserIdAndGameListId(testUser.getId(), testList.getId())).thenReturn(false);
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
-            when(gameListMapper.toDetailDto(testList, List.of(), 0L, true, false)).thenReturn(testDetailDto);
+            when(gameListMapper.toDetailDto(testList, List.of(), 0L, 0L, true, false)).thenReturn(testDetailDto);
 
             // When
             GameListDetailDto result = service.getListDetail(testList.getId(), "user@example.com");
@@ -450,12 +454,12 @@ class GameListServiceImplTest {
             Page<GameList> page = new PageImpl<>(List.of(testList), pageable, 1);
             GameListCardDto cardDto = new GameListCardDto(
                     testList.getId(), testList.getTitle(), null, false,
-                    0, 0L, testUser.getPseudo(), null, List.of(), testList.getCreatedAt());
+                    0, 0L, 0L, testUser.getPseudo(), null, List.of(), testList.getCreatedAt());
 
             when(gameListRepository.findAllPublic(pageable)).thenReturn(page);
             when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
-            when(gameListMapper.toCardDto(testList, 0L, List.of())).thenReturn(cardDto);
+            when(gameListMapper.toCardDto(testList, 0L, 0L, List.of())).thenReturn(cardDto);
 
             // When
             Page<GameListCardDto> result = service.getRecentPublicLists(pageable);

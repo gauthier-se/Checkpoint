@@ -40,6 +40,7 @@ import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.events.ReviewCreatedEvent;
 import com.checkpoint.api.mapper.ReviewMapper;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
@@ -69,6 +70,9 @@ class ReviewServiceImplTest {
     private LikeRepository likeRepository;
 
     @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
     private ReviewMapper reviewMapper;
 
     @Mock
@@ -87,7 +91,7 @@ class ReviewServiceImplTest {
     void setUp() {
         reviewService = new ReviewServiceImpl(
                 reviewRepository, videoGameRepository, userRepository,
-                userGamePlayRepository, likeRepository, reviewMapper, eventPublisher);
+                userGamePlayRepository, likeRepository, commentRepository, reviewMapper, eventPublisher);
 
         gameId = UUID.randomUUID();
         playId = UUID.randomUUID();
@@ -124,13 +128,14 @@ class ReviewServiceImplTest {
             when(videoGameRepository.existsById(gameId)).thenReturn(true);
             when(reviewRepository.findByVideoGameId(gameId, pageable)).thenReturn(reviewPage);
             when(likeRepository.countByReviewId(any())).thenReturn(0L);
+            when(commentRepository.countByReviewId(any())).thenReturn(0L);
 
             ReviewResponseDto responseDto = new ReviewResponseDto(
                     UUID.randomUUID(), "Good", false,
                     LocalDateTime.now(), LocalDateTime.now(),
                     new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    playId, "PC", PlayStatus.COMPLETED, false, 0, false);
-            when(reviewMapper.toDto(review, 0L, false)).thenReturn(responseDto);
+                    playId, "PC", PlayStatus.COMPLETED, false, 0, false, 0);
+            when(reviewMapper.toDto(review, 0L, false, 0L)).thenReturn(responseDto);
 
             // When
             Page<ReviewResponseDto> result = reviewService.getGameReviews(gameId, null, pageable);
@@ -175,7 +180,7 @@ class ReviewServiceImplTest {
                     savedReview.getId(), "Great game!", false,
                     LocalDateTime.now(), LocalDateTime.now(),
                     new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    playId, "PC", PlayStatus.COMPLETED, false, 0, false);
+                    playId, "PC", PlayStatus.COMPLETED, false, 0, false, 0);
             when(reviewMapper.toDto(savedReview)).thenReturn(responseDto);
 
             // When
@@ -259,7 +264,7 @@ class ReviewServiceImplTest {
                     existingReview.getId(), "Updated review", true,
                     LocalDateTime.now(), LocalDateTime.now(),
                     new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    playId, "PC", PlayStatus.COMPLETED, false, 0, false);
+                    playId, "PC", PlayStatus.COMPLETED, false, 0, false, 0);
             when(reviewMapper.toDto(existingReview)).thenReturn(responseDto);
 
             // When
@@ -346,7 +351,7 @@ class ReviewServiceImplTest {
                     review.getId(), "Great game!", false,
                     LocalDateTime.now(), LocalDateTime.now(),
                     new ReviewUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    playId, "PC", PlayStatus.COMPLETED, false, 0, false);
+                    playId, "PC", PlayStatus.COMPLETED, false, 0, false, 0);
             when(reviewMapper.toDto(review)).thenReturn(responseDto);
 
             // When

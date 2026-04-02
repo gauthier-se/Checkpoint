@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Flag, Gamepad2, RefreshCw } from 'lucide-react'
+import { Flag, Gamepad2, MessageSquare, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 import type { PlayStatus } from '@/types/interaction'
 import type { ReviewsResponse } from '@/types/review'
+import { CommentSection } from '@/components/comments/comment-section'
 import { ReportReviewDialog } from '@/components/reviews/report-review-dialog'
 import { LikeButton } from '@/components/shared/like-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -51,6 +52,9 @@ export function ReviewList({ gameId }: ReviewListProps) {
   const [reportingReviewId, setReportingReviewId] = useState<string | null>(
     null,
   )
+  const [expandedComments, setExpandedComments] = useState<
+    Record<string, boolean>
+  >({})
   const size = 10
 
   const queryClient = useQueryClient()
@@ -198,6 +202,20 @@ export function ReviewList({ gameId }: ReviewListProps) {
                     disabled={!user}
                     isPending={likeMutation.isPending}
                   />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() =>
+                      setExpandedComments((prev) => ({
+                        ...prev,
+                        [review.id]: !prev[review.id],
+                      }))
+                    }
+                  >
+                    <MessageSquare className="size-4" />
+                    {review.commentsCount}
+                  </Button>
                   {user && user.id !== review.user.id && (
                     <Button
                       variant="ghost"
@@ -243,6 +261,11 @@ export function ReviewList({ gameId }: ReviewListProps) {
                 </div>
               )}
             </CardContent>
+            {expandedComments[review.id] && (
+              <div className="border-t px-6 py-4">
+                <CommentSection targetType="review" targetId={review.id} />
+              </div>
+            )}
           </Card>
         ))}
       </div>

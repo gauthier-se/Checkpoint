@@ -59,7 +59,7 @@ class GameListControllerTest {
             // Given
             GameListCardDto card = new GameListCardDto(
                     UUID.randomUUID(), "Top RPGs", "Best RPGs of all time", false,
-                    10, 42L, "gamer123", null,
+                    10, 42L, 0L, "gamer123", null,
                     List.of("cover1.jpg", "cover2.jpg"), LocalDateTime.now());
             Page<GameListCardDto> page = new PageImpl<>(List.of(card), PageRequest.of(0, 20), 1);
 
@@ -85,7 +85,7 @@ class GameListControllerTest {
             // Given
             GameListCardDto card = new GameListCardDto(
                     UUID.randomUUID(), "Most Liked", null, false,
-                    5, 100L, "curator", null, List.of(), LocalDateTime.now());
+                    5, 100L, 0L, "curator", null, List.of(), LocalDateTime.now());
             Page<GameListCardDto> page = new PageImpl<>(List.of(card), PageRequest.of(0, 20), 1);
 
             when(gameListService.getPopularPublicLists(any())).thenReturn(page);
@@ -109,7 +109,7 @@ class GameListControllerTest {
             UUID listId = UUID.randomUUID();
             GameListDetailDto detail = new GameListDetailDto(
                     listId, "Top RPGs", "My favorite RPGs", false,
-                    2, 5L, "gamer123", null,
+                    2, 5L, 0L, "gamer123", null,
                     List.of(), false, false,
                     LocalDateTime.now(), LocalDateTime.now());
 
@@ -131,7 +131,7 @@ class GameListControllerTest {
             UUID listId = UUID.randomUUID();
             GameListDetailDto detail = new GameListDetailDto(
                     listId, "My List", null, false,
-                    1, 0L, "testuser", null,
+                    1, 0L, 0L, "testuser", null,
                     List.of(), true, false,
                     LocalDateTime.now(), LocalDateTime.now());
 

@@ -7,6 +7,7 @@ export interface GameListCard {
   isPrivate: boolean
   videoGamesCount: number
   likesCount: number
+  commentsCount: number
   authorPseudo: string
   authorPicture: string | null
   coverUrls: Array<string>
@@ -29,6 +30,7 @@ export interface GameListDetail {
   isPrivate: boolean
   videoGamesCount: number
   likesCount: number
+  commentsCount: number
   authorPseudo: string
   authorPicture: string | null
   entries: Array<GameListEntry>

@@ -1,0 +1,71 @@
+meta {
+  name: Add List Comment
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/lists/:listId/comments
+  body: json
+  auth: bearer
+}
+
+params:path {
+  listId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "Awesome list, thanks for sharing!"
+  }
+}
+
+docs {
+  # Add List Comment
+
+  Adds a comment to a game list.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **listId**: The UUID of the game list to comment on
+
+  ## Request Body
+
+  ```json
+  {
+    "content": "Awesome list, thanks for sharing!"
+  }
+  ```
+
+  - **content** (required): The comment text (max 5000 characters)
+
+  ## Response (201 Created)
+
+  ```json
+  {
+    "id": "uuid",
+    "content": "Awesome list, thanks for sharing!",
+    "user": {
+      "id": "uuid",
+      "pseudo": "gamer123",
+      "picture": null
+    },
+    "createdAt": "2026-04-01T10:00:00",
+    "updatedAt": "2026-04-01T10:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Content is blank or exceeds 5000 characters
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Game list does not exist
+}

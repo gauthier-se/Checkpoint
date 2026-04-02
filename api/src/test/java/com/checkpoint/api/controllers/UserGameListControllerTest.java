@@ -68,7 +68,7 @@ class UserGameListControllerTest {
             UUID listId = UUID.randomUUID();
             GameListDetailDto response = new GameListDetailDto(
                     listId, "My Favorites", "Best games ever", false,
-                    0, 0L, "testuser", null,
+                    0, 0L, 0L, "testuser", null,
                     List.of(), true, false,
                     LocalDateTime.now(), LocalDateTime.now());
 
@@ -119,7 +119,7 @@ class UserGameListControllerTest {
             // Given
             GameListCardDto card = new GameListCardDto(
                     UUID.randomUUID(), "My List", null, false,
-                    5, 3L, "testuser", null, List.of(), LocalDateTime.now());
+                    5, 3L, 0L, "testuser", null, List.of(), LocalDateTime.now());
             Page<GameListCardDto> page = new PageImpl<>(List.of(card), PageRequest.of(0, 20), 1);
 
             when(gameListService.getUserLists(eq("user@example.com"), any()))
@@ -145,7 +145,7 @@ class UserGameListControllerTest {
             UUID listId = UUID.randomUUID();
             GameListDetailDto response = new GameListDetailDto(
                     listId, "Updated Title", null, false,
-                    0, 0L, "testuser", null,
+                    0, 0L, 0L, "testuser", null,
                     List.of(), true, false,
                     LocalDateTime.now(), LocalDateTime.now());
 
@@ -230,7 +230,7 @@ class UserGameListControllerTest {
             UUID videoGameId = UUID.randomUUID();
             GameListDetailDto response = new GameListDetailDto(
                     listId, "My List", null, false,
-                    1, 0L, "testuser", null,
+                    1, 0L, 0L, "testuser", null,
                     List.of(), true, false,
                     LocalDateTime.now(), LocalDateTime.now());
 
@@ -320,7 +320,7 @@ class UserGameListControllerTest {
             UUID game2 = UUID.randomUUID();
             GameListDetailDto response = new GameListDetailDto(
                     listId, "My List", null, false,
-                    2, 0L, "testuser", null,
+                    2, 0L, 0L, "testuser", null,
                     List.of(), true, false,
                     LocalDateTime.now(), LocalDateTime.now());
 

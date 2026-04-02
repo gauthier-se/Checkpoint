@@ -23,6 +23,7 @@ public record ReviewResponseDto(
     PlayStatus playStatus,
     Boolean isReplay,
     long likesCount,
-    boolean hasLiked
+    boolean hasLiked,
+    long commentsCount
 ) {
 }

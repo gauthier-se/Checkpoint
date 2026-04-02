@@ -1,0 +1,43 @@
+meta {
+  name: Delete Comment
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/comments/:commentId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  commentId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Delete Comment
+
+  Deletes a comment. Only the comment owner can perform this action.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **commentId**: The UUID of the comment to delete
+
+  ## Response (204 No Content)
+
+  Empty response body.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the comment owner
+  - **404 Not Found**: Comment does not exist
+}

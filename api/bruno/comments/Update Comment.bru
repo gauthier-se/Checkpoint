@@ -1,0 +1,72 @@
+meta {
+  name: Update Comment
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/comments/:commentId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  commentId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "Updated comment content"
+  }
+}
+
+docs {
+  # Update Comment
+
+  Updates a comment. Only the comment owner can perform this action.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **commentId**: The UUID of the comment to update
+
+  ## Request Body
+
+  ```json
+  {
+    "content": "Updated comment content"
+  }
+  ```
+
+  - **content** (required): The updated comment text (max 5000 characters)
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "content": "Updated comment content",
+    "user": {
+      "id": "uuid",
+      "pseudo": "gamer123",
+      "picture": null
+    },
+    "createdAt": "2026-04-01T10:00:00",
+    "updatedAt": "2026-04-01T12:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Content is blank or exceeds 5000 characters
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Not the comment owner
+  - **404 Not Found**: Comment does not exist
+}

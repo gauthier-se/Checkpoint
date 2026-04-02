@@ -1,0 +1,63 @@
+meta {
+  name: Get Review Comments
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/reviews/:reviewId/comments?page=0&size=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+}
+
+params:path {
+  reviewId: 00000000-0000-0000-0000-000000000000
+}
+
+docs {
+  # Get Review Comments
+
+  Retrieves a paginated list of comments for a review, sorted by most recent first.
+
+  ## Path Parameters
+
+  - **reviewId**: The UUID of the review
+
+  ## Query Parameters
+
+  - **page**: Page number (0-based, default: 0)
+  - **size**: Page size (default: 20, max: 100)
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "content": "Great review!",
+        "user": {
+          "id": "uuid",
+          "pseudo": "gamer123",
+          "picture": null
+        },
+        "createdAt": "2026-04-01T10:00:00",
+        "updatedAt": "2026-04-01T10:00:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+}

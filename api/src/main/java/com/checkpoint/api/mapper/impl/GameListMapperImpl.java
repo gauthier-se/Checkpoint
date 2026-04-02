@@ -20,7 +20,7 @@ import com.checkpoint.api.mapper.GameListMapper;
 public class GameListMapperImpl implements GameListMapper {
 
     @Override
-    public GameListCardDto toCardDto(GameList gameList, long likesCount, List<String> coverUrls) {
+    public GameListCardDto toCardDto(GameList gameList, long likesCount, long commentsCount, List<String> coverUrls) {
         User author = gameList.getUser();
 
         return new GameListCardDto(
@@ -30,6 +30,7 @@ public class GameListMapperImpl implements GameListMapper {
                 gameList.getIsPrivate(),
                 gameList.getVideoGamesCount(),
                 likesCount,
+                commentsCount,
                 author.getPseudo(),
                 author.getPicture(),
                 coverUrls,
@@ -39,7 +40,7 @@ public class GameListMapperImpl implements GameListMapper {
 
     @Override
     public GameListDetailDto toDetailDto(GameList gameList, List<GameListEntry> entries,
-                                         long likesCount, boolean isOwner, boolean hasLiked) {
+                                         long likesCount, long commentsCount, boolean isOwner, boolean hasLiked) {
         User author = gameList.getUser();
         List<GameListEntryDto> entryDtos = entries.stream()
                 .map(this::toEntryDto)
@@ -52,6 +53,7 @@ public class GameListMapperImpl implements GameListMapper {
                 gameList.getIsPrivate(),
                 gameList.getVideoGamesCount(),
                 likesCount,
+                commentsCount,
                 author.getPseudo(),
                 author.getPicture(),
                 entryDtos,
