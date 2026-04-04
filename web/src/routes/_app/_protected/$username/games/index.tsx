@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Archive, BookOpen, Heart, Library } from 'lucide-react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { Archive, BookOpen, Heart, Library, Tag } from 'lucide-react'
 import type { CollectionTab } from '@/types/collection'
 import { BacklogTab, backlogQuery } from '@/components/collection/backlog-tab'
 import { LibraryTab, libraryQuery } from '@/components/collection/library-tab'
@@ -81,6 +81,7 @@ const TAB_CONFIG: Array<{
 // Page
 
 function UserGamesPage() {
+  const { username } = Route.useParams()
   const { tab, page } = Route.useSearch()
   const navigate = Route.useNavigate()
 
@@ -92,7 +93,17 @@ function UserGamesPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold">My Games</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">My Games</h1>
+        <Link
+          to="/$username/tags"
+          params={{ username }}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Tag className="size-4" />
+          Manage Tags
+        </Link>
+      </div>
 
       <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList variant="line" className="mb-6 w-full justify-start">

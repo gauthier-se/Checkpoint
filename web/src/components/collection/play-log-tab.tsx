@@ -13,6 +13,7 @@ import {
   MessageSquare,
   RefreshCw,
   Star,
+  Tag,
   Trash2,
 } from 'lucide-react'
 import type { PlayLogListResponse, PlayStatus } from '@/types/collection'
@@ -214,6 +215,22 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
                   </span>
                 )}
               </div>
+
+              {/* Tag chips */}
+              {entry.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {entry.tags.map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      variant="outline"
+                      className="gap-1 text-[11px] text-muted-foreground"
+                    >
+                      <Tag className="size-2.5" />
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Review preview */}
               {entry.hasReview && entry.reviewPreview && (

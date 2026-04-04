@@ -25,7 +25,9 @@ import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
 import { Route as AppProtectedListsNewRouteImport } from './routes/_app/_protected/lists/new'
+import { Route as AppProtectedUsernameTagsIndexRouteImport } from './routes/_app/_protected/$username/tags/index'
 import { Route as AppProtectedUsernameGamesIndexRouteImport } from './routes/_app/_protected/$username/games/index'
+import { Route as AppProfileUsernameTagsTagNameRouteImport } from './routes/_app/profile_.$username.tags.$tagName'
 import { Route as AppProtectedListsListIdEditRouteImport } from './routes/_app/_protected/lists/$listId/edit'
 
 const AuthRoute = AuthRouteImport.update({
@@ -105,11 +107,23 @@ const AppProtectedListsNewRoute = AppProtectedListsNewRouteImport.update({
   path: '/lists/new',
   getParentRoute: () => AppProtectedRoute,
 } as any)
+const AppProtectedUsernameTagsIndexRoute =
+  AppProtectedUsernameTagsIndexRouteImport.update({
+    id: '/$username/tags/',
+    path: '/$username/tags/',
+    getParentRoute: () => AppProtectedRoute,
+  } as any)
 const AppProtectedUsernameGamesIndexRoute =
   AppProtectedUsernameGamesIndexRouteImport.update({
     id: '/$username/games/',
     path: '/$username/games/',
     getParentRoute: () => AppProtectedRoute,
+  } as any)
+const AppProfileUsernameTagsTagNameRoute =
+  AppProfileUsernameTagsTagNameRouteImport.update({
+    id: '/profile_/$username/tags/$tagName',
+    path: '/profile/$username/tags/$tagName',
+    getParentRoute: () => AppRoute,
   } as any)
 const AppProtectedListsListIdEditRoute =
   AppProtectedListsListIdEditRouteImport.update({
@@ -133,7 +147,9 @@ export interface FileRoutesByFullPath {
   '/members': typeof AppMembersIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
+  '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
+  '/$username/tags': typeof AppProtectedUsernameTagsIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof AuthForgotPasswordRoute
@@ -150,7 +166,9 @@ export interface FileRoutesByTo {
   '/members': typeof AppMembersIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
+  '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
+  '/$username/tags': typeof AppProtectedUsernameTagsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,7 +189,9 @@ export interface FileRoutesById {
   '/_app/members/': typeof AppMembersIndexRoute
   '/_app/_protected/lists/new': typeof AppProtectedListsNewRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
+  '/_app/profile_/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/_app/_protected/$username/games/': typeof AppProtectedUsernameGamesIndexRoute
+  '/_app/_protected/$username/tags/': typeof AppProtectedUsernameTagsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,7 +210,9 @@ export interface FileRouteTypes {
     | '/members'
     | '/lists/new'
     | '/lists/$listId/edit'
+    | '/profile/$username/tags/$tagName'
     | '/$username/games'
+    | '/$username/tags'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -207,7 +229,9 @@ export interface FileRouteTypes {
     | '/members'
     | '/lists/new'
     | '/lists/$listId/edit'
+    | '/profile/$username/tags/$tagName'
     | '/$username/games'
+    | '/$username/tags'
   id:
     | '__root__'
     | '/_app'
@@ -227,7 +251,9 @@ export interface FileRouteTypes {
     | '/_app/members/'
     | '/_app/_protected/lists/new'
     | '/_app/_protected/lists/$listId/edit'
+    | '/_app/profile_/$username/tags/$tagName'
     | '/_app/_protected/$username/games/'
+    | '/_app/_protected/$username/tags/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -349,12 +375,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedListsNewRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/_protected/$username/tags/': {
+      id: '/_app/_protected/$username/tags/'
+      path: '/$username/tags'
+      fullPath: '/$username/tags'
+      preLoaderRoute: typeof AppProtectedUsernameTagsIndexRouteImport
+      parentRoute: typeof AppProtectedRoute
+    }
     '/_app/_protected/$username/games/': {
       id: '/_app/_protected/$username/games/'
       path: '/$username/games'
       fullPath: '/$username/games'
       preLoaderRoute: typeof AppProtectedUsernameGamesIndexRouteImport
       parentRoute: typeof AppProtectedRoute
+    }
+    '/_app/profile_/$username/tags/$tagName': {
+      id: '/_app/profile_/$username/tags/$tagName'
+      path: '/profile/$username/tags/$tagName'
+      fullPath: '/profile/$username/tags/$tagName'
+      preLoaderRoute: typeof AppProfileUsernameTagsTagNameRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/_protected/lists/$listId/edit': {
       id: '/_app/_protected/lists/$listId/edit'
@@ -371,6 +411,7 @@ interface AppProtectedRouteChildren {
   AppProtectedListsNewRoute: typeof AppProtectedListsNewRoute
   AppProtectedListsListIdEditRoute: typeof AppProtectedListsListIdEditRoute
   AppProtectedUsernameGamesIndexRoute: typeof AppProtectedUsernameGamesIndexRoute
+  AppProtectedUsernameTagsIndexRoute: typeof AppProtectedUsernameTagsIndexRoute
 }
 
 const AppProtectedRouteChildren: AppProtectedRouteChildren = {
@@ -378,6 +419,7 @@ const AppProtectedRouteChildren: AppProtectedRouteChildren = {
   AppProtectedListsNewRoute: AppProtectedListsNewRoute,
   AppProtectedListsListIdEditRoute: AppProtectedListsListIdEditRoute,
   AppProtectedUsernameGamesIndexRoute: AppProtectedUsernameGamesIndexRoute,
+  AppProtectedUsernameTagsIndexRoute: AppProtectedUsernameTagsIndexRoute,
 }
 
 const AppProtectedRouteWithChildren = AppProtectedRoute._addFileChildren(
@@ -393,6 +435,7 @@ interface AppRouteChildren {
   AppGamesIndexRoute: typeof AppGamesIndexRoute
   AppListsIndexRoute: typeof AppListsIndexRoute
   AppMembersIndexRoute: typeof AppMembersIndexRoute
+  AppProfileUsernameTagsTagNameRoute: typeof AppProfileUsernameTagsTagNameRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -404,6 +447,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGamesIndexRoute: AppGamesIndexRoute,
   AppListsIndexRoute: AppListsIndexRoute,
   AppMembersIndexRoute: AppMembersIndexRoute,
+  AppProfileUsernameTagsTagNameRoute: AppProfileUsernameTagsTagNameRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Heart, List, MessageSquare, Users } from 'lucide-react'
+import { Heart, List, MessageSquare, Tag, Users } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
 import {
   userFollowingQueryOptions,
@@ -8,21 +8,24 @@ import {
   userWishlistQueryOptions,
 } from '@/queries/profile'
 import { userListsQueryOptions } from '@/queries/lists'
+import { userTagsQueryOptions } from '@/queries/tags'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProfileHeader } from '@/components/profile/profile-header'
 import { ProfileReviewsTab } from '@/components/profile/profile-reviews-tab'
 import { ProfileWishlistTab } from '@/components/profile/profile-wishlist-tab'
 import { ProfileFollowingTab } from '@/components/profile/profile-following-tab'
 import { ProfileListsTab } from '@/components/profile/profile-lists-tab'
+import { ProfileTagsTab } from '@/components/profile/profile-tags-tab'
 
 // Search params
 
-type ProfileTab = 'reviews' | 'wishlist' | 'lists' | 'following'
+type ProfileTab = 'reviews' | 'wishlist' | 'lists' | 'tags' | 'following'
 
 const VALID_TABS: Array<ProfileTab> = [
   'reviews',
   'wishlist',
   'lists',
+  'tags',
   'following',
 ]
 
@@ -68,6 +71,9 @@ export const Route = createFileRoute('/_app/profile/$username')({
             userListsQueryOptions(username, apiPage),
           )
           break
+        case 'tags':
+          void context.queryClient.prefetchQuery(userTagsQueryOptions(username))
+          break
         case 'following':
           void context.queryClient.prefetchQuery(
             userFollowingQueryOptions(profile.id, apiPage),
@@ -103,6 +109,11 @@ const TAB_CONFIG: Array<{
     value: 'lists',
     label: 'Lists',
     icon: <List className="size-4" />,
+  },
+  {
+    value: 'tags',
+    label: 'Tags',
+    icon: <Tag className="size-4" />,
   },
   {
     value: 'following',
@@ -157,6 +168,10 @@ function UserProfilePage() {
             profile={profile}
             page={tab === 'lists' ? page : 1}
           />
+        </TabsContent>
+
+        <TabsContent value="tags">
+          <ProfileTagsTab profile={profile} />
         </TabsContent>
 
         <TabsContent value="following">

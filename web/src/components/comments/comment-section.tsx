@@ -68,8 +68,13 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
-      updateComment(commentId, content),
+    mutationFn: ({
+      commentId,
+      content,
+    }: {
+      commentId: string
+      content: string
+    }) => updateComment(commentId, content),
     onSuccess: () => {
       setEditingId(null)
       setEditContent('')
@@ -208,7 +213,9 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
                     })}
                   </span>
                   {comment.createdAt !== comment.updatedAt && (
-                    <span className="text-xs text-muted-foreground">(edited)</span>
+                    <span className="text-xs text-muted-foreground">
+                      (edited)
+                    </span>
                   )}
                   {user && user.id === comment.user.id && (
                     <DropdownMenu>

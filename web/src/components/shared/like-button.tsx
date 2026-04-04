@@ -30,9 +30,7 @@ export function LikeButton({
       disabled={disabled || isPending}
       onClick={onToggle}
     >
-      <Heart
-        className={`size-4 ${liked ? 'fill-current text-red-500' : ''}`}
-      />
+      <Heart className={`size-4 ${liked ? 'fill-current text-red-500' : ''}`} />
       {likesCount}
     </Button>
   )
