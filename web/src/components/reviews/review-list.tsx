@@ -78,9 +78,7 @@ export function ReviewList({ gameId }: ReviewListProps) {
               ? {
                   ...r,
                   hasLiked: !r.hasLiked,
-                  likesCount: r.hasLiked
-                    ? r.likesCount - 1
-                    : r.likesCount + 1,
+                  likesCount: r.hasLiked ? r.likesCount - 1 : r.likesCount + 1,
                 }
               : r,
           ),

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { TagSelector } from '@/components/games/tag-selector'
 import { logPlay } from '@/queries/games'
 import { submitPlayLogReview } from '@/queries/review'
 
@@ -57,6 +58,7 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
       endDate: '',
       ownership: '',
       isReplay: false,
+      tagIds: [] as Array<string>,
       score: undefined as number | undefined,
       reviewContent: '',
       haveSpoilers: false,
@@ -77,6 +79,7 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
           ownership: value.ownership || undefined,
           isReplay: value.isReplay,
           score: value.score ? value.score : undefined,
+          tagIds: value.tagIds.length > 0 ? value.tagIds : undefined,
         })
 
         if (value.reviewContent && value.reviewContent.trim().length > 0) {
@@ -235,6 +238,19 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
             <Label htmlFor={field.name} className="cursor-pointer">
               This is a replay
             </Label>
+          </div>
+        )}
+      />
+
+      <form.Field
+        name="tagIds"
+        children={(field) => (
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <TagSelector
+              selectedTagIds={field.state.value}
+              onChange={field.handleChange}
+            />
           </div>
         )}
       />

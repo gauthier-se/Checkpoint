@@ -139,9 +139,7 @@ export function myListsQueryOptions(page: number = 0, size: number = 20) {
   })
 }
 
-export const toggleListLike = async (
-  listId: string,
-): Promise<LikeResponse> => {
+export const toggleListLike = async (listId: string): Promise<LikeResponse> => {
   const res = await apiFetch(`/api/lists/${listId}/like`, {
     method: 'POST',
   })

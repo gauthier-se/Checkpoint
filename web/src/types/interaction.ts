@@ -1,4 +1,5 @@
 import type { GameStatus } from './library'
+import type { TagSummary } from './tag'
 
 export interface GameInteractionStatusDto {
   inWishlist: boolean
@@ -29,6 +30,7 @@ export interface GamePlayLogRequestDto {
   ownership?: string
   isReplay?: boolean
   score?: number
+  tagIds?: Array<string>
 }
 
 export interface GamePlayLogResponseDto {
@@ -49,6 +51,7 @@ export interface GamePlayLogResponseDto {
   hasReview: boolean
   reviewPreview: string | null
   score: number | null
+  tags: Array<TagSummary>
 }
 
 export interface RateResponseDto {

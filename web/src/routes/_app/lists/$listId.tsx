@@ -26,7 +26,11 @@ function RouteComponent() {
   const { listId } = Route.useParams()
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { data: list, isLoading, error } = useQuery(listDetailQueryOptions(listId))
+  const {
+    data: list,
+    isLoading,
+    error,
+  } = useQuery(listDetailQueryOptions(listId))
 
   const likeMutation = useMutation({
     mutationFn: () => toggleListLike(listId),

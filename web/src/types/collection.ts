@@ -1,4 +1,5 @@
 import type { PaginationMetadata } from './game'
+import type { TagSummary } from './tag'
 
 // Wishlist
 export interface WishResponse {
@@ -57,6 +58,7 @@ export interface PlayLogResponse {
   hasReview: boolean
   reviewPreview: string | null
   score: number | null
+  tags: Array<TagSummary>
 }
 
 export interface PlayLogListResponse {
