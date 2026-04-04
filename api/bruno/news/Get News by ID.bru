@@ -1,0 +1,48 @@
+meta {
+  name: Get News by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/news/:newsId
+  body: none
+  auth: none
+}
+
+params:path {
+  newsId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+docs {
+  # Get News by ID
+
+  Retrieves a single published news article by its ID. Returns 404 if the news does not exist or is not published.
+
+  ## Path Parameters
+
+  - **newsId**: The UUID of the news article
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "id": "uuid",
+    "title": "New Game Release",
+    "description": "Exciting new game just dropped...",
+    "picture": "https://...",
+    "publishedAt": "2026-04-01T10:00:00",
+    "createdAt": "2026-03-30T08:00:00",
+    "updatedAt": "2026-04-01T10:00:00",
+    "author": {
+      "id": "uuid",
+      "pseudo": "admin",
+      "picture": "https://..."
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: News does not exist or is not published
+}

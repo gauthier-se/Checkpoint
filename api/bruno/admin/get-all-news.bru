@@ -1,0 +1,49 @@
+meta {
+  name: Get All News
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/admin/news
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+  ~sort: createdAt,desc
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get All News
+
+  Retrieves a paginated list of all news articles (drafts + published). Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 100) |
+  | sort | createdAt,desc | Sort field and direction |
+
+  ## Response (200 OK)
+
+  Returns a paginated `PagedResponseDto<NewsResponseDto>` including both drafts and published articles.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+}

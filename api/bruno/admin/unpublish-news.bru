@@ -1,0 +1,40 @@
+meta {
+  name: Unpublish News
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/admin/news/{{newsId}}/unpublish
+  body: none
+  auth: bearer
+}
+
+vars:pre-request {
+  newsId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Unpublish News
+
+  Unpublishes a news article by clearing its `publishedAt` timestamp. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Response (200 OK)
+
+  Returns the news article with `publishedAt: null`.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: News with the specified ID does not exist
+}
