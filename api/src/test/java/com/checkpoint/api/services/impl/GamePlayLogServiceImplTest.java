@@ -39,6 +39,7 @@ import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.events.GameFinishedEvent;
 import com.checkpoint.api.mapper.GamePlayLogMapper;
 import com.checkpoint.api.repositories.PlatformRepository;
+import com.checkpoint.api.repositories.TagRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
@@ -58,6 +59,9 @@ class GamePlayLogServiceImplTest {
 
     @Mock
     private PlatformRepository platformRepository;
+
+    @Mock
+    private TagRepository tagRepository;
 
     @Mock
     private GamePlayLogMapper gamePlayLogMapper;
@@ -84,6 +88,7 @@ class GamePlayLogServiceImplTest {
                 userRepository,
                 videoGameRepository,
                 platformRepository,
+                tagRepository,
                 gamePlayLogMapper,
                 rateService,
                 eventPublisher
@@ -109,12 +114,12 @@ class GamePlayLogServiceImplTest {
                 testPlayLog.getId(), testGame.getId(), testGame.getTitle(), null,
                 testPlatform.getId(), testPlatform.getName(), PlayStatus.COMPLETED,
                 false, 2000, LocalDate.now(), LocalDate.now(), "owned",
-                LocalDateTime.now(), LocalDateTime.now(), null, null, null
+                LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()
         );
 
         testRequestDto = new GamePlayLogRequestDto(
                 testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
+                LocalDate.now(), LocalDate.now(), 2000, "owned", false, null, null
         );
     }
 
@@ -172,7 +177,7 @@ class GamePlayLogServiceImplTest {
             // Given
             GamePlayLogRequestDto requestWithScore = new GamePlayLogRequestDto(
                     testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 4
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 4, null
             );
 
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
@@ -253,7 +258,7 @@ class GamePlayLogServiceImplTest {
             testPlayLog.setScore(3);
             GamePlayLogRequestDto requestWithNewScore = new GamePlayLogRequestDto(
                     testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5, null
             );
 
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
@@ -277,7 +282,7 @@ class GamePlayLogServiceImplTest {
             testPlayLog.setScore(3);
             GamePlayLogRequestDto requestWithNewScore = new GamePlayLogRequestDto(
                     testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, 5, null
             );
 
             UserGamePlay moreRecentPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
@@ -306,7 +311,7 @@ class GamePlayLogServiceImplTest {
             testPlayLog.setScore(4);
             GamePlayLogRequestDto requestWithNoScore = new GamePlayLogRequestDto(
                     testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null, null
             );
 
             UserGamePlay olderScoredPlayLog = new UserGamePlay(testUser, testGame, testPlatform, PlayStatus.COMPLETED);
@@ -336,7 +341,7 @@ class GamePlayLogServiceImplTest {
             testPlayLog.setScore(4);
             GamePlayLogRequestDto requestWithNoScore = new GamePlayLogRequestDto(
                     testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null
+                    LocalDate.now(), LocalDate.now(), 2000, "owned", false, null, null
             );
 
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));

@@ -1,0 +1,54 @@
+meta {
+  name: Create Tag
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/me/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "cozy"
+  }
+}
+
+docs {
+  # Create Tag
+
+  Creates a new personal tag for the authenticated user.
+  Tag names are normalized (lowercase, trimmed) and must be unique per user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | name | String | Yes | Tag name (max 50 characters) |
+
+  ## Response (201 Created)
+
+  ```json
+  {
+    "id": "uuid",
+    "name": "cozy",
+    "playLogsCount": 0
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Name is blank or exceeds 50 characters
+  - **401 Unauthorized**: Not authenticated
+  - **409 Conflict**: Tag name already exists for this user
+}

@@ -1,0 +1,40 @@
+meta {
+  name: Delete Tag
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/me/tags/:tagId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  tagId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Delete Tag
+
+  Deletes a tag owned by the authenticated user.
+  Removes all play log associations but does not delete the play logs themselves.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **tagId**: The tag UUID
+
+  ## Response (204 No Content)
+
+  ## Error Responses
+
+  - **404 Not Found**: Tag not found or not owned by user
+}

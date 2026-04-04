@@ -2,8 +2,10 @@ package com.checkpoint.api.dto.playlog;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import com.checkpoint.api.dto.tag.TagSummaryDto;
 import com.checkpoint.api.enums.PlayStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param hasReview     whether this play log has a review attached
  * @param reviewPreview first 100 characters of the review content, or null
  * @param score         rating score (1-5) given during this play session, or null
+ * @param tags          list of tags associated with this play log
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record GamePlayLogResponseDto(
@@ -46,5 +49,6 @@ public record GamePlayLogResponseDto(
         LocalDateTime updatedAt,
         Boolean hasReview,
         String reviewPreview,
-        Integer score
+        Integer score,
+        List<TagSummaryDto> tags
 ) {}

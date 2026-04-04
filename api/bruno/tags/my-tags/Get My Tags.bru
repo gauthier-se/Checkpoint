@@ -1,0 +1,42 @@
+meta {
+  name: Get My Tags
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/me/tags
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get My Tags
+
+  Returns all tags belonging to the authenticated user, with the number of play logs associated with each tag.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "name": "cozy",
+      "playLogsCount": 3
+    },
+    {
+      "id": "uuid",
+      "name": "ps5",
+      "playLogsCount": 5
+    }
+  ]
+  ```
+}
