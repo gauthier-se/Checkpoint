@@ -1,0 +1,56 @@
+meta {
+  name: Update News
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/api/admin/news/{{newsId}}
+  body: json
+  auth: bearer
+}
+
+vars:pre-request {
+  newsId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "Updated News Title",
+    "description": "Updated content for the news article...",
+    "picture": "https://example.com/updated-cover.jpg"
+  }
+}
+
+docs {
+  # Update News
+
+  Updates a news article's title, description, and picture. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | title | String | Yes | The news title |
+  | description | String | No | The news content |
+  | picture | String | No | Cover image URL |
+
+  ## Response (200 OK)
+
+  Returns the updated news article.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: News with the specified ID does not exist
+}

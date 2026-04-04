@@ -1,0 +1,51 @@
+meta {
+  name: Create News
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/admin/news
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "title": "New Game Release Announcement",
+    "description": "We are excited to announce the release of a brand new game...",
+    "picture": "https://example.com/news-cover.jpg"
+  }
+}
+
+docs {
+  # Create News
+
+  Creates a new news article as a draft (unpublished). Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | title | String | Yes | The news title |
+  | description | String | No | The news content |
+  | picture | String | No | Cover image URL |
+
+  ## Response (201 Created)
+
+  Returns the created news article with `publishedAt: null` (draft).
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+}

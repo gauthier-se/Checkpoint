@@ -1,0 +1,64 @@
+meta {
+  name: Get Published News
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/news
+  body: none
+  auth: none
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+  ~sort: publishedAt,desc
+}
+
+docs {
+  # Get Published News
+
+  Retrieves a paginated list of published news articles, newest first.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 100) |
+  | sort | publishedAt,desc | Sort field and direction |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "title": "New Game Release",
+        "description": "Exciting new game just dropped...",
+        "picture": "https://...",
+        "publishedAt": "2026-04-01T10:00:00",
+        "createdAt": "2026-03-30T08:00:00",
+        "updatedAt": "2026-04-01T10:00:00",
+        "author": {
+          "id": "uuid",
+          "pseudo": "admin",
+          "picture": "https://..."
+        }
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+}
