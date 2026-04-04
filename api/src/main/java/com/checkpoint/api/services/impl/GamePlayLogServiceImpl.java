@@ -1,5 +1,6 @@
 package com.checkpoint.api.services.impl;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checkpoint.api.dto.playlog.GamePlayLogRequestDto;
 import com.checkpoint.api.dto.playlog.GamePlayLogResponseDto;
 import com.checkpoint.api.entities.Platform;
+import com.checkpoint.api.entities.Tag;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.entities.VideoGame;
@@ -26,6 +28,7 @@ import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
 import com.checkpoint.api.mapper.GamePlayLogMapper;
 import com.checkpoint.api.repositories.PlatformRepository;
+import com.checkpoint.api.repositories.TagRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
@@ -46,6 +49,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
     private final UserRepository userRepository;
     private final VideoGameRepository videoGameRepository;
     private final PlatformRepository platformRepository;
+    private final TagRepository tagRepository;
     private final GamePlayLogMapper gamePlayLogMapper;
     private final RateService rateService;
     private final ApplicationEventPublisher eventPublisher;
@@ -55,6 +59,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
             UserRepository userRepository,
             VideoGameRepository videoGameRepository,
             PlatformRepository platformRepository,
+            TagRepository tagRepository,
             GamePlayLogMapper gamePlayLogMapper,
             RateService rateService,
             ApplicationEventPublisher eventPublisher
@@ -63,6 +68,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         this.userRepository = userRepository;
         this.videoGameRepository = videoGameRepository;
         this.platformRepository = platformRepository;
+        this.tagRepository = tagRepository;
         this.gamePlayLogMapper = gamePlayLogMapper;
         this.rateService = rateService;
         this.eventPublisher = eventPublisher;
@@ -88,6 +94,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         playLog.setUser(user);
         playLog.setVideoGame(videoGame);
         playLog.setPlatform(platform);
+        associateTags(playLog, request.tagIds(), user.getId());
 
         UserGamePlay savedPlayLog = userGamePlayRepository.save(playLog);
 
@@ -137,6 +144,7 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
         Integer previousScore = playLog.getScore();
         PlayStatus previousStatus = playLog.getStatus();
         gamePlayLogMapper.updateEntityFromDto(request, playLog);
+        associateTags(playLog, request.tagIds(), user.getId());
 
         UserGamePlay updatedPlayLog = userGamePlayRepository.save(playLog);
 
@@ -265,6 +273,28 @@ public class GamePlayLogServiceImpl implements GamePlayLogService {
             log.info("Removing global rating for game {} as no scored play logs remain", videoGameId);
             rateService.removeRating(userEmail, videoGameId);
         }
+    }
+
+    /**
+     * Associates tags with a play log. Replaces all existing tag associations.
+     * If tagIds is null, tags are left unchanged. If tagIds is empty, all tags are removed.
+     *
+     * @param playLog the play log entity
+     * @param tagIds  the list of tag IDs to associate (may be null)
+     * @param userId  the user ID for ownership verification
+     */
+    private void associateTags(UserGamePlay playLog, List<UUID> tagIds, UUID userId) {
+        if (tagIds == null) {
+            return;
+        }
+
+        if (tagIds.isEmpty()) {
+            playLog.getTags().clear();
+            return;
+        }
+
+        List<Tag> tags = tagRepository.findAllByIdInAndUserId(tagIds, userId);
+        playLog.setTags(new HashSet<>(tags));
     }
 
     /**

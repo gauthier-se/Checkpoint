@@ -1,16 +1,26 @@
 package com.checkpoint.api.mapper.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.checkpoint.api.dto.playlog.GamePlayLogRequestDto;
 import com.checkpoint.api.dto.playlog.GamePlayLogResponseDto;
+import com.checkpoint.api.dto.tag.TagSummaryDto;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.UserGamePlay;
-import com.checkpoint.api.mapper.GamePlayLogMapper;
 import com.checkpoint.api.enums.PlayStatus;
+import com.checkpoint.api.mapper.GamePlayLogMapper;
+import com.checkpoint.api.mapper.TagMapper;
 
 @Component
 public class GamePlayLogMapperImpl implements GamePlayLogMapper {
+
+    private final TagMapper tagMapper;
+
+    public GamePlayLogMapperImpl(TagMapper tagMapper) {
+        this.tagMapper = tagMapper;
+    }
 
     @Override
     public GamePlayLogResponseDto toDto(UserGamePlay playLog) {
@@ -32,6 +42,12 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
             hasReview = false;
         }
 
+        List<TagSummaryDto> tags = playLog.getTags() != null
+                ? playLog.getTags().stream()
+                        .map(tagMapper::toSummaryDto)
+                        .toList()
+                : List.of();
+
         return new GamePlayLogResponseDto(
                 playLog.getId(),
                 playLog.getVideoGame() != null ? playLog.getVideoGame().getId() : null,
@@ -49,7 +65,8 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
                 playLog.getUpdatedAt(),
                 hasReview,
                 reviewPreview,
-                playLog.getScore()
+                playLog.getScore(),
+                tags
         );
     }
 

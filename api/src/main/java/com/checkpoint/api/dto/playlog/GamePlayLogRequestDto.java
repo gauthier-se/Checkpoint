@@ -1,6 +1,7 @@
 package com.checkpoint.api.dto.playlog;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import com.checkpoint.api.enums.PlayStatus;
@@ -21,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
  * @param ownership   ownership status (e.g. "owned", "borrowed")
  * @param isReplay    whether it's a replay (default false if null)
  * @param score       optional rating score (1-5) for this play session
+ * @param tagIds      optional list of tag IDs to associate with this play log
  */
 public record GamePlayLogRequestDto(
         @NotNull(message = "Video Game ID is required")
@@ -35,5 +37,6 @@ public record GamePlayLogRequestDto(
         Boolean isReplay,
         @Min(value = 1, message = "Score must be at least 1")
         @Max(value = 5, message = "Score must be at most 5")
-        Integer score
+        Integer score,
+        List<UUID> tagIds
 ) {}

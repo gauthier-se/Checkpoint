@@ -2,6 +2,8 @@ package com.checkpoint.api.entities;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import com.checkpoint.api.enums.PlayStatus;
@@ -16,6 +18,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
@@ -83,6 +87,15 @@ public class UserGamePlay {
     // Relationship: UserGamePlay can have one optional review
     @OneToOne(mappedBy = "userGamePlay", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
+
+    // Relationship: UserGamePlay can have multiple tags
+    @ManyToMany
+    @JoinTable(
+        name = "user_game_play_tags",
+        joinColumns = @JoinColumn(name = "user_game_play_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -220,5 +233,33 @@ public class UserGamePlay {
 
     public void setReview(Review review) {
         this.review = review;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
+    /**
+     * Adds a tag to this play log (bidirectional).
+     *
+     * @param tag the tag to add
+     */
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+        tag.getPlayLogs().add(this);
+    }
+
+    /**
+     * Removes a tag from this play log (bidirectional).
+     *
+     * @param tag the tag to remove
+     */
+    public void removeTag(Tag tag) {
+        this.tags.remove(tag);
+        tag.getPlayLogs().remove(this);
     }
 }

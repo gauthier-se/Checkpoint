@@ -1,0 +1,55 @@
+meta {
+  name: Update Tag
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/me/tags/:tagId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  tagId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "relaxing"
+  }
+}
+
+docs {
+  # Update Tag
+
+  Renames an existing tag owned by the authenticated user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **tagId**: The tag UUID
+
+  ## Request Body
+
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | name | String | Yes | New tag name (max 50 characters) |
+
+  ## Response (200 OK)
+
+  Returns the updated tag.
+
+  ## Error Responses
+
+  - **400 Bad Request**: Name is blank or exceeds 50 characters
+  - **404 Not Found**: Tag not found or not owned by user
+  - **409 Conflict**: New name already exists for this user
+}

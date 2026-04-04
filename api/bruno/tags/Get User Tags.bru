@@ -1,0 +1,42 @@
+meta {
+  name: Get User Tags
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users/:username/tags
+  body: none
+  auth: none
+}
+
+params:path {
+  username: gamer123
+}
+
+docs {
+  # Get User Tags (Public)
+
+  Returns all tags belonging to a user by username, with play log counts.
+  This is a public endpoint — no authentication required.
+
+  ## Path Parameters
+
+  - **username**: The user's display name (pseudo)
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "name": "cozy",
+      "playLogsCount": 3
+    }
+  ]
+  ```
+
+  ## Error Responses
+
+  - **404 Not Found**: User does not exist
+}

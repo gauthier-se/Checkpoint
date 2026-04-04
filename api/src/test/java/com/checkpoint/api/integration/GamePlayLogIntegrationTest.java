@@ -91,7 +91,7 @@ class GamePlayLogIntegrationTest {
         // 1. Log a play session
         GamePlayLogRequestDto request = new GamePlayLogRequestDto(
                 testGame.getId(), testPlatform.getId(), PlayStatus.COMPLETED,
-                LocalDate.now().minusDays(5), LocalDate.now(), 3000, "owned", false, null
+                LocalDate.now().minusDays(5), LocalDate.now(), 3000, "owned", false, null, null
         );
 
         mockMvc.perform(post("/api/me/plays")
