@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.checkpoint.api.dto.social.LikeResponseDto;
 
 /**
- * Service for managing likes on reviews and game lists.
+ * Service for managing likes on reviews, game lists, and comments.
  */
 public interface LikeService {
 
@@ -30,4 +30,15 @@ public interface LikeService {
      * @throws com.checkpoint.api.exceptions.GameListNotFoundException if the game list does not exist
      */
     LikeResponseDto toggleListLike(String userEmail, UUID listId);
+
+    /**
+     * Toggles a like on a comment. If the user already liked the comment, the like is removed.
+     * Otherwise, a new like is created.
+     *
+     * @param userEmail the authenticated user's email
+     * @param commentId the comment ID
+     * @return a response indicating the new like status and updated count
+     * @throws com.checkpoint.api.exceptions.CommentNotFoundException if the comment does not exist
+     */
+    LikeResponseDto toggleCommentLike(String userEmail, UUID commentId);
 }

@@ -21,13 +21,15 @@ import com.checkpoint.api.exceptions.UnauthorizedCommentAccessException;
 import com.checkpoint.api.mapper.CommentMapper;
 import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListRepository;
+import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.services.CommentService;
 
 /**
  * Implementation of {@link CommentService}.
- * Manages CRUD operations for comments on reviews and game lists.
+ * Manages CRUD operations for comments on reviews and game lists,
+ * including nested replies and like enrichment.
  */
 @Service
 @Transactional
@@ -39,6 +41,7 @@ public class CommentServiceImpl implements CommentService {
     private final ReviewRepository reviewRepository;
     private final GameListRepository gameListRepository;
     private final UserRepository userRepository;
+    private final LikeRepository likeRepository;
     private final CommentMapper commentMapper;
 
     /**
@@ -48,17 +51,20 @@ public class CommentServiceImpl implements CommentService {
      * @param reviewRepository   the review repository
      * @param gameListRepository the game list repository
      * @param userRepository     the user repository
+     * @param likeRepository     the like repository
      * @param commentMapper      the comment mapper
      */
     public CommentServiceImpl(CommentRepository commentRepository,
                               ReviewRepository reviewRepository,
                               GameListRepository gameListRepository,
                               UserRepository userRepository,
+                              LikeRepository likeRepository,
                               CommentMapper commentMapper) {
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
         this.gameListRepository = gameListRepository;
         this.userRepository = userRepository;
+        this.likeRepository = likeRepository;
         this.commentMapper = commentMapper;
     }
 
@@ -103,9 +109,10 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<CommentResponseDto> getReviewComments(UUID reviewId, Pageable pageable) {
-        Page<Comment> comments = commentRepository.findByReviewId(reviewId, pageable);
-        return comments.map(commentMapper::toDto);
+    public Page<CommentResponseDto> getReviewComments(UUID reviewId, String viewerEmail, Pageable pageable) {
+        User viewer = resolveViewer(viewerEmail);
+        Page<Comment> comments = commentRepository.findByReviewIdAndParentCommentIsNull(reviewId, pageable);
+        return comments.map(comment -> enrichComment(comment, viewer));
     }
 
     /**
@@ -113,9 +120,39 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<CommentResponseDto> getListComments(UUID listId, Pageable pageable) {
-        Page<Comment> comments = commentRepository.findByGameListId(listId, pageable);
-        return comments.map(commentMapper::toDto);
+    public Page<CommentResponseDto> getListComments(UUID listId, String viewerEmail, Pageable pageable) {
+        User viewer = resolveViewer(viewerEmail);
+        Page<Comment> comments = commentRepository.findByGameListIdAndParentCommentIsNull(listId, pageable);
+        return comments.map(comment -> enrichComment(comment, viewer));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CommentResponseDto addReply(String userEmail, UUID parentCommentId, String content) {
+        User user = getUserByEmail(userEmail);
+
+        Comment parentComment = commentRepository.findById(parentCommentId)
+                .orElseThrow(() -> new CommentNotFoundException(parentCommentId));
+
+        Comment reply = Comment.asReply(content, user, parentComment);
+        Comment savedReply = commentRepository.save(reply);
+
+        log.info("User {} replied to comment {}", user.getPseudo(), parentCommentId);
+
+        return commentMapper.toDto(savedReply);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CommentResponseDto> getReplies(UUID parentCommentId, String viewerEmail, Pageable pageable) {
+        User viewer = resolveViewer(viewerEmail);
+        Page<Comment> replies = commentRepository.findByParentCommentId(parentCommentId, pageable);
+        return replies.map(reply -> enrichComment(reply, viewer));
     }
 
     /**
@@ -157,6 +194,34 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.delete(comment);
 
         log.info("User {} deleted comment {}", user.getPseudo(), commentId);
+    }
+
+    /**
+     * Enriches a comment entity with like count, reply count, and viewer's like status.
+     *
+     * @param comment the comment entity
+     * @param viewer  the current viewer (nullable)
+     * @return the enriched comment response DTO
+     */
+    private CommentResponseDto enrichComment(Comment comment, User viewer) {
+        long likesCount = likeRepository.countByCommentId(comment.getId());
+        long repliesCount = commentRepository.countByParentCommentId(comment.getId());
+        boolean hasLiked = viewer != null
+                && likeRepository.existsByUserIdAndCommentId(viewer.getId(), comment.getId());
+        return commentMapper.toDto(comment, likesCount, hasLiked, repliesCount);
+    }
+
+    /**
+     * Resolves a viewer from their email. Returns null if email is null or user not found.
+     *
+     * @param viewerEmail the viewer's email (nullable)
+     * @return the user entity, or null
+     */
+    private User resolveViewer(String viewerEmail) {
+        if (viewerEmail == null) {
+            return null;
+        }
+        return userRepository.findByEmail(viewerEmail).orElse(null);
     }
 
     /**

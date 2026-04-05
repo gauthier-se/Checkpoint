@@ -53,6 +53,11 @@ public class Like {
     @JoinColumn(name = "list_id")
     private GameList gameList;
 
+    // Relationship: Like can be for a comment (nullable - polymorphic)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -90,6 +95,13 @@ public class Like {
         Like like = new Like();
         like.setUser(user);
         like.setGameList(gameList);
+        return like;
+    }
+
+    public static Like forComment(User user, Comment comment) {
+        Like like = new Like();
+        like.setUser(user);
+        like.setComment(comment);
         return like;
     }
 
@@ -147,5 +159,13 @@ public class Like {
 
     public void setGameList(GameList gameList) {
         this.gameList = gameList;
+    }
+
+    public Comment getComment() {
+        return comment;
+    }
+
+    public void setComment(Comment comment) {
+        this.comment = comment;
     }
 }

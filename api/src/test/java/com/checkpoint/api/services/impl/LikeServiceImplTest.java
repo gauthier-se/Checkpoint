@@ -18,12 +18,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
+import com.checkpoint.api.entities.Comment;
 import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Like;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListRepository;
 import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
@@ -45,6 +48,9 @@ class LikeServiceImplTest {
     private GameListRepository gameListRepository;
 
     @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     private LikeServiceImpl likeService;
@@ -55,7 +61,9 @@ class LikeServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        likeService = new LikeServiceImpl(likeRepository, reviewRepository, gameListRepository, userRepository);
+        likeService = new LikeServiceImpl(
+                likeRepository, reviewRepository, gameListRepository,
+                commentRepository, userRepository);
 
         user = new User();
         user.setId(UUID.randomUUID());
@@ -198,6 +206,77 @@ class LikeServiceImplTest {
             // When / Then
             assertThatThrownBy(() -> likeService.toggleListLike("user@example.com", unknownId))
                     .isInstanceOf(GameListNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("toggleCommentLike")
+    class ToggleCommentLike {
+
+        @Test
+        @DisplayName("should like when not already liked")
+        void toggleCommentLike_shouldLikeWhenNotLiked() {
+            // Given
+            Comment comment = new Comment();
+            comment.setId(UUID.randomUUID());
+
+            when(userRepository.findByEmail("user@example.com"))
+                    .thenReturn(Optional.of(user));
+            when(commentRepository.findById(comment.getId()))
+                    .thenReturn(Optional.of(comment));
+            when(likeRepository.findByUserIdAndCommentId(user.getId(), comment.getId()))
+                    .thenReturn(Optional.empty());
+            when(likeRepository.countByCommentId(comment.getId()))
+                    .thenReturn(2L);
+
+            // When
+            LikeResponseDto result = likeService.toggleCommentLike("user@example.com", comment.getId());
+
+            // Then
+            assertThat(result.liked()).isTrue();
+            assertThat(result.likesCount()).isEqualTo(3);
+            verify(likeRepository).save(any(Like.class));
+        }
+
+        @Test
+        @DisplayName("should unlike when already liked")
+        void toggleCommentLike_shouldUnlikeWhenAlreadyLiked() {
+            // Given
+            Comment comment = new Comment();
+            comment.setId(UUID.randomUUID());
+            Like existingLike = Like.forComment(user, comment);
+
+            when(userRepository.findByEmail("user@example.com"))
+                    .thenReturn(Optional.of(user));
+            when(commentRepository.findById(comment.getId()))
+                    .thenReturn(Optional.of(comment));
+            when(likeRepository.findByUserIdAndCommentId(user.getId(), comment.getId()))
+                    .thenReturn(Optional.of(existingLike));
+            when(likeRepository.countByCommentId(comment.getId()))
+                    .thenReturn(3L);
+
+            // When
+            LikeResponseDto result = likeService.toggleCommentLike("user@example.com", comment.getId());
+
+            // Then
+            assertThat(result.liked()).isFalse();
+            assertThat(result.likesCount()).isEqualTo(2);
+            verify(likeRepository).delete(existingLike);
+        }
+
+        @Test
+        @DisplayName("should throw CommentNotFoundException when comment does not exist")
+        void toggleCommentLike_shouldThrowWhenCommentNotFound() {
+            // Given
+            UUID unknownId = UUID.randomUUID();
+            when(userRepository.findByEmail("user@example.com"))
+                    .thenReturn(Optional.of(user));
+            when(commentRepository.findById(unknownId))
+                    .thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> likeService.toggleCommentLike("user@example.com", unknownId))
+                    .isInstanceOf(CommentNotFoundException.class);
         }
     }
 }

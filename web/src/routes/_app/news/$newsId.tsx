@@ -66,9 +66,7 @@ function RouteComponent() {
         </Avatar>
         <div className="flex flex-col">
           <span className="text-sm font-medium">{article.author.pseudo}</span>
-          <span className="text-xs text-muted-foreground">
-            {publishedDate}
-          </span>
+          <span className="text-xs text-muted-foreground">{publishedDate}</span>
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
+
 import type { Comment, CommentsResponse } from '@/types/comment'
+import type { LikeResponse } from '@/types/review'
 import { apiFetch } from '@/services/api'
 
 export const reviewCommentsQueryOptions = (
@@ -42,6 +44,26 @@ export const listCommentsQueryOptions = (
   })
 }
 
+export const commentRepliesQueryOptions = (
+  commentId: string,
+  page: number = 0,
+  size: number = 20,
+) => {
+  return queryOptions({
+    queryKey: ['comments', commentId, 'replies', page, size],
+    queryFn: async (): Promise<CommentsResponse> => {
+      const res = await apiFetch(
+        `/api/comments/${commentId}/replies?page=${page}&size=${size}`,
+      )
+      if (!res.ok) {
+        throw new Error('Failed to fetch replies')
+      }
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
 export const postReviewComment = async (
   reviewId: string,
   content: string,
@@ -72,6 +94,21 @@ export const postListComment = async (
   return res.json()
 }
 
+export const postReply = async (
+  commentId: string,
+  content: string,
+): Promise<Comment> => {
+  const res = await apiFetch(`/api/comments/${commentId}/replies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to post reply')
+  }
+  return res.json()
+}
+
 export const updateComment = async (
   commentId: string,
   content: string,
@@ -94,4 +131,16 @@ export const deleteComment = async (commentId: string): Promise<void> => {
   if (!res.ok) {
     throw new Error('Failed to delete comment')
   }
+}
+
+export const toggleCommentLike = async (
+  commentId: string,
+): Promise<LikeResponse> => {
+  const res = await apiFetch(`/api/comments/${commentId}/like`, {
+    method: 'POST',
+  })
+  if (!res.ok) {
+    throw new Error('Failed to toggle comment like')
+  }
+  return res.json()
 }

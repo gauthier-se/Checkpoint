@@ -2,6 +2,7 @@ package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -65,7 +66,11 @@ class CommentControllerTest {
                 "Great review!",
                 new CommentUserDto(UUID.randomUUID(), "testuser", null),
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null,
+                0,
+                0,
+                false
         );
     }
 
@@ -81,13 +86,16 @@ class CommentControllerTest {
             CommentResponseDto comment = createTestComment();
             Page<CommentResponseDto> page = new PageImpl<>(List.of(comment), PageRequest.of(0, 20), 1);
 
-            when(commentService.getReviewComments(eq(reviewId), any())).thenReturn(page);
+            when(commentService.getReviewComments(eq(reviewId), isNull(), any())).thenReturn(page);
 
             // When / Then
             mockMvc.perform(get("/api/reviews/{reviewId}/comments", reviewId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great review!"))
                     .andExpect(jsonPath("$.content[0].user.pseudo").value("testuser"))
+                    .andExpect(jsonPath("$.content[0].likesCount").value(0))
+                    .andExpect(jsonPath("$.content[0].repliesCount").value(0))
+                    .andExpect(jsonPath("$.content[0].hasLiked").value(false))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
         }
     }
@@ -159,7 +167,7 @@ class CommentControllerTest {
             CommentResponseDto comment = createTestComment();
             Page<CommentResponseDto> page = new PageImpl<>(List.of(comment), PageRequest.of(0, 20), 1);
 
-            when(commentService.getListComments(eq(listId), any())).thenReturn(page);
+            when(commentService.getListComments(eq(listId), isNull(), any())).thenReturn(page);
 
             // When / Then
             mockMvc.perform(get("/api/lists/{listId}/comments", listId))
@@ -210,6 +218,83 @@ class CommentControllerTest {
     }
 
     @Nested
+    @DisplayName("POST /api/comments/{commentId}/replies")
+    class AddReply {
+
+        @Test
+        @DisplayName("should create reply and return 201")
+        @WithMockUser(username = "user@example.com")
+        void addReply_shouldCreateReply() throws Exception {
+            // Given
+            UUID commentId = UUID.randomUUID();
+            UUID parentId = UUID.randomUUID();
+            CommentResponseDto response = new CommentResponseDto(
+                    commentId, "I agree!",
+                    new CommentUserDto(UUID.randomUUID(), "replier", null),
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    parentId, 0, 0, false
+            );
+
+            when(commentService.addReply(eq("user@example.com"), eq(parentId), eq("I agree!")))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(post("/api/comments/{commentId}/replies", parentId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"content\": \"I agree!\"}"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.content").value("I agree!"))
+                    .andExpect(jsonPath("$.parentCommentId").value(parentId.toString()));
+        }
+
+        @Test
+        @DisplayName("should return 404 when parent comment not found")
+        @WithMockUser(username = "user@example.com")
+        void addReply_shouldReturn404WhenParentNotFound() throws Exception {
+            // Given
+            UUID commentId = UUID.randomUUID();
+
+            when(commentService.addReply(eq("user@example.com"), eq(commentId), eq("Reply")))
+                    .thenThrow(new CommentNotFoundException(commentId));
+
+            // When / Then
+            mockMvc.perform(post("/api/comments/{commentId}/replies", commentId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"content\": \"Reply\"}"))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/comments/{commentId}/replies")
+    class GetReplies {
+
+        @Test
+        @DisplayName("should return paginated replies for a comment")
+        void getReplies_shouldReturnPaginatedReplies() throws Exception {
+            // Given
+            UUID parentId = UUID.randomUUID();
+            CommentResponseDto reply = new CommentResponseDto(
+                    UUID.randomUUID(), "Nice point!",
+                    new CommentUserDto(UUID.randomUUID(), "replier", null),
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    parentId, 0, 2, false
+            );
+            Page<CommentResponseDto> page = new PageImpl<>(List.of(reply), PageRequest.of(0, 20), 1);
+
+            when(commentService.getReplies(eq(parentId), isNull(), any())).thenReturn(page);
+
+            // When / Then
+            mockMvc.perform(get("/api/comments/{commentId}/replies", parentId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[0].content").value("Nice point!"))
+                    .andExpect(jsonPath("$.content[0].parentCommentId").value(parentId.toString()))
+                    .andExpect(jsonPath("$.content[0].likesCount").value(2))
+                    .andExpect(jsonPath("$.metadata.totalElements").value(1));
+        }
+    }
+
+    @Nested
     @DisplayName("PUT /api/comments/{commentId}")
     class UpdateComment {
 
@@ -222,7 +307,8 @@ class CommentControllerTest {
             CommentResponseDto response = new CommentResponseDto(
                     commentId, "Updated content",
                     new CommentUserDto(UUID.randomUUID(), "testuser", null),
-                    LocalDateTime.now(), LocalDateTime.now()
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    null, 0, 0, false
             );
 
             when(commentService.updateComment(eq("user@example.com"), eq(commentId), eq("Updated content")))

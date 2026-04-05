@@ -20,9 +20,7 @@ export const Route = createFileRoute('/_app/news/')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }): Promise<NewsResponse> => {
     const apiPage = Math.max(0, deps.page - 1)
-    const res = await apiFetch(
-      `/api/news?page=${apiPage}&size=${PAGE_SIZE}`,
-    )
+    const res = await apiFetch(`/api/news?page=${apiPage}&size=${PAGE_SIZE}`)
     if (!res.ok) throw new Error('Failed to fetch news')
     return res.json()
   },

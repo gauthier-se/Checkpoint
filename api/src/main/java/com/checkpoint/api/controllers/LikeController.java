@@ -15,7 +15,7 @@ import com.checkpoint.api.dto.social.LikeResponseDto;
 import com.checkpoint.api.services.LikeService;
 
 /**
- * REST controller for like/unlike toggle on reviews and game lists.
+ * REST controller for like/unlike toggle on reviews, game lists, and comments.
  * All endpoints require authentication.
  */
 @RestController
@@ -72,6 +72,27 @@ public class LikeController {
 
         LikeResponseDto response = likeService.toggleListLike(
                 userDetails.getUsername(), listId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Toggles a like on a comment. If the user already liked it, the like is removed.
+     * Otherwise, a new like is created.
+     *
+     * @param userDetails the authenticated user principal
+     * @param commentId   the comment ID
+     * @return the new like status and updated count
+     */
+    @PostMapping("/api/comments/{commentId}/like")
+    public ResponseEntity<LikeResponseDto> toggleCommentLike(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID commentId) {
+
+        log.info("POST /api/comments/{}/like - user: {}", commentId, userDetails.getUsername());
+
+        LikeResponseDto response = likeService.toggleCommentLike(
+                userDetails.getUsername(), commentId);
 
         return ResponseEntity.ok(response);
     }

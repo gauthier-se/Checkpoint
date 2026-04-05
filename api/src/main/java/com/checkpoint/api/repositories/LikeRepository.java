@@ -43,4 +43,19 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
      * Finds a like by user and review.
      */
     Optional<Like> findByUserIdAndReviewId(UUID userId, UUID reviewId);
+
+    /**
+     * Counts the number of likes for a comment.
+     */
+    long countByCommentId(UUID commentId);
+
+    /**
+     * Checks if a user has liked a comment.
+     */
+    boolean existsByUserIdAndCommentId(UUID userId, UUID commentId);
+
+    /**
+     * Finds a like by user and comment.
+     */
+    Optional<Like> findByUserIdAndCommentId(UUID userId, UUID commentId);
 }

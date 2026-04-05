@@ -53,23 +53,26 @@ public class CommentController {
     }
 
     /**
-     * Retrieves a paginated list of comments for a review.
+     * Retrieves a paginated list of top-level comments for a review.
      *
-     * @param reviewId the review ID
-     * @param page     the page number (0-based)
-     * @param size     the page size
+     * @param reviewId    the review ID
+     * @param userDetails the authenticated user principal (nullable)
+     * @param page        the page number (0-based)
+     * @param size        the page size
      * @return the paginated comments
      */
     @GetMapping("/api/reviews/{reviewId}/comments")
     public ResponseEntity<PagedResponseDto<CommentResponseDto>> getReviewComments(
             @PathVariable UUID reviewId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
         log.info("GET /api/reviews/{}/comments - page: {}, size: {}", reviewId, page, size);
 
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(page, size);
-        Page<CommentResponseDto> comments = commentService.getReviewComments(reviewId, pageable);
+        Page<CommentResponseDto> comments = commentService.getReviewComments(reviewId, viewerEmail, pageable);
 
         return ResponseEntity.ok(PagedResponseDto.from(comments));
     }
@@ -97,23 +100,26 @@ public class CommentController {
     }
 
     /**
-     * Retrieves a paginated list of comments for a game list.
+     * Retrieves a paginated list of top-level comments for a game list.
      *
-     * @param listId the game list ID
-     * @param page   the page number (0-based)
-     * @param size   the page size
+     * @param listId      the game list ID
+     * @param userDetails the authenticated user principal (nullable)
+     * @param page        the page number (0-based)
+     * @param size        the page size
      * @return the paginated comments
      */
     @GetMapping("/api/lists/{listId}/comments")
     public ResponseEntity<PagedResponseDto<CommentResponseDto>> getListComments(
             @PathVariable UUID listId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
         log.info("GET /api/lists/{}/comments - page: {}, size: {}", listId, page, size);
 
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(page, size);
-        Page<CommentResponseDto> comments = commentService.getListComments(listId, pageable);
+        Page<CommentResponseDto> comments = commentService.getListComments(listId, viewerEmail, pageable);
 
         return ResponseEntity.ok(PagedResponseDto.from(comments));
     }
@@ -138,6 +144,53 @@ public class CommentController {
                 userDetails.getUsername(), listId, request.content());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Adds a reply to an existing comment.
+     *
+     * @param userDetails the authenticated user principal
+     * @param commentId   the parent comment ID
+     * @param request     the comment request body
+     * @return the created reply
+     */
+    @PostMapping("/api/comments/{commentId}/replies")
+    public ResponseEntity<CommentResponseDto> addReply(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID commentId,
+            @Valid @RequestBody CommentRequestDto request) {
+
+        log.info("POST /api/comments/{}/replies - user: {}", commentId, userDetails.getUsername());
+
+        CommentResponseDto response = commentService.addReply(
+                userDetails.getUsername(), commentId, request.content());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Retrieves a paginated list of replies for a comment.
+     *
+     * @param commentId   the parent comment ID
+     * @param userDetails the authenticated user principal (nullable)
+     * @param page        the page number (0-based)
+     * @param size        the page size
+     * @return the paginated replies
+     */
+    @GetMapping("/api/comments/{commentId}/replies")
+    public ResponseEntity<PagedResponseDto<CommentResponseDto>> getReplies(
+            @PathVariable UUID commentId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
+
+        log.info("GET /api/comments/{}/replies - page: {}, size: {}", commentId, page, size);
+
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
+        Pageable pageable = createPageable(page, size);
+        Page<CommentResponseDto> replies = commentService.getReplies(commentId, viewerEmail, pageable);
+
+        return ResponseEntity.ok(PagedResponseDto.from(replies));
     }
 
     /**

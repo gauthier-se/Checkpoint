@@ -12,6 +12,10 @@ export interface Comment {
   user: CommentUser
   createdAt: string
   updatedAt: string
+  parentCommentId: string | null
+  repliesCount: number
+  likesCount: number
+  hasLiked: boolean
 }
 
 export interface CommentsResponse {

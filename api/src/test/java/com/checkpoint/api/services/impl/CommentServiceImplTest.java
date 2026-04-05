@@ -35,6 +35,7 @@ import com.checkpoint.api.exceptions.UnauthorizedCommentAccessException;
 import com.checkpoint.api.mapper.CommentMapper;
 import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListRepository;
+import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserRepository;
 
@@ -57,6 +58,9 @@ class CommentServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private LikeRepository likeRepository;
+
+    @Mock
     private CommentMapper commentMapper;
 
     private CommentServiceImpl commentService;
@@ -70,7 +74,7 @@ class CommentServiceImplTest {
     void setUp() {
         commentService = new CommentServiceImpl(
                 commentRepository, reviewRepository, gameListRepository,
-                userRepository, commentMapper);
+                userRepository, likeRepository, commentMapper);
 
         testUser = new User();
         testUser.setId(UUID.randomUUID());
@@ -107,7 +111,7 @@ class CommentServiceImplTest {
             CommentResponseDto expectedDto = new CommentResponseDto(
                     savedComment.getId(), "Nice!",
                     new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    null, null);
+                    null, null, null, 0, 0, false);
             when(commentMapper.toDto(savedComment)).thenReturn(expectedDto);
 
             // When
@@ -151,7 +155,7 @@ class CommentServiceImplTest {
             CommentResponseDto expectedDto = new CommentResponseDto(
                     savedComment.getId(), "Cool list!",
                     new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    null, null);
+                    null, null, null, 0, 0, false);
             when(commentMapper.toDto(savedComment)).thenReturn(expectedDto);
 
             // When
@@ -182,7 +186,7 @@ class CommentServiceImplTest {
     class GetReviewComments {
 
         @Test
-        @DisplayName("should return paginated comments for a review")
+        @DisplayName("should return paginated top-level comments for a review")
         void getReviewComments_shouldReturnPaginatedComments() {
             // Given
             Pageable pageable = PageRequest.of(0, 10);
@@ -190,20 +194,137 @@ class CommentServiceImplTest {
             comment.setId(UUID.randomUUID());
             Page<Comment> commentPage = new PageImpl<>(List.of(comment));
 
-            when(commentRepository.findByReviewId(testReview.getId(), pageable)).thenReturn(commentPage);
+            when(commentRepository.findByReviewIdAndParentCommentIsNull(testReview.getId(), pageable))
+                    .thenReturn(commentPage);
+            when(likeRepository.countByCommentId(comment.getId())).thenReturn(3L);
+            when(commentRepository.countByParentCommentId(comment.getId())).thenReturn(2L);
 
             CommentResponseDto dto = new CommentResponseDto(
                     comment.getId(), "Great!",
                     new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    null, null);
-            when(commentMapper.toDto(comment)).thenReturn(dto);
+                    null, null, null, 2, 3, false);
+            when(commentMapper.toDto(comment, 3L, false, 2L)).thenReturn(dto);
 
             // When
-            Page<CommentResponseDto> result = commentService.getReviewComments(testReview.getId(), pageable);
+            Page<CommentResponseDto> result = commentService.getReviewComments(testReview.getId(), null, pageable);
 
             // Then
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).content()).isEqualTo("Great!");
+            assertThat(result.getContent().get(0).likesCount()).isEqualTo(3);
+            assertThat(result.getContent().get(0).repliesCount()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("should resolve hasLiked when viewer is authenticated")
+        void getReviewComments_shouldResolveHasLikedForViewer() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 10);
+            Comment comment = Comment.onReview("Great!", testUser, testReview);
+            comment.setId(UUID.randomUUID());
+            Page<Comment> commentPage = new PageImpl<>(List.of(comment));
+
+            when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(testUser));
+            when(commentRepository.findByReviewIdAndParentCommentIsNull(testReview.getId(), pageable))
+                    .thenReturn(commentPage);
+            when(likeRepository.countByCommentId(comment.getId())).thenReturn(1L);
+            when(commentRepository.countByParentCommentId(comment.getId())).thenReturn(0L);
+            when(likeRepository.existsByUserIdAndCommentId(testUser.getId(), comment.getId())).thenReturn(true);
+
+            CommentResponseDto dto = new CommentResponseDto(
+                    comment.getId(), "Great!",
+                    new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    null, null, null, 0, 1, true);
+            when(commentMapper.toDto(comment, 1L, true, 0L)).thenReturn(dto);
+
+            // When
+            Page<CommentResponseDto> result = commentService.getReviewComments(
+                    testReview.getId(), "test@test.com", pageable);
+
+            // Then
+            assertThat(result.getContent().get(0).hasLiked()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("addReply()")
+    class AddReply {
+
+        @Test
+        @DisplayName("should create a reply on a comment")
+        void addReply_shouldCreateReply() {
+            // Given
+            Comment parentComment = Comment.onReview("Parent", testUser, testReview);
+            parentComment.setId(UUID.randomUUID());
+
+            when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(testUser));
+            when(commentRepository.findById(parentComment.getId())).thenReturn(Optional.of(parentComment));
+
+            Comment savedReply = Comment.asReply("Reply!", testUser, parentComment);
+            savedReply.setId(UUID.randomUUID());
+            when(commentRepository.save(any(Comment.class))).thenReturn(savedReply);
+
+            CommentResponseDto expectedDto = new CommentResponseDto(
+                    savedReply.getId(), "Reply!",
+                    new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    null, null, parentComment.getId(), 0, 0, false);
+            when(commentMapper.toDto(savedReply)).thenReturn(expectedDto);
+
+            // When
+            CommentResponseDto result = commentService.addReply("test@test.com", parentComment.getId(), "Reply!");
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.content()).isEqualTo("Reply!");
+            assertThat(result.parentCommentId()).isEqualTo(parentComment.getId());
+            verify(commentRepository).save(any(Comment.class));
+        }
+
+        @Test
+        @DisplayName("should throw CommentNotFoundException when parent does not exist")
+        void addReply_shouldThrowWhenParentNotFound() {
+            // Given
+            UUID commentId = UUID.randomUUID();
+            when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(testUser));
+            when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> commentService.addReply("test@test.com", commentId, "Reply"))
+                    .isInstanceOf(CommentNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("getReplies()")
+    class GetReplies {
+
+        @Test
+        @DisplayName("should return paginated replies for a parent comment")
+        void getReplies_shouldReturnPaginatedReplies() {
+            // Given
+            UUID parentId = UUID.randomUUID();
+            Pageable pageable = PageRequest.of(0, 10);
+
+            Comment reply = Comment.onReview("Reply", testUser, testReview);
+            reply.setId(UUID.randomUUID());
+            Page<Comment> replyPage = new PageImpl<>(List.of(reply));
+
+            when(commentRepository.findByParentCommentId(parentId, pageable)).thenReturn(replyPage);
+            when(likeRepository.countByCommentId(reply.getId())).thenReturn(1L);
+            when(commentRepository.countByParentCommentId(reply.getId())).thenReturn(0L);
+
+            CommentResponseDto dto = new CommentResponseDto(
+                    reply.getId(), "Reply",
+                    new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
+                    null, null, parentId, 0, 1, false);
+            when(commentMapper.toDto(reply, 1L, false, 0L)).thenReturn(dto);
+
+            // When
+            Page<CommentResponseDto> result = commentService.getReplies(parentId, null, pageable);
+
+            // Then
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).content()).isEqualTo("Reply");
         }
     }
 
@@ -225,7 +346,7 @@ class CommentServiceImplTest {
             CommentResponseDto expectedDto = new CommentResponseDto(
                     comment.getId(), "New content",
                     new CommentUserDto(testUser.getId(), testUser.getPseudo(), null),
-                    null, null);
+                    null, null, null, 0, 0, false);
             when(commentMapper.toDto(comment)).thenReturn(expectedDto);
 
             // When

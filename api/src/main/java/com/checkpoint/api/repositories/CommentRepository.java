@@ -34,6 +34,41 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     Page<Comment> findByGameListId(UUID gameListId, Pageable pageable);
 
     /**
+     * Finds all top-level comments (not replies) for a specific review.
+     *
+     * @param reviewId the review ID
+     * @param pageable pagination and sorting details
+     * @return a page of top-level comments
+     */
+    Page<Comment> findByReviewIdAndParentCommentIsNull(UUID reviewId, Pageable pageable);
+
+    /**
+     * Finds all top-level comments (not replies) for a specific game list.
+     *
+     * @param gameListId the game list ID
+     * @param pageable   pagination and sorting details
+     * @return a page of top-level comments
+     */
+    Page<Comment> findByGameListIdAndParentCommentIsNull(UUID gameListId, Pageable pageable);
+
+    /**
+     * Finds all replies for a specific parent comment.
+     *
+     * @param parentCommentId the parent comment ID
+     * @param pageable        pagination and sorting details
+     * @return a page of reply comments
+     */
+    Page<Comment> findByParentCommentId(UUID parentCommentId, Pageable pageable);
+
+    /**
+     * Counts the number of replies for a parent comment.
+     *
+     * @param parentCommentId the parent comment ID
+     * @return the reply count
+     */
+    long countByParentCommentId(UUID parentCommentId);
+
+    /**
      * Counts the number of comments for a review.
      *
      * @param reviewId the review ID
