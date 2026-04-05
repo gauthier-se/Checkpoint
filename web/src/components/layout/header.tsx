@@ -58,6 +58,13 @@ export const Header = () => {
         >
           Members
         </Link>
+        <Link
+          to="/news"
+          search={{ page: 1 }}
+          className="text-muted-foreground font-semibold"
+        >
+          News
+        </Link>
         <button
           onClick={() => setSearchOpen(true)}
           className="flex h-9 items-center gap-2 rounded-lg border bg-muted/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted"

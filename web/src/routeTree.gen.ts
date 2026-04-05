@@ -17,10 +17,12 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AppProtectedRouteImport } from './routes/_app/_protected'
+import { Route as AppNewsIndexRouteImport } from './routes/_app/news/index'
 import { Route as AppMembersIndexRouteImport } from './routes/_app/members/index'
 import { Route as AppListsIndexRouteImport } from './routes/_app/lists/index'
 import { Route as AppGamesIndexRouteImport } from './routes/_app/games/index'
 import { Route as AppProfileUsernameRouteImport } from './routes/_app/profile/$username'
+import { Route as AppNewsNewsIdRouteImport } from './routes/_app/news/$newsId'
 import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
@@ -67,6 +69,11 @@ const AppProtectedRoute = AppProtectedRouteImport.update({
   id: '/_protected',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNewsIndexRoute = AppNewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMembersIndexRoute = AppMembersIndexRouteImport.update({
   id: '/members/',
   path: '/members/',
@@ -85,6 +92,11 @@ const AppGamesIndexRoute = AppGamesIndexRouteImport.update({
 const AppProfileUsernameRoute = AppProfileUsernameRouteImport.update({
   id: '/profile/$username',
   path: '/profile/$username',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewsNewsIdRoute = AppNewsNewsIdRouteImport.update({
+  id: '/news/$newsId',
+  path: '/news/$newsId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppListsListIdRoute = AppListsListIdRouteImport.update({
@@ -141,10 +153,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
+  '/news/$newsId': typeof AppNewsNewsIdRoute
   '/profile/$username': typeof AppProfileUsernameRoute
   '/games': typeof AppGamesIndexRoute
   '/lists': typeof AppListsIndexRoute
   '/members': typeof AppMembersIndexRoute
+  '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -160,10 +174,12 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
+  '/news/$newsId': typeof AppNewsNewsIdRoute
   '/profile/$username': typeof AppProfileUsernameRoute
   '/games': typeof AppGamesIndexRoute
   '/lists': typeof AppListsIndexRoute
   '/members': typeof AppMembersIndexRoute
+  '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -183,10 +199,12 @@ export interface FileRoutesById {
   '/_app/_protected/profile': typeof AppProtectedProfileRoute
   '/_app/games/$gameId': typeof AppGamesGameIdRoute
   '/_app/lists/$listId': typeof AppListsListIdRoute
+  '/_app/news/$newsId': typeof AppNewsNewsIdRoute
   '/_app/profile/$username': typeof AppProfileUsernameRoute
   '/_app/games/': typeof AppGamesIndexRoute
   '/_app/lists/': typeof AppListsIndexRoute
   '/_app/members/': typeof AppMembersIndexRoute
+  '/_app/news/': typeof AppNewsIndexRoute
   '/_app/_protected/lists/new': typeof AppProtectedListsNewRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/_app/profile_/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -204,10 +222,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/games/$gameId'
     | '/lists/$listId'
+    | '/news/$newsId'
     | '/profile/$username'
     | '/games'
     | '/lists'
     | '/members'
+    | '/news'
     | '/lists/new'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
@@ -223,10 +243,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/games/$gameId'
     | '/lists/$listId'
+    | '/news/$newsId'
     | '/profile/$username'
     | '/games'
     | '/lists'
     | '/members'
+    | '/news'
     | '/lists/new'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
@@ -245,10 +267,12 @@ export interface FileRouteTypes {
     | '/_app/_protected/profile'
     | '/_app/games/$gameId'
     | '/_app/lists/$listId'
+    | '/_app/news/$newsId'
     | '/_app/profile/$username'
     | '/_app/games/'
     | '/_app/lists/'
     | '/_app/members/'
+    | '/_app/news/'
     | '/_app/_protected/lists/new'
     | '/_app/_protected/lists/$listId/edit'
     | '/_app/profile_/$username/tags/$tagName'
@@ -319,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/news/': {
+      id: '/_app/news/'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AppNewsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/members/': {
       id: '/_app/members/'
       path: '/members'
@@ -345,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/$username'
       fullPath: '/profile/$username'
       preLoaderRoute: typeof AppProfileUsernameRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/news/$newsId': {
+      id: '/_app/news/$newsId'
+      path: '/news/$newsId'
+      fullPath: '/news/$newsId'
+      preLoaderRoute: typeof AppNewsNewsIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/lists/$listId': {
@@ -431,10 +469,12 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppGamesGameIdRoute: typeof AppGamesGameIdRoute
   AppListsListIdRoute: typeof AppListsListIdRoute
+  AppNewsNewsIdRoute: typeof AppNewsNewsIdRoute
   AppProfileUsernameRoute: typeof AppProfileUsernameRoute
   AppGamesIndexRoute: typeof AppGamesIndexRoute
   AppListsIndexRoute: typeof AppListsIndexRoute
   AppMembersIndexRoute: typeof AppMembersIndexRoute
+  AppNewsIndexRoute: typeof AppNewsIndexRoute
   AppProfileUsernameTagsTagNameRoute: typeof AppProfileUsernameTagsTagNameRoute
 }
 
@@ -443,10 +483,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppGamesGameIdRoute: AppGamesGameIdRoute,
   AppListsListIdRoute: AppListsListIdRoute,
+  AppNewsNewsIdRoute: AppNewsNewsIdRoute,
   AppProfileUsernameRoute: AppProfileUsernameRoute,
   AppGamesIndexRoute: AppGamesIndexRoute,
   AppListsIndexRoute: AppListsIndexRoute,
   AppMembersIndexRoute: AppMembersIndexRoute,
+  AppNewsIndexRoute: AppNewsIndexRoute,
   AppProfileUsernameTagsTagNameRoute: AppProfileUsernameTagsTagNameRoute,
 }
 
