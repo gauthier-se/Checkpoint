@@ -1,0 +1,82 @@
+import { useEffect } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { ArrowLeft, Newspaper } from 'lucide-react'
+import { newsDetailQueryOptions } from '@/queries/news'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+
+export const Route = createFileRoute('/_app/news/$newsId')({
+  component: RouteComponent,
+  loader: async ({ params: { newsId }, context }) => {
+    await context.queryClient.ensureQueryData(newsDetailQueryOptions(newsId))
+  },
+})
+
+function RouteComponent() {
+  const { newsId } = Route.useParams()
+  const { data: article } = useSuspenseQuery(newsDetailQueryOptions(newsId))
+
+  const initials = article.author.pseudo.slice(0, 2).toUpperCase()
+  const publishedDate = new Date(article.publishedAt).toLocaleDateString(
+    'en-US',
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  )
+
+  useEffect(() => {
+    document.title = `${article.title} — Checkpoint`
+  }, [article.title])
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <Link
+        to="/news"
+        search={{ page: 1 }}
+        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Back to news
+      </Link>
+
+      {article.picture ? (
+        <img
+          src={article.picture}
+          alt={article.title}
+          className="mb-6 w-full rounded-lg object-cover aspect-[2/1]"
+        />
+      ) : (
+        <div className="mb-6 flex w-full items-center justify-center rounded-lg bg-muted aspect-[2/1]">
+          <Newspaper className="size-16 text-muted-foreground/40" />
+        </div>
+      )}
+
+      <h1 className="text-3xl font-bold">{article.title}</h1>
+
+      <div className="mt-4 flex items-center gap-3">
+        <Avatar className="size-8">
+          <AvatarImage
+            src={article.author.picture ?? undefined}
+            alt={article.author.pseudo}
+          />
+          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{article.author.pseudo}</span>
+          <span className="text-xs text-muted-foreground">
+            {publishedDate}
+          </span>
+        </div>
+      </div>
+
+      <Separator className="my-6" />
+
+      <div className="prose prose-neutral dark:prose-invert max-w-none whitespace-pre-wrap">
+        {article.description}
+      </div>
+    </main>
+  )
+}
