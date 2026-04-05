@@ -1,27 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import type { Comment, CommentsResponse } from '@/types/comment'
+import { CommentItem } from './comment-item'
+import type { CommentsResponse } from '@/types/comment'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/use-auth'
 import {
-  deleteComment,
   listCommentsQueryOptions,
   postListComment,
   postReviewComment,
   reviewCommentsQueryOptions,
-  updateComment,
 } from '@/queries/comment'
+
 
 interface CommentSectionProps {
   targetType: 'review' | 'list'
@@ -33,8 +27,6 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(0)
   const [newComment, setNewComment] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editContent, setEditContent] = useState('')
   const size = 10
 
   const queryOptions =
@@ -67,74 +59,10 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
     },
   })
 
-  const updateMutation = useMutation({
-    mutationFn: ({
-      commentId,
-      content,
-    }: {
-      commentId: string
-      content: string
-    }) => updateComment(commentId, content),
-    onSuccess: () => {
-      setEditingId(null)
-      setEditContent('')
-      invalidateComments()
-    },
-    onError: () => {
-      toast.error('Failed to update comment')
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (commentId: string) => deleteComment(commentId),
-    onMutate: async (commentId) => {
-      const queryKey = queryOptions.queryKey
-      await queryClient.cancelQueries({ queryKey })
-      const previous = queryClient.getQueryData<CommentsResponse>(queryKey)
-      queryClient.setQueryData<CommentsResponse>(queryKey, (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          content: old.content.filter((c) => c.id !== commentId),
-          metadata: {
-            ...old.metadata,
-            totalElements: old.metadata.totalElements - 1,
-          },
-        }
-      })
-      return { previous }
-    },
-    onError: (_err, _commentId, context) => {
-      toast.error('Failed to delete comment')
-      if (context?.previous) {
-        queryClient.setQueryData(queryOptions.queryKey, context.previous)
-      }
-    },
-    onSettled: () => {
-      invalidateComments()
-    },
-  })
-
-  const startEdit = (comment: Comment) => {
-    setEditingId(comment.id)
-    setEditContent(comment.content)
-  }
-
-  const cancelEdit = () => {
-    setEditingId(null)
-    setEditContent('')
-  }
-
   const handleSubmitNew = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newComment.trim()) return
     postMutation.mutate(newComment.trim())
-  }
-
-  const handleSubmitEdit = (e: React.FormEvent, commentId: string) => {
-    e.preventDefault()
-    if (!editContent.trim()) return
-    updateMutation.mutate({ commentId, content: editContent.trim() })
   }
 
   return (
@@ -190,97 +118,12 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       ) : data && data.content.length > 0 ? (
         <div className="space-y-4">
           {data.content.map((comment) => (
-            <div key={comment.id} className="flex gap-3">
-              <Avatar className="mt-1 size-8 shrink-0">
-                <AvatarImage
-                  src={comment.user.picture ?? undefined}
-                  alt={comment.user.pseudo}
-                />
-                <AvatarFallback className="text-xs">
-                  {comment.user.pseudo.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">
-                    {comment.user.pseudo}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(comment.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </span>
-                  {comment.createdAt !== comment.updatedAt && (
-                    <span className="text-xs text-muted-foreground">
-                      (edited)
-                    </span>
-                  )}
-                  {user && user.id === comment.user.id && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="ml-auto h-7 w-7"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => startEdit(comment)}>
-                          <Pencil className="mr-2 size-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => deleteMutation.mutate(comment.id)}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-                {editingId === comment.id ? (
-                  <form
-                    onSubmit={(e) => handleSubmitEdit(e, comment.id)}
-                    className="mt-2 space-y-2"
-                  >
-                    <Textarea
-                      className="min-h-[60px] resize-y"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="submit"
-                        size="sm"
-                        disabled={
-                          !editContent.trim() || updateMutation.isPending
-                        }
-                      >
-                        {updateMutation.isPending ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={cancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <p className="mt-1 text-sm leading-relaxed whitespace-pre-line">
-                    {comment.content}
-                  </p>
-                )}
-              </div>
-            </div>
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              targetType={targetType}
+              targetId={targetId}
+            />
           ))}
 
           {/* Pagination */}

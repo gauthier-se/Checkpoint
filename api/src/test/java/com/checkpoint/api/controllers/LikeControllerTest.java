@@ -19,6 +19,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
+import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
@@ -153,6 +154,63 @@ class LikeControllerTest {
 
             // When / Then
             mockMvc.perform(post("/api/lists/{listId}/like", listId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/comments/{commentId}/like")
+    class ToggleCommentLike {
+
+        @Test
+        @DisplayName("should like comment and return 200")
+        @WithMockUser(username = "user@example.com")
+        void toggleCommentLike_shouldLikeComment() throws Exception {
+            // Given
+            UUID commentId = UUID.randomUUID();
+            LikeResponseDto response = new LikeResponseDto(true, 3);
+
+            when(likeService.toggleCommentLike(eq("user@example.com"), eq(commentId)))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.liked").value(true))
+                    .andExpect(jsonPath("$.likesCount").value(3));
+        }
+
+        @Test
+        @DisplayName("should unlike comment and return 200")
+        @WithMockUser(username = "user@example.com")
+        void toggleCommentLike_shouldUnlikeComment() throws Exception {
+            // Given
+            UUID commentId = UUID.randomUUID();
+            LikeResponseDto response = new LikeResponseDto(false, 2);
+
+            when(likeService.toggleCommentLike(eq("user@example.com"), eq(commentId)))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.liked").value(false))
+                    .andExpect(jsonPath("$.likesCount").value(2));
+        }
+
+        @Test
+        @DisplayName("should return 404 when comment not found")
+        @WithMockUser(username = "user@example.com")
+        void toggleCommentLike_shouldReturn404WhenCommentNotFound() throws Exception {
+            // Given
+            UUID commentId = UUID.randomUUID();
+
+            when(likeService.toggleCommentLike(eq("user@example.com"), eq(commentId)))
+                    .thenThrow(new CommentNotFoundException(commentId));
+
+            // When / Then
+            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }

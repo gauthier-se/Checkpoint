@@ -1,0 +1,48 @@
+meta {
+  name: Toggle Comment Like
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/comments/:commentId/like
+  body: none
+  auth: bearer
+}
+
+params:path {
+  commentId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Toggle Comment Like
+
+  Toggles a like on a comment. If the user already liked the comment, the like is removed.
+  Otherwise, a new like is created.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **commentId**: The UUID of the comment to like/unlike
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "liked": true,
+    "likesCount": 5
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Comment does not exist
+}

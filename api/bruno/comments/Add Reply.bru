@@ -1,0 +1,76 @@
+meta {
+  name: Add Reply
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/comments/:commentId/replies
+  body: json
+  auth: bearer
+}
+
+params:path {
+  commentId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "content": "I totally agree with your point!"
+  }
+}
+
+docs {
+  # Add Reply
+
+  Adds a reply to an existing comment. Replies are limited to 1 level deep:
+  replying to a reply will target the root parent comment.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **commentId**: The UUID of the comment to reply to
+
+  ## Request Body
+
+  ```json
+  {
+    "content": "I totally agree with your point!"
+  }
+  ```
+
+  - **content** (required): The reply text (max 5000 characters)
+
+  ## Response (201 Created)
+
+  ```json
+  {
+    "id": "uuid",
+    "content": "I totally agree with your point!",
+    "user": {
+      "id": "uuid",
+      "pseudo": "gamer123",
+      "picture": null
+    },
+    "createdAt": "2026-04-01T10:00:00",
+    "updatedAt": "2026-04-01T10:00:00",
+    "parentCommentId": "uuid",
+    "repliesCount": 0,
+    "likesCount": 0,
+    "hasLiked": false
+  }
+  ```
+
+  ## Error Responses
+
+  - **400 Bad Request**: Content is blank or exceeds 5000 characters
+  - **401 Unauthorized**: Not authenticated
+  - **404 Not Found**: Parent comment does not exist
+}

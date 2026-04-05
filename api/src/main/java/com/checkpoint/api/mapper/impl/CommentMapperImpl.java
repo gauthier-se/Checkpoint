@@ -1,5 +1,7 @@
 package com.checkpoint.api.mapper.impl;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.checkpoint.api.dto.social.CommentResponseDto;
@@ -19,6 +21,14 @@ public class CommentMapperImpl implements CommentMapper {
      */
     @Override
     public CommentResponseDto toDto(Comment comment) {
+        return toDto(comment, 0, false, 0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CommentResponseDto toDto(Comment comment, long likesCount, boolean hasLiked, long repliesCount) {
         if (comment == null) {
             return null;
         }
@@ -33,12 +43,20 @@ public class CommentMapperImpl implements CommentMapper {
             );
         }
 
+        UUID parentCommentId = comment.getParentComment() != null
+                ? comment.getParentComment().getId()
+                : null;
+
         return new CommentResponseDto(
                 comment.getId(),
                 comment.getContent(),
                 userDto,
                 comment.getCreatedAt(),
-                comment.getUpdatedAt()
+                comment.getUpdatedAt(),
+                parentCommentId,
+                repliesCount,
+                likesCount,
+                hasLiked
         );
     }
 }

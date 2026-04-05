@@ -9,12 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
+import com.checkpoint.api.entities.Comment;
 import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Like;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
+import com.checkpoint.api.repositories.CommentRepository;
 import com.checkpoint.api.repositories.GameListRepository;
 import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
@@ -23,7 +26,7 @@ import com.checkpoint.api.services.LikeService;
 
 /**
  * Implementation of {@link LikeService}.
- * Manages like/unlike toggle operations on reviews and game lists.
+ * Manages like/unlike toggle operations on reviews, game lists, and comments.
  */
 @Service
 @Transactional
@@ -34,6 +37,7 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final ReviewRepository reviewRepository;
     private final GameListRepository gameListRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     /**
@@ -42,15 +46,18 @@ public class LikeServiceImpl implements LikeService {
      * @param likeRepository     the like repository
      * @param reviewRepository   the review repository
      * @param gameListRepository the game list repository
+     * @param commentRepository  the comment repository
      * @param userRepository     the user repository
      */
     public LikeServiceImpl(LikeRepository likeRepository,
                            ReviewRepository reviewRepository,
                            GameListRepository gameListRepository,
+                           CommentRepository commentRepository,
                            UserRepository userRepository) {
         this.likeRepository = likeRepository;
         this.reviewRepository = reviewRepository;
         this.gameListRepository = gameListRepository;
+        this.commentRepository = commentRepository;
         this.userRepository = userRepository;
     }
 
@@ -102,6 +109,32 @@ public class LikeServiceImpl implements LikeService {
             likeRepository.save(like);
             long likesCount = likeRepository.countByGameListId(listId) + 1;
             log.info("User {} liked list {}", user.getPseudo(), listId);
+            return new LikeResponseDto(true, likesCount);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LikeResponseDto toggleCommentLike(String userEmail, UUID commentId) {
+        User user = getUserByEmail(userEmail);
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException(commentId));
+
+        Optional<Like> existingLike = likeRepository.findByUserIdAndCommentId(user.getId(), commentId);
+
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+            long likesCount = likeRepository.countByCommentId(commentId) - 1;
+            log.info("User {} unliked comment {}", user.getPseudo(), commentId);
+            return new LikeResponseDto(false, Math.max(0, likesCount));
+        } else {
+            Like like = Like.forComment(user, comment);
+            likeRepository.save(like);
+            long likesCount = likeRepository.countByCommentId(commentId) + 1;
+            log.info("User {} liked comment {}", user.getPseudo(), commentId);
             return new LikeResponseDto(true, likesCount);
         }
     }
