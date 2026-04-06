@@ -1,0 +1,44 @@
+meta {
+  name: Get Trending Games
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/games/trending
+  body: none
+  auth: none
+}
+
+params:query {
+  ~size: 7
+}
+
+docs {
+  # Get Trending Games
+
+  Returns trending games ranked by weighted recent user activity over the last 7 days.
+  Scores are computed from library additions, play sessions, ratings, reviews, likes,
+  and wishlist additions. Falls back to all-time popularity when recent activity is low.
+
+  ## Query Parameters
+
+  | Parameter | Required | Default | Description |
+  |-----------|----------|---------|-------------|
+  | size | No | 7 | Number of trending games to return (max 20) |
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "title": "Elden Ring",
+      "coverUrl": "https://images.igdb.com/...",
+      "releaseDate": "2022-02-25",
+      "averageRating": 4.8,
+      "ratingCount": 342
+    }
+  ]
+  ```
+}

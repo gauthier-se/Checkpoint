@@ -21,6 +21,7 @@ import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.services.GameCatalogService;
 import com.checkpoint.api.services.GameSearchService;
+import com.checkpoint.api.services.GameTrendingService;
 
 /**
  * REST controller for public game catalog endpoints.
@@ -35,14 +36,20 @@ public class GameController {
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 20;
     private static final int MAX_SIZE = 100;
+    private static final int DEFAULT_TRENDING_SIZE = 7;
+    private static final int MAX_TRENDING_SIZE = 20;
     private static final String DEFAULT_SORT = "releaseDate,desc";
 
     private final GameCatalogService gameCatalogService;
     private final GameSearchService gameSearchService;
+    private final GameTrendingService gameTrendingService;
 
-    public GameController(GameCatalogService gameCatalogService, GameSearchService gameSearchService) {
+    public GameController(GameCatalogService gameCatalogService,
+                          GameSearchService gameSearchService,
+                          GameTrendingService gameTrendingService) {
         this.gameCatalogService = gameCatalogService;
         this.gameSearchService = gameSearchService;
+        this.gameTrendingService = gameTrendingService;
     }
 
     /**
@@ -105,6 +112,25 @@ public class GameController {
 
         List<GameCardDto> results = gameSearchService.searchGames(q, genre, platform);
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * Returns trending games based on recent user activity.
+     * Games are scored by weighted recent library additions, play sessions,
+     * ratings, reviews, likes, and wishlist additions from the last 7 days.
+     *
+     * @param size the number of trending games to return (default 7, max 20)
+     * @return a list of trending game cards
+     */
+    @GetMapping("/trending")
+    public ResponseEntity<List<GameCardDto>> getTrendingGames(
+            @RequestParam(defaultValue = "" + DEFAULT_TRENDING_SIZE) int size) {
+
+        int validatedSize = Math.min(Math.max(1, size), MAX_TRENDING_SIZE);
+        log.info("GET /api/games/trending - size: {}", validatedSize);
+
+        List<GameCardDto> trending = gameTrendingService.getTrendingGames(validatedSize);
+        return ResponseEntity.ok(trending);
     }
 
     /**

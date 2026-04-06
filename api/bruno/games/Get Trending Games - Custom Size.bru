@@ -1,0 +1,25 @@
+meta {
+  name: Get Trending Games - Custom Size
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/games/trending?size=3
+  body: none
+  auth: none
+}
+
+params:query {
+  size: 3
+}
+
+docs {
+  # Get Trending Games - Custom Size
+
+  Same as Get Trending Games but with a custom size parameter to return fewer results.
+
+  ## Response (200 OK)
+
+  Returns an array of up to 3 trending game cards.
+}

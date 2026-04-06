@@ -41,6 +41,18 @@ export function genresQueryOptions() {
   })
 }
 
+export function trendingGamesQueryOptions() {
+  return queryOptions({
+    queryKey: ['games', 'trending'],
+    queryFn: async (): Promise<Array<Game>> => {
+      const res = await apiFetch('/api/games/trending?size=7')
+      if (!res.ok) throw new Error('Failed to fetch trending games')
+      return res.json()
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function platformsQueryOptions() {
   return queryOptions({
     queryKey: ['platforms'],

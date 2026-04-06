@@ -9,7 +9,11 @@ import { GamesPagination } from '@/components/games/pagination'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
-import { genresQueryOptions, platformsQueryOptions } from '@/queries/catalog'
+import {
+  genresQueryOptions,
+  platformsQueryOptions,
+  trendingGamesQueryOptions,
+} from '@/queries/catalog'
 
 const PAGE_SIZE = 32
 
@@ -90,15 +94,19 @@ export const Route = createFileRoute('/_app/games/')({
     sort: parseSort(search.sort),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps, context }): Promise<GamesResponse> => {
-    const [data] = await Promise.all([
+  loader: async ({
+    deps,
+    context,
+  }): Promise<{ catalog: GamesResponse; trending: Array<Game> }> => {
+    const [catalog, trending] = await Promise.all([
       apiFetch(buildCatalogUrl(deps)).then(
         (res): Promise<GamesResponse> => res.json(),
       ),
+      context.queryClient.ensureQueryData(trendingGamesQueryOptions()),
       context.queryClient.ensureQueryData(genresQueryOptions()),
       context.queryClient.ensureQueryData(platformsQueryOptions()),
     ])
-    return data
+    return { catalog, trending }
   },
 })
 
@@ -214,23 +222,22 @@ function RouteComponent() {
               </Link>
             </div>
             <Separator />
-            {/* TODO: API should support "featured" or "popular" games so we don't have to slice here */}
-            <GameGrid games={data.content.slice(0, 7)} columns={7} />
+            <GameGrid games={data.trending} columns={7} />
           </div>
           <h2 id="catalog" className="py-2 text-muted-foreground font-semibold">
-            {data.metadata.totalElements === 0
+            {data.catalog.metadata.totalElements === 0
               ? 'No games found'
-              : `There ${data.metadata.totalElements > 1 ? 'are' : 'is'} ${data.metadata.totalElements} game${data.metadata.totalElements > 1 ? 's' : ''}`}
+              : `There ${data.catalog.metadata.totalElements > 1 ? 'are' : 'is'} ${data.catalog.metadata.totalElements} game${data.catalog.metadata.totalElements > 1 ? 's' : ''}`}
           </h2>
           <Separator />
-          {data.content.length > 0 ? (
+          {data.catalog.content.length > 0 ? (
             <>
-              <GameGrid games={data.content} />
+              <GameGrid games={data.catalog.content} />
               <GamesPagination
                 page={page}
-                totalPages={data.metadata.totalPages}
-                hasNext={data.metadata.hasNext}
-                hasPrevious={data.metadata.hasPrevious}
+                totalPages={data.catalog.metadata.totalPages}
+                hasNext={data.catalog.metadata.hasNext}
+                hasPrevious={data.catalog.metadata.hasPrevious}
                 search={search}
               />
             </>
