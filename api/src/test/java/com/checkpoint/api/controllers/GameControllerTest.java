@@ -1,6 +1,7 @@
 package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,7 @@ import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.GameCatalogService;
 import com.checkpoint.api.services.GameSearchService;
+import com.checkpoint.api.services.GameTrendingService;
 
 /**
  * Unit tests for {@link GameController}.
@@ -50,6 +52,9 @@ class GameControllerTest {
 
     @MockitoBean
     private GameSearchService gameSearchService;
+
+    @MockitoBean
+    private GameTrendingService gameTrendingService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -322,5 +327,53 @@ class GameControllerTest {
         // When / Then
         mockMvc.perform(get("/api/games/search"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /api/games/trending should return trending games")
+    void getTrendingGames_shouldReturnTrendingGames() throws Exception {
+        // Given
+        UUID gameId = UUID.randomUUID();
+        List<GameCardDto> trending = List.of(
+                new GameCardDto(gameId, "Elden Ring", "cover.jpg", LocalDate.of(2022, 2, 25), 4.9, 2000L)
+        );
+
+        when(gameTrendingService.getTrendingGames(7)).thenReturn(trending);
+
+        // When / Then
+        mockMvc.perform(get("/api/games/trending"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].title").value("Elden Ring"))
+                .andExpect(jsonPath("$[0].averageRating").value(4.9))
+                .andExpect(jsonPath("$[0].ratingCount").value(2000));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/trending should cap size to maximum 20")
+    void getTrendingGames_shouldCapSizeToMaximum() throws Exception {
+        // Given
+        when(gameTrendingService.getTrendingGames(anyInt())).thenReturn(List.of());
+
+        // When / Then
+        mockMvc.perform(get("/api/games/trending")
+                        .param("size", "50"))
+                .andExpect(status().isOk());
+
+        verify(gameTrendingService).getTrendingGames(20);
+    }
+
+    @Test
+    @DisplayName("GET /api/games/trending should accept custom size parameter")
+    void getTrendingGames_shouldAcceptCustomSize() throws Exception {
+        // Given
+        when(gameTrendingService.getTrendingGames(anyInt())).thenReturn(List.of());
+
+        // When / Then
+        mockMvc.perform(get("/api/games/trending")
+                        .param("size", "3"))
+                .andExpect(status().isOk());
+
+        verify(gameTrendingService).getTrendingGames(3);
     }
 }

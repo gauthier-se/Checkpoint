@@ -1,5 +1,7 @@
 package com.checkpoint.api.repositories;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,4 +84,33 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID>, Vid
      */
     @Query("SELECT COUNT(r) FROM Rate r WHERE r.videoGame.id = :videoGameId")
     Long countRatings(@Param("videoGameId") UUID videoGameId);
+
+    /**
+     * Finds trending games ranked by weighted recent activity score.
+     * Uses correlated subqueries to count recent library additions, play sessions,
+     * ratings, reviews, likes, and wishlist additions within the given time window.
+     * Falls back to all-time average rating and release date when recent activity is low.
+     * DLCs are excluded from results.
+     *
+     * @param since the start of the trending window (typically 7 days ago)
+     * @param limit the maximum number of results to return
+     * @return a list of trending game data as Object arrays
+     *         (id, title, coverUrl, releaseDate, averageRating, ratingCount)
+     */
+    @Query(value = """
+            SELECT vg.id, vg.title, vg.cover_url, vg.release_date, vg.average_rating,
+                   (SELECT COUNT(*) FROM rates r WHERE r.video_game_id = vg.id) AS rating_count,
+                   (3 * (SELECT COUNT(*) FROM user_games ug WHERE ug.video_game_id = vg.id AND ug.created_at >= :since)
+                    + 3 * (SELECT COUNT(*) FROM user_game_plays gp WHERE gp.video_game_id = vg.id AND gp.created_at >= :since)
+                    + 2 * (SELECT COUNT(*) FROM rates rr WHERE rr.video_game_id = vg.id AND rr.created_at >= :since)
+                    + 2 * (SELECT COUNT(*) FROM reviews rv WHERE rv.video_game_id = vg.id AND rv.created_at >= :since)
+                    + 1 * (SELECT COUNT(*) FROM likes lk WHERE lk.video_game_id = vg.id AND lk.created_at >= :since)
+                    + 1 * (SELECT COUNT(*) FROM wishes ws WHERE ws.video_game_id = vg.id AND ws.created_at >= :since)
+                   ) AS trending_score
+            FROM video_games vg
+            WHERE vg.parent_game_id IS NULL
+            ORDER BY trending_score DESC, COALESCE(vg.average_rating, 0) DESC, vg.release_date DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> findTrendingGames(@Param("since") LocalDateTime since, @Param("limit") int limit);
 }
