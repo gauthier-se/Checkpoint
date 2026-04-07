@@ -16,7 +16,6 @@ import {
   reviewCommentsQueryOptions,
 } from '@/queries/comment'
 
-
 interface CommentSectionProps {
   targetType: 'review' | 'list'
   targetId: string
