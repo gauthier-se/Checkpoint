@@ -1,14 +1,33 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { Gamepad2, ListChecks, Star, Users } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  Gamepad2,
+  Heart,
+  ListChecks,
+  MessageSquare,
+  Star,
+  Users,
+  Users2,
+} from 'lucide-react'
 import type { Game } from '@/types/game'
 import type { NewsArticle } from '@/types/news'
+import type { User } from '@/types/user'
+import type { UserProfile } from '@/types/profile'
+import type { MemberCard as MemberCardType } from '@/types/member'
+import type { GameListCard } from '@/types/list'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { GameGrid } from '@/components/games/game-grid'
 import { NewsCard } from '@/components/news/news-card'
+import { MemberCard } from '@/components/members/member-card'
+import { ListsGrid } from '@/components/lists/lists-grid'
 import { useAuth } from '@/hooks/use-auth'
 import { trendingGamesQueryOptions } from '@/queries/catalog'
 import { newsListQueryOptions } from '@/queries/news'
+import { userProfileQueryOptions } from '@/queries/profile'
+import { suggestedMembersQueryOptions } from '@/queries/members'
+import { popularListsQueryOptions } from '@/queries/lists'
 
 interface HomeData {
   trending: Array<Game>
@@ -31,13 +50,7 @@ function App() {
   const data = Route.useLoaderData()
 
   if (user) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">
-          Welcome back, {user.pseudo}! Authenticated homepage coming soon.
-        </p>
-      </div>
-    )
+    return <AuthenticatedHome user={user} data={data} />
   }
 
   return (
@@ -194,6 +207,150 @@ function CtaSection() {
           <Link to="/register">Create your account</Link>
         </Button>
       </div>
+    </section>
+  )
+}
+
+function AuthenticatedHome({ user, data }: { user: User; data: HomeData }) {
+  const profileQuery = useQuery(userProfileQueryOptions(user.username))
+  const suggestedQuery = useQuery(suggestedMembersQueryOptions(5))
+  const popularListsQuery = useQuery(popularListsQueryOptions(0, 4))
+
+  return (
+    <div className="mx-auto max-w-7xl px-4">
+      <WelcomeSection user={user} profile={profileQuery.data} />
+      <TrendingSection games={data.trending} />
+      <SuggestedMembersSection
+        members={suggestedQuery.data}
+        isLoading={suggestedQuery.isLoading}
+      />
+      <PopularListsSection
+        lists={popularListsQuery.data?.content}
+        isLoading={popularListsQuery.isLoading}
+      />
+      <NewsSection articles={data.news} />
+    </div>
+  )
+}
+
+const stats = [
+  { key: 'reviewCount', label: 'Reviews', icon: MessageSquare },
+  { key: 'wishlistCount', label: 'Wishlist', icon: Heart },
+  { key: 'followerCount', label: 'Followers', icon: Users2 },
+  { key: 'followingCount', label: 'Following', icon: Users },
+] as const
+
+function WelcomeSection({
+  user,
+  profile,
+}: {
+  user: User
+  profile: UserProfile | undefined
+}) {
+  const xpPercent = profile
+    ? Math.round((profile.xpPoint / profile.xpThreshold) * 100)
+    : 0
+
+  return (
+    <section className="py-10">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Welcome back, {user.username}!
+        </h1>
+        {profile && (
+          <div className="mt-2 flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">
+              Level {profile.level}
+            </span>
+            <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${xpPercent}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {profile.xpPoint}/{profile.xpThreshold} XP
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.key} className="py-4">
+            <CardContent className="flex items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <stat.icon className="size-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {profile ? profile[stat.key] : '--'}
+                </p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function SuggestedMembersSection({
+  members,
+  isLoading,
+}: {
+  members: Array<MemberCardType> | undefined
+  isLoading: boolean
+}) {
+  if (isLoading || !members || members.length === 0) return null
+
+  return (
+    <section className="my-12">
+      <div className="flex items-center justify-between py-2">
+        <h2 className="font-semibold text-muted-foreground">
+          People you might know
+        </h2>
+        <Link
+          to="/members"
+          search={{ page: 1 }}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          See all
+        </Link>
+      </div>
+      <Separator />
+      <div className="grid grid-cols-2 gap-4 py-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {members.map((member) => (
+          <MemberCard key={member.id} member={member} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PopularListsSection({
+  lists,
+  isLoading,
+}: {
+  lists: Array<GameListCard> | undefined
+  isLoading: boolean
+}) {
+  if (isLoading || !lists || lists.length === 0) return null
+
+  return (
+    <section className="my-12">
+      <div className="flex items-center justify-between py-2">
+        <h2 className="font-semibold text-muted-foreground">Popular lists</h2>
+        <Link
+          to="/lists"
+          search={{ page: 1 }}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          See all
+        </Link>
+      </div>
+      <Separator />
+      <ListsGrid lists={lists} />
     </section>
   )
 }
