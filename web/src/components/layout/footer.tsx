@@ -35,7 +35,7 @@ export const Footer = () => {
             <Link to="/about" hash="contact">
               Contact
             </Link>
-            <Link to="/">Roadmap</Link>
+            <Link to="/roadmap">Roadmap</Link>
           </div>
           <div className="flex items-center gap-4">
             <a
