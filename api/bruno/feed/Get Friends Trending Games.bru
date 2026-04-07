@@ -1,0 +1,66 @@
+meta {
+  name: Get Friends Trending Games
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/me/friends/trending-games
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~size: 7
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Friends Trending Games
+
+  Returns trending games among the authenticated user's followed users.
+  Uses the same weighted scoring as global trending but filtered to the follow graph (last 7 days).
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | size | 7 | Number of games to return (max 20) |
+
+  ## Scoring Weights
+
+  - Library additions: 3 points
+  - Play sessions: 3 points
+  - Ratings: 2 points
+  - Reviews: 2 points
+  - Likes: 1 point
+  - Wishlist additions: 1 point
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "title": "Elden Ring",
+      "coverUrl": "https://...",
+      "releaseDate": "2022-02-25",
+      "averageRating": 4.9,
+      "ratingCount": 5000
+    }
+  ]
+  ```
+
+  Returns an empty array `[]` if the user follows nobody or there is no recent activity among friends.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}
