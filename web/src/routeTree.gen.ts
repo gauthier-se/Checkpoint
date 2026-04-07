@@ -16,6 +16,7 @@ import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-pass
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as AppAboutRouteImport } from './routes/_app/about'
 import { Route as AppProtectedRouteImport } from './routes/_app/_protected'
 import { Route as AppNewsIndexRouteImport } from './routes/_app/news/index'
 import { Route as AppMembersIndexRouteImport } from './routes/_app/members/index'
@@ -64,6 +65,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
+} as any)
+const AppAboutRoute = AppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProtectedRoute = AppProtectedRouteImport.update({
   id: '/_protected',
@@ -145,6 +151,7 @@ const AppProtectedListsListIdEditRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/about': typeof AppAboutRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/$username/tags': typeof AppProtectedUsernameTagsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/about': typeof AppAboutRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
   '/_app/_protected': typeof AppProtectedRouteWithChildren
+  '/_app/about': typeof AppAboutRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
@@ -214,6 +223,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/about'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/$username/tags'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/about'
     | '/forgot-password'
     | '/login'
     | '/register'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_auth'
     | '/_app/_protected'
+    | '/_app/about'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_app/about': {
+      id: '/_app/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AppAboutRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/_protected': {
       id: '/_app/_protected'
@@ -466,6 +485,7 @@ const AppProtectedRouteWithChildren = AppProtectedRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppProtectedRoute: typeof AppProtectedRouteWithChildren
+  AppAboutRoute: typeof AppAboutRoute
   AppIndexRoute: typeof AppIndexRoute
   AppGamesGameIdRoute: typeof AppGamesGameIdRoute
   AppListsListIdRoute: typeof AppListsListIdRoute
@@ -480,6 +500,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppProtectedRoute: AppProtectedRouteWithChildren,
+  AppAboutRoute: AppAboutRoute,
   AppIndexRoute: AppIndexRoute,
   AppGamesGameIdRoute: AppGamesGameIdRoute,
   AppListsListIdRoute: AppListsListIdRoute,

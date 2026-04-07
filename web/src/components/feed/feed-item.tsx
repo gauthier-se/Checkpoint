@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { formatDistanceToNow } from 'date-fns'
-import { ListMusic, Play, Star, MessageSquare } from 'lucide-react'
+import { ListMusic, MessageSquare, Play, Star } from 'lucide-react'
 import type { FeedItem as FeedItemType } from '@/types/feed'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -76,9 +76,7 @@ export function FeedItem({ item }: FeedItemProps) {
           >
             {item.user.pseudo}
           </Link>
-          <span className="text-muted-foreground">
-            {getActivityText(item)}
-          </span>
+          <span className="text-muted-foreground">{getActivityText(item)}</span>
           {item.game && (
             <Link
               to="/games/$gameId"

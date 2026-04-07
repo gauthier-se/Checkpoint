@@ -19,9 +19,7 @@ export function friendsTrendingGamesQueryOptions(size: number = 7) {
   return queryOptions({
     queryKey: ['games', 'friends-trending', size],
     queryFn: async (): Promise<Array<Game>> => {
-      const res = await apiFetch(
-        `/api/me/friends/trending-games?size=${size}`,
-      )
+      const res = await apiFetch(`/api/me/friends/trending-games?size=${size}`)
       if (!res.ok) throw new Error('Failed to fetch friends trending games')
       return res.json()
     },

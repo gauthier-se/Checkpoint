@@ -30,7 +30,10 @@ import { newsListQueryOptions } from '@/queries/news'
 import { userProfileQueryOptions } from '@/queries/profile'
 import { suggestedMembersQueryOptions } from '@/queries/members'
 import { popularListsQueryOptions } from '@/queries/lists'
-import { feedQueryOptions, friendsTrendingGamesQueryOptions } from '@/queries/feed'
+import {
+  feedQueryOptions,
+  friendsTrendingGamesQueryOptions,
+} from '@/queries/feed'
 
 interface HomeData {
   trending: Array<Game>
