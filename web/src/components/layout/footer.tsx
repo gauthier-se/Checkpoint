@@ -29,8 +29,12 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto py-10">
         <div className="flex justify-between items-center">
           <div className="flex items-center font-semibold gap-4">
-            <Link to="/">About</Link>
-            <Link to="/">Contact</Link>
+            <Link to="/about" hash="about">
+              About
+            </Link>
+            <Link to="/about" hash="contact">
+              Contact
+            </Link>
             <Link to="/">Roadmap</Link>
           </div>
           <div className="flex items-center gap-4">

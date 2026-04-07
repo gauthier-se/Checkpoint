@@ -1,5 +1,5 @@
-import type { FeedItem as FeedItemType } from '@/types/feed'
 import { FeedItem } from './feed-item'
+import type { FeedItem as FeedItemType } from '@/types/feed'
 
 interface FeedListProps {
   items: Array<FeedItemType>
