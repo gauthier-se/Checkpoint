@@ -113,4 +113,35 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID>, Vid
             LIMIT :limit
             """, nativeQuery = true)
     List<Object[]> findTrendingGames(@Param("since") LocalDateTime since, @Param("limit") int limit);
+
+    /**
+     * Finds trending games among the given set of friend user IDs.
+     * Uses the same weighted scoring as {@link #findTrendingGames} but filters
+     * all activity subqueries to only count actions from the specified friends.
+     *
+     * @param friendIds the IDs of users in the follow graph
+     * @param since     the start of the trending window
+     * @param limit     the maximum number of results to return
+     * @return a list of trending game data as Object arrays
+     *         (id, title, coverUrl, releaseDate, averageRating, ratingCount)
+     */
+    @Query(value = """
+            SELECT vg.id, vg.title, vg.cover_url, vg.release_date, vg.average_rating,
+                   (SELECT COUNT(*) FROM rates r WHERE r.video_game_id = vg.id) AS rating_count,
+                   (3 * (SELECT COUNT(*) FROM user_games ug WHERE ug.video_game_id = vg.id AND ug.created_at >= :since AND ug.user_id IN (:friendIds))
+                    + 3 * (SELECT COUNT(*) FROM user_game_plays gp WHERE gp.video_game_id = vg.id AND gp.created_at >= :since AND gp.user_id IN (:friendIds))
+                    + 2 * (SELECT COUNT(*) FROM rates rr WHERE rr.video_game_id = vg.id AND rr.created_at >= :since AND rr.user_id IN (:friendIds))
+                    + 2 * (SELECT COUNT(*) FROM reviews rv WHERE rv.video_game_id = vg.id AND rv.created_at >= :since AND rv.user_id IN (:friendIds))
+                    + 1 * (SELECT COUNT(*) FROM likes lk WHERE lk.video_game_id = vg.id AND lk.created_at >= :since AND lk.user_id IN (:friendIds))
+                    + 1 * (SELECT COUNT(*) FROM wishes ws WHERE ws.video_game_id = vg.id AND ws.created_at >= :since AND ws.user_id IN (:friendIds))
+                   ) AS trending_score
+            FROM video_games vg
+            WHERE vg.parent_game_id IS NULL
+            ORDER BY trending_score DESC, COALESCE(vg.average_rating, 0) DESC, vg.release_date DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> findFriendsTrendingGames(
+            @Param("friendIds") List<UUID> friendIds,
+            @Param("since") LocalDateTime since,
+            @Param("limit") int limit);
 }

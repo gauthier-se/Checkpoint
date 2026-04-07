@@ -1,0 +1,114 @@
+meta {
+  name: Get My Feed
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/me/feed
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~page: 0
+  ~size: 20
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get My Feed
+
+  Returns a paginated activity feed from users the authenticated user follows.
+  Aggregates play sessions, ratings, reviews, and list creations from the last 30 days.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Query Parameters
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | page | 0 | Page number (0-based) |
+  | size | 20 | Number of items per page (max 50) |
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "uuid",
+        "type": "RATING",
+        "createdAt": "2026-04-05T14:30:00",
+        "user": {
+          "id": "uuid",
+          "pseudo": "gamer42",
+          "picture": "https://..."
+        },
+        "game": {
+          "id": "uuid",
+          "title": "Elden Ring",
+          "coverUrl": "https://..."
+        },
+        "score": 5
+      },
+      {
+        "id": "uuid",
+        "type": "PLAY",
+        "createdAt": "2026-04-04T10:00:00",
+        "user": {
+          "id": "uuid",
+          "pseudo": "player1",
+          "picture": null
+        },
+        "game": {
+          "id": "uuid",
+          "title": "Hollow Knight",
+          "coverUrl": "https://..."
+        },
+        "playStatus": "COMPLETED"
+      },
+      {
+        "id": "uuid",
+        "type": "LIST",
+        "createdAt": "2026-04-03T18:00:00",
+        "user": {
+          "id": "uuid",
+          "pseudo": "curator",
+          "picture": "https://..."
+        },
+        "listTitle": "Best RPGs of 2025",
+        "listGameCount": 12
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 3,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Feed Item Types
+
+  | Type | Description | Specific Fields |
+  |------|-------------|-----------------|
+  | PLAY | Play session started/completed | `playStatus` (ARE_PLAYING, COMPLETED, ABANDONED, PLANNING) |
+  | RATING | Game rated | `score` (1-5) |
+  | REVIEW | Game reviewed | `reviewContent` (truncated), `haveSpoilers` |
+  | LIST | List created | `listTitle`, `listGameCount` |
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}

@@ -15,6 +15,7 @@ import type { User } from '@/types/user'
 import type { UserProfile } from '@/types/profile'
 import type { MemberCard as MemberCardType } from '@/types/member'
 import type { GameListCard } from '@/types/list'
+import type { FeedItem as FeedItemType } from '@/types/feed'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -22,12 +23,14 @@ import { GameGrid } from '@/components/games/game-grid'
 import { NewsCard } from '@/components/news/news-card'
 import { MemberCard } from '@/components/members/member-card'
 import { ListsGrid } from '@/components/lists/lists-grid'
+import { FeedList } from '@/components/feed/feed-list'
 import { useAuth } from '@/hooks/use-auth'
 import { trendingGamesQueryOptions } from '@/queries/catalog'
 import { newsListQueryOptions } from '@/queries/news'
 import { userProfileQueryOptions } from '@/queries/profile'
 import { suggestedMembersQueryOptions } from '@/queries/members'
 import { popularListsQueryOptions } from '@/queries/lists'
+import { feedQueryOptions, friendsTrendingGamesQueryOptions } from '@/queries/feed'
 
 interface HomeData {
   trending: Array<Game>
@@ -215,10 +218,20 @@ function AuthenticatedHome({ user, data }: { user: User; data: HomeData }) {
   const profileQuery = useQuery(userProfileQueryOptions(user.username))
   const suggestedQuery = useQuery(suggestedMembersQueryOptions(5))
   const popularListsQuery = useQuery(popularListsQueryOptions(0, 4))
+  const feedQuery = useQuery(feedQueryOptions(0, 5))
+  const friendsTrendingQuery = useQuery(friendsTrendingGamesQueryOptions(7))
 
   return (
     <div className="mx-auto max-w-7xl px-4">
       <WelcomeSection user={user} profile={profileQuery.data} />
+      <FriendsActivitySection
+        items={feedQuery.data?.content}
+        isLoading={feedQuery.isLoading}
+      />
+      <FriendsTrendingSection
+        games={friendsTrendingQuery.data}
+        isLoading={friendsTrendingQuery.isLoading}
+      />
       <TrendingSection games={data.trending} />
       <SuggestedMembersSection
         members={suggestedQuery.data}
@@ -351,6 +364,50 @@ function PopularListsSection({
       </div>
       <Separator />
       <ListsGrid lists={lists} />
+    </section>
+  )
+}
+
+function FriendsActivitySection({
+  items,
+  isLoading,
+}: {
+  items: Array<FeedItemType> | undefined
+  isLoading: boolean
+}) {
+  if (isLoading || !items || items.length === 0) return null
+
+  return (
+    <section className="my-12">
+      <div className="py-2">
+        <h2 className="font-semibold text-muted-foreground">
+          Friends activity
+        </h2>
+      </div>
+      <Separator />
+      <FeedList items={items} />
+    </section>
+  )
+}
+
+function FriendsTrendingSection({
+  games,
+  isLoading,
+}: {
+  games: Array<Game> | undefined
+  isLoading: boolean
+}) {
+  if (isLoading || !games || games.length === 0) return null
+
+  return (
+    <section className="my-12">
+      <div className="py-2">
+        <h2 className="font-semibold text-muted-foreground">
+          Popular with friends
+        </h2>
+      </div>
+      <Separator />
+      <GameGrid games={games} columns={7} />
     </section>
   )
 }
