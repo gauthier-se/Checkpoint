@@ -1,0 +1,37 @@
+meta {
+  name: Get Unread Count
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/me/notifications/unread-count
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Unread Count
+
+  Returns the number of unread notifications for the authenticated user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "count": 5
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}

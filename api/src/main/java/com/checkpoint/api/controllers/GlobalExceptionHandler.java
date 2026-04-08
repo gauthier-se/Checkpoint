@@ -40,8 +40,10 @@ import com.checkpoint.api.exceptions.SelfFollowException;
 import com.checkpoint.api.exceptions.TagNotFoundException;
 import com.checkpoint.api.exceptions.DuplicateTagException;
 import com.checkpoint.api.exceptions.NewsNotFoundException;
+import com.checkpoint.api.exceptions.NotificationNotFoundException;
 import com.checkpoint.api.exceptions.UnauthorizedCommentAccessException;
 import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
+import com.checkpoint.api.exceptions.UnauthorizedNotificationAccessException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 
 /**
@@ -592,6 +594,46 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles NotificationNotFoundException when a notification is not found.
+     *
+     * @param ex the exception
+     * @return error response with 404 status
+     */
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotificationNotFound(NotificationNotFoundException ex) {
+        log.warn("Notification not found: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles UnauthorizedNotificationAccessException when a user tries to access a notification they do not own.
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(UnauthorizedNotificationAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedNotificationAccess(UnauthorizedNotificationAccessException ex) {
+        log.warn("Unauthorized notification access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

@@ -52,6 +52,26 @@ public class SecurityConfig {
     }
 
     /**
+     * Filter Chain 0 — WebSocket (HTTP upgrade handshake).
+     * Matches all requests under {@code /ws/**}.
+     * Permits all HTTP requests; actual authentication is handled at the
+     * STOMP protocol level by {@link com.checkpoint.api.security.WebSocketAuthInterceptor}.
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain wsFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/ws/**")
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll())
+                .build();
+    }
+
+    /**
      * Filter Chain 1 — API (JWT + session-cookie hybrid).
      * Matches all requests under {@code /api/**}.
      * Ordered first so it is evaluated before the web chain.
