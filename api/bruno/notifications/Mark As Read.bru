@@ -1,0 +1,43 @@
+meta {
+  name: Mark As Read
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/me/notifications/:notificationId/read
+  body: none
+  auth: bearer
+}
+
+params:path {
+  notificationId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Mark As Read
+
+  Marks a single notification as read. The notification must belong to the authenticated user.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Path Parameters
+
+  - **notificationId**: The UUID of the notification to mark as read
+
+  ## Response (204 No Content)
+
+  Empty body on success.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+  - **403 Forbidden**: Notification belongs to another user
+  - **404 Not Found**: Notification does not exist
+}

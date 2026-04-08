@@ -85,7 +85,7 @@ public class User {
     private Set<Badge> badges = new HashSet<>();
 
     // Relationship: User can have multiple notifications
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Notification> notifications = new HashSet<>();
 
     // Relationship: User can have multiple social links

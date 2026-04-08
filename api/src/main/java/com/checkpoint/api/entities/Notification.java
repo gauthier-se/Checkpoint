@@ -3,8 +3,12 @@ package com.checkpoint.api.entities;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.checkpoint.api.enums.NotificationType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,8 +27,23 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_id", nullable = false)
+    private User recipient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private NotificationType type;
+
+    @Column(name = "reference_id")
+    private UUID referenceId;
+
+    @Column(nullable = false, length = 500)
+    private String message;
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
@@ -34,11 +53,6 @@ public class Notification {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    // Relationship: Notification belongs to one user
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
 
     @PrePersist
     protected void onCreate() {
@@ -53,9 +67,12 @@ public class Notification {
 
     public Notification() {}
 
-    public Notification(String content, User user) {
-        this.content = content;
-        this.user = user;
+    public Notification(User recipient, User sender, NotificationType type, UUID referenceId, String message) {
+        this.recipient = recipient;
+        this.sender = sender;
+        this.type = type;
+        this.referenceId = referenceId;
+        this.message = message;
     }
 
     public UUID getId() {
@@ -66,12 +83,44 @@ public class Notification {
         this.id = id;
     }
 
-    public String getContent() {
-        return content;
+    public User getRecipient() {
+        return recipient;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setRecipient(User recipient) {
+        this.recipient = recipient;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public NotificationType getType() {
+        return type;
+    }
+
+    public void setType(NotificationType type) {
+        this.type = type;
+    }
+
+    public UUID getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(UUID referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public Boolean getIsRead() {
@@ -96,13 +145,5 @@ public class Notification {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 }
