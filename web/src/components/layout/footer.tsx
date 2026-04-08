@@ -76,11 +76,11 @@ export const Footer = () => {
           <p>Checkpoint is proudly made in Strasbourg, France</p>
           <p>
             © {new Date().getFullYear()} Checkpoint ·{' '}
-            <Link to="/" className="hover:underline">
+            <Link to="/legal" hash="terms" className="hover:underline">
               Terms of Service
             </Link>{' '}
             ·{' '}
-            <Link to="/" className="hover:underline">
+            <Link to="/legal" hash="privacy" className="hover:underline">
               Privacy Policy
             </Link>
           </p>

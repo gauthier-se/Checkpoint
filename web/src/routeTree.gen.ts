@@ -17,6 +17,7 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AppRoadmapRouteImport } from './routes/_app/roadmap'
+import { Route as AppLegalRouteImport } from './routes/_app/legal'
 import { Route as AppAboutRouteImport } from './routes/_app/about'
 import { Route as AppProtectedRouteImport } from './routes/_app/_protected'
 import { Route as AppNewsIndexRouteImport } from './routes/_app/news/index'
@@ -70,6 +71,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
 const AppRoadmapRoute = AppRoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLegalRoute = AppLegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAboutRoute = AppAboutRouteImport.update({
@@ -158,6 +164,7 @@ const AppProtectedListsListIdEditRoute =
 
 export interface FileRoutesByFullPath {
   '/about': typeof AppAboutRoute
+  '/legal': typeof AppLegalRoute
   '/roadmap': typeof AppRoadmapRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/about': typeof AppAboutRoute
+  '/legal': typeof AppLegalRoute
   '/roadmap': typeof AppRoadmapRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_app/_protected': typeof AppProtectedRouteWithChildren
   '/_app/about': typeof AppAboutRoute
+  '/_app/legal': typeof AppLegalRoute
   '/_app/roadmap': typeof AppRoadmapRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/about'
+    | '/legal'
     | '/roadmap'
     | '/forgot-password'
     | '/login'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
+    | '/legal'
     | '/roadmap'
     | '/forgot-password'
     | '/login'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_app/_protected'
     | '/_app/about'
+    | '/_app/legal'
     | '/_app/roadmap'
     | '/_auth/forgot-password'
     | '/_auth/login'
@@ -365,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/roadmap'
       fullPath: '/roadmap'
       preLoaderRoute: typeof AppRoadmapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/legal': {
+      id: '/_app/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof AppLegalRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/about': {
@@ -505,6 +524,7 @@ const AppProtectedRouteWithChildren = AppProtectedRoute._addFileChildren(
 interface AppRouteChildren {
   AppProtectedRoute: typeof AppProtectedRouteWithChildren
   AppAboutRoute: typeof AppAboutRoute
+  AppLegalRoute: typeof AppLegalRoute
   AppRoadmapRoute: typeof AppRoadmapRoute
   AppIndexRoute: typeof AppIndexRoute
   AppGamesGameIdRoute: typeof AppGamesGameIdRoute
@@ -521,6 +541,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppProtectedRoute: AppProtectedRouteWithChildren,
   AppAboutRoute: AppAboutRoute,
+  AppLegalRoute: AppLegalRoute,
   AppRoadmapRoute: AppRoadmapRoute,
   AppIndexRoute: AppIndexRoute,
   AppGamesGameIdRoute: AppGamesGameIdRoute,
