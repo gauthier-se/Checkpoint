@@ -1,5 +1,7 @@
 package com.checkpoint.api.services;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 
@@ -68,4 +70,15 @@ public interface AuthService {
      * @param request the reset password request containing the token and new password
      */
     void resetPassword(com.checkpoint.api.dto.auth.ResetPasswordRequestDto request);
+
+    /**
+     * Generates a short-lived JWT for WebSocket authentication.
+     *
+     * <p>Used by web clients that are session-authenticated to obtain a token
+     * for the STOMP WebSocket connection.</p>
+     *
+     * @param userDetails the authenticated user principal
+     * @return a JWT token string
+     */
+    String generateWsToken(UserDetails userDetails);
 }

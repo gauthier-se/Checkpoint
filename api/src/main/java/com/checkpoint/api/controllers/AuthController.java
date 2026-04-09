@@ -127,6 +127,24 @@ public class AuthController {
     }
 
     /**
+     * Generates a short-lived JWT for WebSocket authentication.
+     *
+     * <p>Web clients use session cookies for REST API calls but need a JWT
+     * to authenticate the STOMP WebSocket connection. This endpoint bridges
+     * the two authentication mechanisms.</p>
+     *
+     * @param userDetails the authenticated user principal (injected by Spring Security)
+     * @return JWT token in the response body
+     */
+    @GetMapping("/ws-token")
+    public ResponseEntity<LoginResponseDto> wsToken(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String token = authService.generateWsToken(userDetails);
+        return ResponseEntity.ok(new LoginResponseDto(token));
+    }
+
+    /**
      * Returns profile information for the currently authenticated user.
      *
      * <p>Works with both JWT (Desktop) and session cookie (Web) authentication.</p>

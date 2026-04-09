@@ -200,4 +200,9 @@ public class AuthServiceImpl implements AuthService {
         // Invalidate token after use
         passwordResetTokenRepository.delete(resetToken);
     }
+
+    @Override
+    public String generateWsToken(UserDetails userDetails) {
+        return jwtService.generateToken(userDetails);
+    }
 }

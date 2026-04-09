@@ -6,6 +6,7 @@ import { Button } from '../ui/button'
 import { SearchCommand } from '../search/search-command'
 import { QuickLogModal } from '../log/quick-log-modal'
 import { AvatarDropdown } from './avatar-dropdown'
+import { NotificationBell } from './notification-bell'
 import { useAuth } from '@/hooks/use-auth'
 
 function useIsMac() {
@@ -86,6 +87,7 @@ export const Header = () => {
               Log
             </Button>
             <QuickLogModal open={quickLogOpen} onOpenChange={setQuickLogOpen} />
+            <NotificationBell />
           </>
         )}
         {!isLoading &&
