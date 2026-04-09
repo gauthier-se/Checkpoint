@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/legal')({
   component: LegalPage,
@@ -67,9 +67,9 @@ function LegalPage() {
             <p>
               To use certain features, you must create an account by providing
               accurate and complete information. You are responsible for
-              maintaining the confidentiality of your account credentials and for
-              all activities that occur under your account. You must be at least
-              16 years old to create an account. You agree to notify us
+              maintaining the confidentiality of your account credentials and
+              for all activities that occur under your account. You must be at
+              least 16 years old to create an account. You agree to notify us
               immediately of any unauthorized use of your account.
             </p>
           </div>
@@ -82,10 +82,10 @@ function LegalPage() {
               You retain ownership of all content you create on Checkpoint,
               including reviews, ratings, lists, and other user-generated
               content. By posting content, you grant Checkpoint a non-exclusive,
-              worldwide, royalty-free license to display, distribute, and promote
-              your content within the Service. Game metadata (titles, covers,
-              descriptions) is sourced from third-party providers and remains the
-              property of their respective owners.
+              worldwide, royalty-free license to display, distribute, and
+              promote your content within the Service. Game metadata (titles,
+              covers, descriptions) is sourced from third-party providers and
+              remains the property of their respective owners.
             </p>
           </div>
 
@@ -124,11 +124,11 @@ function LegalPage() {
             </h3>
             <p>
               You may delete your account at any time through your account
-              settings. We reserve the right to suspend or terminate your account
-              if you violate these terms. Upon termination, your right to use the
-              Service ceases immediately. We may retain certain data as required
-              by law or for legitimate business purposes, as described in our
-              Privacy Policy.
+              settings. We reserve the right to suspend or terminate your
+              account if you violate these terms. Upon termination, your right
+              to use the Service ceases immediately. We may retain certain data
+              as required by law or for legitimate business purposes, as
+              described in our Privacy Policy.
             </p>
           </div>
 
@@ -138,12 +138,12 @@ function LegalPage() {
             </h3>
             <p>
               The Service is provided "as is" and "as available" without
-              warranties of any kind, either express or implied. Checkpoint shall
-              not be liable for any indirect, incidental, special, consequential,
-              or punitive damages arising out of or relating to your use of the
-              Service. Our total liability shall not exceed the amount you have
-              paid to Checkpoint, if any, in the twelve months preceding the
-              claim.
+              warranties of any kind, either express or implied. Checkpoint
+              shall not be liable for any indirect, incidental, special,
+              consequential, or punitive damages arising out of or relating to
+              your use of the Service. Our total liability shall not exceed the
+              amount you have paid to Checkpoint, if any, in the twelve months
+              preceding the claim.
             </p>
           </div>
 
@@ -189,8 +189,8 @@ function LegalPage() {
                 status, play logs, and playtime
               </li>
               <li>
-                <strong>User-generated content:</strong> reviews, ratings, lists,
-                and tags
+                <strong>User-generated content:</strong> reviews, ratings,
+                lists, and tags
               </li>
               <li>
                 <strong>Technical data:</strong> IP address, browser type, and
@@ -218,7 +218,9 @@ function LegalPage() {
                 Communicate with you about your account or important Service
                 updates
               </li>
-              <li>Improve the Service through aggregated, anonymized analytics</li>
+              <li>
+                Improve the Service through aggregated, anonymized analytics
+              </li>
             </ul>
             <p>
               We do not sell your personal data to third parties. We do not use
@@ -245,8 +247,9 @@ function LegalPage() {
             <p>
               We use the IGDB API (provided by Twitch/Amazon) to retrieve game
               metadata such as titles, descriptions, cover art, and release
-              dates. No personal user data is shared with IGDB. Your game library
-              and activity data remain exclusively on Checkpoint's servers.
+              dates. No personal user data is shared with IGDB. Your game
+              library and activity data remain exclusively on Checkpoint's
+              servers.
             </p>
           </div>
 
@@ -255,11 +258,11 @@ function LegalPage() {
               5. Data Retention and Deletion
             </h3>
             <p>
-              We retain your data for as long as your account is active. When you
-              delete your account, we will permanently delete your personal data
-              within 30 days, except where retention is required by law. Backups
-              containing your data may persist for up to 90 days before being
-              purged.
+              We retain your data for as long as your account is active. When
+              you delete your account, we will permanently delete your personal
+              data within 30 days, except where retention is required by law.
+              Backups containing your data may persist for up to 90 days before
+              being purged.
             </p>
           </div>
 
@@ -293,8 +296,8 @@ function LegalPage() {
                 your personal data
               </li>
               <li>
-                <strong>Right to restrict processing:</strong> request limitation
-                of how your data is processed
+                <strong>Right to restrict processing:</strong> request
+                limitation of how your data is processed
               </li>
             </ul>
             <p>
