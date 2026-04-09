@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,8 @@ import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Like;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
@@ -39,6 +42,7 @@ public class LikeServiceImpl implements LikeService {
     private final GameListRepository gameListRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Constructs a new LikeServiceImpl.
@@ -48,17 +52,20 @@ public class LikeServiceImpl implements LikeService {
      * @param gameListRepository the game list repository
      * @param commentRepository  the comment repository
      * @param userRepository     the user repository
+     * @param eventPublisher     the application event publisher
      */
     public LikeServiceImpl(LikeRepository likeRepository,
                            ReviewRepository reviewRepository,
                            GameListRepository gameListRepository,
                            CommentRepository commentRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           ApplicationEventPublisher eventPublisher) {
         this.likeRepository = likeRepository;
         this.reviewRepository = reviewRepository;
         this.gameListRepository = gameListRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -83,6 +90,12 @@ public class LikeServiceImpl implements LikeService {
             likeRepository.save(like);
             long likesCount = likeRepository.countByReviewId(reviewId) + 1;
             log.info("User {} liked review {}", user.getPseudo(), reviewId);
+
+            String message = user.getPseudo() + " liked your review of " + review.getVideoGame().getTitle();
+            eventPublisher.publishEvent(new NotificationEvent(
+                    review.getUser().getId(), user.getId(),
+                    NotificationType.LIKE_REVIEW, reviewId, message));
+
             return new LikeResponseDto(true, likesCount);
         }
     }
@@ -109,6 +122,12 @@ public class LikeServiceImpl implements LikeService {
             likeRepository.save(like);
             long likesCount = likeRepository.countByGameListId(listId) + 1;
             log.info("User {} liked list {}", user.getPseudo(), listId);
+
+            String message = user.getPseudo() + " liked your list \"" + gameList.getTitle() + "\"";
+            eventPublisher.publishEvent(new NotificationEvent(
+                    gameList.getUser().getId(), user.getId(),
+                    NotificationType.LIKE_LIST, listId, message));
+
             return new LikeResponseDto(true, likesCount);
         }
     }

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checkpoint.api.dto.social.FollowResponseDto;
 import com.checkpoint.api.dto.social.FollowUserDto;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.SelfFollowException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 import com.checkpoint.api.mapper.FollowMapper;
@@ -30,10 +33,13 @@ public class FollowServiceImpl implements FollowService {
 
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public FollowServiceImpl(UserRepository userRepository, FollowMapper followMapper) {
+    public FollowServiceImpl(UserRepository userRepository, FollowMapper followMapper,
+                             ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.followMapper = followMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -60,6 +66,12 @@ public class FollowServiceImpl implements FollowService {
         } else {
             currentUser.follow(targetUser);
             log.info("User {} followed user {}", currentUser.getPseudo(), targetUser.getPseudo());
+
+            String message = currentUser.getPseudo() + " started following you";
+            eventPublisher.publishEvent(new NotificationEvent(
+                    targetUser.getId(), currentUser.getId(),
+                    NotificationType.FOLLOW, targetUser.getId(), message));
+
             return new FollowResponseDto(true, "Successfully followed " + targetUser.getPseudo());
         }
     }

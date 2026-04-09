@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -113,6 +114,40 @@ class NotificationServiceImplTest {
                     eq("/queue/notifications"),
                     any(NotificationResponseDto.class)
             );
+        }
+
+        @Test
+        @DisplayName("should return null when sender and recipient are the same user")
+        void createNotification_shouldReturnNullForSelfNotification() {
+            // Given
+            UUID sameUserId = recipient.getId();
+
+            // When
+            NotificationResponseDto result = notificationService.createNotification(
+                    sameUserId, sameUserId, NotificationType.FOLLOW, null, "Self follow");
+
+            // Then
+            assertThat(result).isNull();
+            verify(notificationRepository, never()).save(any(Notification.class));
+        }
+
+        @Test
+        @DisplayName("should return null when a duplicate notification already exists")
+        void createNotification_shouldReturnNullForDuplicate() {
+            // Given
+            UUID referenceId = UUID.randomUUID();
+            when(notificationRepository.existsBySenderIdAndRecipientIdAndTypeAndReferenceId(
+                    sender.getId(), recipient.getId(), NotificationType.LIKE_REVIEW, referenceId))
+                    .thenReturn(true);
+
+            // When
+            NotificationResponseDto result = notificationService.createNotification(
+                    recipient.getId(), sender.getId(), NotificationType.LIKE_REVIEW, referenceId,
+                    "senderUser liked your review");
+
+            // Then
+            assertThat(result).isNull();
+            verify(notificationRepository, never()).save(any(Notification.class));
         }
 
         @Test
