@@ -55,6 +55,22 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public NotificationResponseDto createNotification(UUID recipientId, UUID senderId, NotificationType type,
                                                       UUID referenceId, String message) {
+        // Self-notification prevention: never notify a user about their own actions
+        if (senderId != null && senderId.equals(recipientId)) {
+            log.debug("Skipping self-notification — sender and recipient are the same user: {}", senderId);
+            return null;
+        }
+
+        // Duplicate prevention: don't create a notification if one already exists
+        // for the same sender+recipient+type+reference combination
+        if (senderId != null && referenceId != null
+                && notificationRepository.existsBySenderIdAndRecipientIdAndTypeAndReferenceId(
+                        senderId, recipientId, type, referenceId)) {
+            log.debug("Skipping duplicate notification — type: {}, sender: {}, recipient: {}, reference: {}",
+                    type, senderId, recipientId, referenceId);
+            return null;
+        }
+
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() -> new IllegalArgumentException("Recipient not found with ID: " + recipientId));
 

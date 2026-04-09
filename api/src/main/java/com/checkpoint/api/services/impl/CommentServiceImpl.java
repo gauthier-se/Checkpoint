@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import com.checkpoint.api.entities.Comment;
 import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
@@ -43,6 +46,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final CommentMapper commentMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Constructs a new CommentServiceImpl.
@@ -53,19 +57,22 @@ public class CommentServiceImpl implements CommentService {
      * @param userRepository     the user repository
      * @param likeRepository     the like repository
      * @param commentMapper      the comment mapper
+     * @param eventPublisher     the application event publisher
      */
     public CommentServiceImpl(CommentRepository commentRepository,
                               ReviewRepository reviewRepository,
                               GameListRepository gameListRepository,
                               UserRepository userRepository,
                               LikeRepository likeRepository,
-                              CommentMapper commentMapper) {
+                              CommentMapper commentMapper,
+                              ApplicationEventPublisher eventPublisher) {
         this.commentRepository = commentRepository;
         this.reviewRepository = reviewRepository;
         this.gameListRepository = gameListRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
         this.commentMapper = commentMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -140,6 +147,11 @@ public class CommentServiceImpl implements CommentService {
         Comment savedReply = commentRepository.save(reply);
 
         log.info("User {} replied to comment {}", user.getPseudo(), parentCommentId);
+
+        String message = user.getPseudo() + " replied to your comment";
+        eventPublisher.publishEvent(new NotificationEvent(
+                parentComment.getUser().getId(), user.getId(),
+                NotificationType.COMMENT_REPLY, parentCommentId, message));
 
         return commentMapper.toDto(savedReply);
     }

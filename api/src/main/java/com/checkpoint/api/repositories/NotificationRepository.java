@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.checkpoint.api.entities.Notification;
+import com.checkpoint.api.enums.NotificationType;
 
 /**
  * Repository for {@link Notification} entities.
@@ -45,4 +46,17 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.updatedAt = CURRENT_TIMESTAMP WHERE n.recipient.id = :recipientId AND n.isRead = false")
     int markAllAsReadByRecipientId(@Param("recipientId") UUID recipientId);
+
+    /**
+     * Checks whether a notification already exists for the given sender, recipient,
+     * type, and reference combination. Used to prevent duplicate notifications.
+     *
+     * @param senderId    the sender's user ID
+     * @param recipientId the recipient's user ID
+     * @param type        the notification type
+     * @param referenceId the related entity ID
+     * @return true if a matching notification already exists
+     */
+    boolean existsBySenderIdAndRecipientIdAndTypeAndReferenceId(
+            UUID senderId, UUID recipientId, NotificationType type, UUID referenceId);
 }

@@ -3,6 +3,7 @@ package com.checkpoint.api.services.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,8 +15,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
 import com.checkpoint.api.entities.Comment;
@@ -23,6 +26,9 @@ import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Like;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
@@ -53,28 +59,49 @@ class LikeServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private LikeServiceImpl likeService;
 
     private User user;
+    private User reviewAuthor;
+    private User listOwner;
     private Review review;
+    private VideoGame videoGame;
     private GameList gameList;
 
     @BeforeEach
     void setUp() {
         likeService = new LikeServiceImpl(
                 likeRepository, reviewRepository, gameListRepository,
-                commentRepository, userRepository);
+                commentRepository, userRepository, eventPublisher);
 
         user = new User();
         user.setId(UUID.randomUUID());
         user.setEmail("user@example.com");
         user.setPseudo("testUser");
 
+        reviewAuthor = new User();
+        reviewAuthor.setId(UUID.randomUUID());
+        reviewAuthor.setPseudo("reviewAuthor");
+
+        listOwner = new User();
+        listOwner.setId(UUID.randomUUID());
+        listOwner.setPseudo("listOwner");
+
+        videoGame = new VideoGame();
+        videoGame.setTitle("The Last of Us");
+
         review = new Review();
         review.setId(UUID.randomUUID());
+        review.setUser(reviewAuthor);
+        review.setVideoGame(videoGame);
 
         gameList = new GameList();
         gameList.setId(UUID.randomUUID());
+        gameList.setUser(listOwner);
+        gameList.setTitle("My Top Games");
     }
 
     @Nested
@@ -101,6 +128,15 @@ class LikeServiceImplTest {
             assertThat(result.liked()).isTrue();
             assertThat(result.likesCount()).isEqualTo(4);
             verify(likeRepository).save(any(Like.class));
+
+            ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+            NotificationEvent event = eventCaptor.getValue();
+            assertThat(event.getRecipientId()).isEqualTo(reviewAuthor.getId());
+            assertThat(event.getSenderId()).isEqualTo(user.getId());
+            assertThat(event.getType()).isEqualTo(NotificationType.LIKE_REVIEW);
+            assertThat(event.getReferenceId()).isEqualTo(review.getId());
+            assertThat(event.getMessage()).contains("The Last of Us");
         }
 
         @Test
@@ -125,6 +161,7 @@ class LikeServiceImplTest {
             assertThat(result.liked()).isFalse();
             assertThat(result.likesCount()).isEqualTo(3);
             verify(likeRepository).delete(existingLike);
+            verify(eventPublisher, never()).publishEvent(any(NotificationEvent.class));
         }
 
         @Test
@@ -167,6 +204,15 @@ class LikeServiceImplTest {
             assertThat(result.liked()).isTrue();
             assertThat(result.likesCount()).isEqualTo(8);
             verify(likeRepository).save(any(Like.class));
+
+            ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+            NotificationEvent event = eventCaptor.getValue();
+            assertThat(event.getRecipientId()).isEqualTo(listOwner.getId());
+            assertThat(event.getSenderId()).isEqualTo(user.getId());
+            assertThat(event.getType()).isEqualTo(NotificationType.LIKE_LIST);
+            assertThat(event.getReferenceId()).isEqualTo(gameList.getId());
+            assertThat(event.getMessage()).contains("My Top Games");
         }
 
         @Test
@@ -191,6 +237,7 @@ class LikeServiceImplTest {
             assertThat(result.liked()).isFalse();
             assertThat(result.likesCount()).isEqualTo(7);
             verify(likeRepository).delete(existingLike);
+            verify(eventPublisher, never()).publishEvent(any(NotificationEvent.class));
         }
 
         @Test

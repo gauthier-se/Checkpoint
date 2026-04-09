@@ -15,8 +15,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +30,8 @@ import com.checkpoint.api.entities.Comment;
 import com.checkpoint.api.entities.GameList;
 import com.checkpoint.api.entities.Review;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.CommentNotFoundException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
@@ -63,6 +67,9 @@ class CommentServiceImplTest {
     @Mock
     private CommentMapper commentMapper;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private CommentServiceImpl commentService;
 
     private User testUser;
@@ -74,7 +81,7 @@ class CommentServiceImplTest {
     void setUp() {
         commentService = new CommentServiceImpl(
                 commentRepository, reviewRepository, gameListRepository,
-                userRepository, likeRepository, commentMapper);
+                userRepository, likeRepository, commentMapper, eventPublisher);
 
         testUser = new User();
         testUser.setId(UUID.randomUUID());
@@ -251,10 +258,10 @@ class CommentServiceImplTest {
     class AddReply {
 
         @Test
-        @DisplayName("should create a reply on a comment")
-        void addReply_shouldCreateReply() {
+        @DisplayName("should create a reply on a comment and publish notification")
+        void addReply_shouldCreateReplyAndPublishNotification() {
             // Given
-            Comment parentComment = Comment.onReview("Parent", testUser, testReview);
+            Comment parentComment = Comment.onReview("Parent", otherUser, testReview);
             parentComment.setId(UUID.randomUUID());
 
             when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(testUser));
@@ -278,6 +285,15 @@ class CommentServiceImplTest {
             assertThat(result.content()).isEqualTo("Reply!");
             assertThat(result.parentCommentId()).isEqualTo(parentComment.getId());
             verify(commentRepository).save(any(Comment.class));
+
+            ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+            NotificationEvent event = eventCaptor.getValue();
+            assertThat(event.getRecipientId()).isEqualTo(otherUser.getId());
+            assertThat(event.getSenderId()).isEqualTo(testUser.getId());
+            assertThat(event.getType()).isEqualTo(NotificationType.COMMENT_REPLY);
+            assertThat(event.getReferenceId()).isEqualTo(parentComment.getId());
+            assertThat(event.getMessage()).contains("testuser");
         }
 
         @Test

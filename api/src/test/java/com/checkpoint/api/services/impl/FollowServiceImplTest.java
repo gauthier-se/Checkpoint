@@ -2,6 +2,8 @@ package com.checkpoint.api.services.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,8 +16,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +28,8 @@ import org.springframework.data.domain.Pageable;
 import com.checkpoint.api.dto.social.FollowResponseDto;
 import com.checkpoint.api.dto.social.FollowUserDto;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.enums.NotificationType;
+import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.exceptions.SelfFollowException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 import com.checkpoint.api.mapper.FollowMapper;
@@ -39,6 +45,9 @@ class FollowServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private FollowMapper followMapper;
     private FollowServiceImpl followService;
 
@@ -48,7 +57,7 @@ class FollowServiceImplTest {
     @BeforeEach
     void setUp() {
         followMapper = new FollowMapperImpl();
-        followService = new FollowServiceImpl(userRepository, followMapper);
+        followService = new FollowServiceImpl(userRepository, followMapper, eventPublisher);
 
         currentUser = new User();
         currentUser.setId(UUID.randomUUID());
@@ -83,6 +92,14 @@ class FollowServiceImplTest {
             assertThat(result.following()).isTrue();
             assertThat(result.message()).contains("targetUser");
             assertThat(currentUser.getFollowing()).contains(targetUser);
+
+            ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+            NotificationEvent event = eventCaptor.getValue();
+            assertThat(event.getRecipientId()).isEqualTo(targetUser.getId());
+            assertThat(event.getSenderId()).isEqualTo(currentUser.getId());
+            assertThat(event.getType()).isEqualTo(NotificationType.FOLLOW);
+            assertThat(event.getMessage()).contains("currentUser");
         }
 
         @Test
@@ -104,6 +121,7 @@ class FollowServiceImplTest {
             assertThat(result.following()).isFalse();
             assertThat(result.message()).contains("targetUser");
             assertThat(currentUser.getFollowing()).doesNotContain(targetUser);
+            verify(eventPublisher, never()).publishEvent(any(NotificationEvent.class));
         }
 
         @Test
