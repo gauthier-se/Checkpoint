@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.checkpoint.api.exceptions.CommentNotFoundException;
+import com.checkpoint.api.exceptions.InvalidFileException;
 import com.checkpoint.api.exceptions.GameAlreadyInListException;
 import com.checkpoint.api.exceptions.GameListNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInListException;
@@ -33,6 +34,7 @@ import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
+import com.checkpoint.api.exceptions.PseudoAlreadyExistsException;
 import com.checkpoint.api.exceptions.RateNotFoundException;
 import com.checkpoint.api.exceptions.ReviewAlreadyExistsException;
 import com.checkpoint.api.exceptions.ReviewNotFoundException;
@@ -791,6 +793,47 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
                 message,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Handles PseudoAlreadyExistsException when a user tries to update their pseudo
+     * to one that is already taken.
+     *
+     * @param ex the exception
+     * @return error response with 409 status
+     */
+    @ExceptionHandler(PseudoAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePseudoAlreadyExists(PseudoAlreadyExistsException ex) {
+        log.warn("Pseudo already exists: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handles InvalidFileException when an uploaded file fails validation.
+     *
+     * @param ex the exception
+     * @return error response with 400 status
+     */
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFile(InvalidFileException ex) {
+        log.warn("Invalid file upload: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
                 LocalDateTime.now()
         );
 

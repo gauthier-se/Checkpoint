@@ -2,10 +2,13 @@ package com.checkpoint.api.services;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.collection.WishResponseDto;
 import com.checkpoint.api.dto.list.GameListCardDto;
+import com.checkpoint.api.dto.profile.ProfileUpdatedDto;
+import com.checkpoint.api.dto.profile.UpdateProfileDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 
 /**
@@ -56,4 +59,29 @@ public interface ProfileService {
      * @return a page of game list card DTOs
      */
     Page<GameListCardDto> getUserLists(String username, Pageable pageable);
+
+    /**
+     * Updates the authenticated user's profile information (pseudo, bio, privacy).
+     *
+     * @param email the authenticated user's email
+     * @param dto   the profile update data
+     * @return the updated profile DTO
+     */
+    ProfileUpdatedDto updateProfile(String email, UpdateProfileDto dto);
+
+    /**
+     * Uploads or replaces the authenticated user's profile picture.
+     *
+     * @param email the authenticated user's email
+     * @param file  the uploaded image file
+     * @return the URL of the stored picture
+     */
+    String updatePicture(String email, MultipartFile file);
+
+    /**
+     * Removes the authenticated user's profile picture.
+     *
+     * @param email the authenticated user's email
+     */
+    void deletePicture(String email);
 }

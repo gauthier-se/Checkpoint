@@ -1,6 +1,8 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import type { User } from '@/types/user'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+const API_URL = import.meta.env.VITE_API_URL
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,6 +19,7 @@ export function AvatarDropdown({ user }: { user: User }) {
   const navigate = useNavigate()
 
   const initials = user.username.slice(0, 2).toUpperCase()
+  const avatarSrc = user.picture ? `${API_URL}${user.picture}` : undefined
 
   const handleLogout = async () => {
     await logout()
@@ -28,7 +31,7 @@ export function AvatarDropdown({ user }: { user: User }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar>
-            <AvatarImage src="/images/default-user.jpg" alt={user.username} />
+            <AvatarImage src={avatarSrc} alt={user.username} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>

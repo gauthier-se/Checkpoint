@@ -29,6 +29,7 @@ import { Route as AppNewsNewsIdRouteImport } from './routes/_app/news/$newsId'
 import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
+import { Route as AppProtectedSettingsProfileRouteImport } from './routes/_app/_protected/settings/profile'
 import { Route as AppProtectedListsNewRouteImport } from './routes/_app/_protected/lists/new'
 import { Route as AppProtectedUsernameTagsIndexRouteImport } from './routes/_app/_protected/$username/tags/index'
 import { Route as AppProtectedUsernameGamesIndexRouteImport } from './routes/_app/_protected/$username/games/index'
@@ -132,6 +133,12 @@ const AppProtectedProfileRoute = AppProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppProtectedRoute,
 } as any)
+const AppProtectedSettingsProfileRoute =
+  AppProtectedSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
+    getParentRoute: () => AppProtectedRoute,
+  } as any)
 const AppProtectedListsNewRoute = AppProtectedListsNewRouteImport.update({
   id: '/lists/new',
   path: '/lists/new',
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/members': typeof AppMembersIndexRoute
   '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
+  '/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesByTo {
   '/members': typeof AppMembersIndexRoute
   '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
+  '/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/_app/members/': typeof AppMembersIndexRoute
   '/_app/news/': typeof AppNewsIndexRoute
   '/_app/_protected/lists/new': typeof AppProtectedListsNewRoute
+  '/_app/_protected/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/_app/profile_/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/_app/_protected/$username/games/': typeof AppProtectedUsernameGamesIndexRoute
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/members'
     | '/news'
     | '/lists/new'
+    | '/settings/profile'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
     | '/$username/games'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/members'
     | '/news'
     | '/lists/new'
+    | '/settings/profile'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
     | '/$username/games'
@@ -310,6 +322,7 @@ export interface FileRouteTypes {
     | '/_app/members/'
     | '/_app/news/'
     | '/_app/_protected/lists/new'
+    | '/_app/_protected/settings/profile'
     | '/_app/_protected/lists/$listId/edit'
     | '/_app/profile_/$username/tags/$tagName'
     | '/_app/_protected/$username/games/'
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedProfileRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/_protected/settings/profile': {
+      id: '/_app/_protected/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AppProtectedSettingsProfileRouteImport
+      parentRoute: typeof AppProtectedRoute
+    }
     '/_app/_protected/lists/new': {
       id: '/_app/_protected/lists/new'
       path: '/lists/new'
@@ -504,6 +524,7 @@ declare module '@tanstack/react-router' {
 interface AppProtectedRouteChildren {
   AppProtectedProfileRoute: typeof AppProtectedProfileRoute
   AppProtectedListsNewRoute: typeof AppProtectedListsNewRoute
+  AppProtectedSettingsProfileRoute: typeof AppProtectedSettingsProfileRoute
   AppProtectedListsListIdEditRoute: typeof AppProtectedListsListIdEditRoute
   AppProtectedUsernameGamesIndexRoute: typeof AppProtectedUsernameGamesIndexRoute
   AppProtectedUsernameTagsIndexRoute: typeof AppProtectedUsernameTagsIndexRoute
@@ -512,6 +533,7 @@ interface AppProtectedRouteChildren {
 const AppProtectedRouteChildren: AppProtectedRouteChildren = {
   AppProtectedProfileRoute: AppProtectedProfileRoute,
   AppProtectedListsNewRoute: AppProtectedListsNewRoute,
+  AppProtectedSettingsProfileRoute: AppProtectedSettingsProfileRoute,
   AppProtectedListsListIdEditRoute: AppProtectedListsListIdEditRoute,
   AppProtectedUsernameGamesIndexRoute: AppProtectedUsernameGamesIndexRoute,
   AppProtectedUsernameTagsIndexRoute: AppProtectedUsernameTagsIndexRoute,

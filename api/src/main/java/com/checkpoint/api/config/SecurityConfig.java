@@ -104,6 +104,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/comments/*/replies").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/lists/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex

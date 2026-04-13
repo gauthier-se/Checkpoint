@@ -129,7 +129,10 @@ public class AuthServiceImpl implements AuthService {
                 user.getId(),
                 user.getPseudo(),
                 user.getEmail(),
-                roleName
+                roleName,
+                user.getBio(),
+                user.getPicture(),
+                user.getIsPrivate()
         );
     }
 
