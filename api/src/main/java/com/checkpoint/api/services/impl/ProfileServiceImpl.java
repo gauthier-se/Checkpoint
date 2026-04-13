@@ -6,13 +6,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.checkpoint.api.dto.catalog.ReviewResponseDto;
 import com.checkpoint.api.dto.collection.WishResponseDto;
 import com.checkpoint.api.dto.list.GameListCardDto;
+import com.checkpoint.api.dto.profile.ProfileUpdatedDto;
+import com.checkpoint.api.dto.profile.UpdateProfileDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.exceptions.ProfilePrivateException;
+import com.checkpoint.api.exceptions.PseudoAlreadyExistsException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 import com.checkpoint.api.mapper.ProfileMapper;
 import com.checkpoint.api.mapper.ReviewMapper;
@@ -22,6 +26,7 @@ import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.WishRepository;
 import com.checkpoint.api.services.GameListService;
 import com.checkpoint.api.services.ProfileService;
+import com.checkpoint.api.services.StorageService;
 
 /**
  * Implementation of {@link ProfileService}.
@@ -33,10 +38,13 @@ public class ProfileServiceImpl implements ProfileService {
 
     private static final Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
+    private static final String PROFILE_PICTURES_DIR = "profiles";
+
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final WishRepository wishRepository;
     private final GameListService gameListService;
+    private final StorageService storageService;
     private final ProfileMapper profileMapper;
     private final ReviewMapper reviewMapper;
     private final WishMapper wishMapper;
@@ -48,6 +56,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param reviewRepository the review repository
      * @param wishRepository   the wish repository
      * @param gameListService  the game list service
+     * @param storageService   the storage service
      * @param profileMapper    the profile mapper
      * @param reviewMapper     the review mapper
      * @param wishMapper       the wish mapper
@@ -56,6 +65,7 @@ public class ProfileServiceImpl implements ProfileService {
                                ReviewRepository reviewRepository,
                                WishRepository wishRepository,
                                GameListService gameListService,
+                               StorageService storageService,
                                ProfileMapper profileMapper,
                                ReviewMapper reviewMapper,
                                WishMapper wishMapper) {
@@ -63,6 +73,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.reviewRepository = reviewRepository;
         this.wishRepository = wishRepository;
         this.gameListService = gameListService;
+        this.storageService = storageService;
         this.profileMapper = profileMapper;
         this.reviewMapper = reviewMapper;
         this.wishMapper = wishMapper;
@@ -143,6 +154,81 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new UserNotFoundException(username));
 
         return gameListService.getUserPublicLists(username, pageable);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public ProfileUpdatedDto updateProfile(String email, UpdateProfileDto dto) {
+        log.info("Updating profile for user: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        // Check pseudo uniqueness (excluding current user)
+        if (!user.getPseudo().equals(dto.pseudo())) {
+            userRepository.findByPseudo(dto.pseudo()).ifPresent(existing -> {
+                if (!existing.getId().equals(user.getId())) {
+                    throw new PseudoAlreadyExistsException(dto.pseudo());
+                }
+            });
+            user.setPseudo(dto.pseudo());
+        }
+
+        user.setBio(dto.bio());
+
+        if (dto.isPrivate() != null) {
+            user.setIsPrivate(dto.isPrivate());
+        }
+
+        User savedUser = userRepository.save(user);
+        return profileMapper.toProfileUpdatedDto(savedUser);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public String updatePicture(String email, MultipartFile file) {
+        log.info("Updating profile picture for user: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        // Delete old picture if exists
+        if (user.getPicture() != null) {
+            String oldStoragePath = user.getPicture().replaceFirst("^/uploads/", "");
+            storageService.delete(oldStoragePath);
+        }
+
+        String storagePath = storageService.store(file, PROFILE_PICTURES_DIR);
+        String servingUrl = "/uploads/" + storagePath;
+        user.setPicture(servingUrl);
+        userRepository.save(user);
+
+        return servingUrl;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void deletePicture(String email) {
+        log.info("Deleting profile picture for user: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        if (user.getPicture() != null) {
+            String storagePath = user.getPicture().replaceFirst("^/uploads/", "");
+            storageService.delete(storagePath);
+            user.setPicture(null);
+            userRepository.save(user);
+        }
     }
 
     /**

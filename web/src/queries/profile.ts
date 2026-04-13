@@ -39,7 +39,7 @@ export const userProfileQueryOptions = (username: string) => {
       }
       return res.json()
     },
-    staleTime: 60 * 1000,
+    staleTime: 0,
   })
 }
 
@@ -109,5 +109,58 @@ export const toggleFollowMutation = async (userId: string): Promise<void> => {
   })
   if (!res.ok) {
     throw new Error('Failed to toggle follow')
+  }
+}
+
+export interface UpdateProfileRequest {
+  pseudo: string
+  bio: string | null
+  isPrivate: boolean
+}
+
+export interface ProfileUpdatedResponse {
+  username: string
+  bio: string | null
+  picture: string | null
+  isPrivate: boolean
+}
+
+export async function updateProfile(
+  data: UpdateProfileRequest,
+): Promise<ProfileUpdatedResponse> {
+  const res = await apiFetch('/api/me/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const error = await res.json().catch(() => null)
+    throw new Error(error?.message || 'Failed to update profile')
+  }
+  return res.json()
+}
+
+export async function uploadPicture(
+  file: File,
+): Promise<{ picture: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await apiFetch('/api/me/picture', {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) {
+    const error = await res.json().catch(() => null)
+    throw new Error(error?.message || 'Failed to upload picture')
+  }
+  return res.json()
+}
+
+export async function deletePicture(): Promise<void> {
+  const res = await apiFetch('/api/me/picture', {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    throw new Error('Failed to delete picture')
   }
 }

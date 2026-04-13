@@ -3,4 +3,7 @@ export interface User {
   username: string
   email: string
   role: string
+  bio: string | null
+  picture: string | null
+  isPrivate: boolean
 }

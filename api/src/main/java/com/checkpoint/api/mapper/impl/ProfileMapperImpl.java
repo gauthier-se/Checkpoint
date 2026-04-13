@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.checkpoint.api.dto.profile.BadgeDto;
+import com.checkpoint.api.dto.profile.ProfileUpdatedDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 import com.checkpoint.api.entities.Badge;
 import com.checkpoint.api.entities.User;
@@ -59,6 +60,19 @@ public class ProfileMapperImpl implements ProfileMapper {
                 badge.getName(),
                 badge.getPicture(),
                 badge.getDescription()
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ProfileUpdatedDto toProfileUpdatedDto(User user) {
+        return new ProfileUpdatedDto(
+                user.getPseudo(),
+                user.getBio(),
+                user.getPicture(),
+                user.getIsPrivate()
         );
     }
 }

@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { Heart, List, MessageSquare, Tag, Users } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
 import {
@@ -125,7 +126,8 @@ const TAB_CONFIG: Array<{
 // Page
 
 function UserProfilePage() {
-  const profile: UserProfile = Route.useLoaderData()
+  const { username } = Route.useParams()
+  const { data: profile } = useSuspenseQuery(userProfileQueryOptions(username))
   const { tab, page } = Route.useSearch()
   const navigate = Route.useNavigate()
 

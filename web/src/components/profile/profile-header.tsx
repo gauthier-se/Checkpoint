@@ -1,4 +1,6 @@
 import { Calendar, Pencil, UserMinus, UserPlus } from 'lucide-react'
+
+const API_URL = import.meta.env.VITE_API_URL
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { XpProgressBar } from './xp-progress-bar'
@@ -39,7 +41,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <Avatar className="size-24 text-2xl">
           <AvatarImage
-            src={profile.picture ?? undefined}
+            src={profile.picture ? `${API_URL}${profile.picture}` : undefined}
             alt={profile.username}
           />
           <AvatarFallback>{initials}</AvatarFallback>
@@ -85,7 +87,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         <div className="flex gap-2">
           {profile.isOwner && (
             <Button variant="outline" asChild>
-              <Link to="/profile">
+              <Link to="/settings/profile">
                 <Pencil className="mr-2 size-4" />
                 Edit Profile
               </Link>

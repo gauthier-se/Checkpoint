@@ -1,6 +1,7 @@
 package com.checkpoint.api.mapper;
 
 import com.checkpoint.api.dto.profile.BadgeDto;
+import com.checkpoint.api.dto.profile.ProfileUpdatedDto;
 import com.checkpoint.api.dto.profile.UserProfileDto;
 import com.checkpoint.api.entities.Badge;
 import com.checkpoint.api.entities.User;
@@ -33,4 +34,12 @@ public interface ProfileMapper {
      * @return the badge DTO
      */
     BadgeDto toBadgeDto(Badge badge);
+
+    /**
+     * Maps a User entity to a ProfileUpdatedDto after a profile update.
+     *
+     * @param user the updated user entity
+     * @return the profile updated DTO
+     */
+    ProfileUpdatedDto toProfileUpdatedDto(User user);
 }
