@@ -1,0 +1,63 @@
+meta {
+  name: Get Report By ID
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/admin/reports/{{reportId}}
+  body: none
+  auth: bearer
+}
+
+vars:pre-request {
+  reportId: 123e4567-e89b-12d3-a456-426614174000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Report By ID
+
+  Retrieves the full details of a specific report, including the reported content and its author. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Response
+
+  Returns an `AdminReportDetailDto`:
+  - `id`: Report UUID
+  - `reporterUsername`: Pseudo of the user who filed the report
+  - `reason`: Report reason/content
+  - `type`: Type of reported content (`review` or `comment`)
+  - `targetId`: UUID of the reported review or comment
+  - `targetAuthorUsername`: Pseudo of the reported content's author
+  - `targetFullContent`: Full text of the reported content
+  - `createdAt`: Date of report creation
+
+  ## Example Response
+
+  ```json
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "reporterUsername": "john_doe",
+    "reason": "Spam content",
+    "type": "review",
+    "targetId": "987e6543-e21b-12d3-a456-426614174000",
+    "targetAuthorUsername": "spammer42",
+    "targetFullContent": "This is the full text of the offensive review that was reported.",
+    "createdAt": "2023-10-15T12:00:00"
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: Report with the specified ID does not exist
+}

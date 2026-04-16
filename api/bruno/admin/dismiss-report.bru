@@ -1,0 +1,40 @@
+meta {
+  name: Dismiss Report
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/reports/{{reportId}}
+  body: none
+  auth: bearer
+}
+
+vars:pre-request {
+  reportId: 123e4567-e89b-12d3-a456-426614174000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Dismiss Report
+
+  Dismisses (deletes) a specific report by its ID. The reported content remains untouched. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Response
+
+  - **204 No Content**: Report successfully dismissed.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: Report with the specified ID does not exist
+}

@@ -1,0 +1,259 @@
+package com.seyzeriat.desktop.controller;
+
+import java.util.Optional;
+
+import com.seyzeriat.desktop.HelloApplication;
+import com.seyzeriat.desktop.dto.PagedResponse;
+import com.seyzeriat.desktop.dto.ReportResult;
+import com.seyzeriat.desktop.service.ApiService;
+
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
+
+public class ReportModerationController {
+
+    @FXML private TableView<ReportResult> reportsTable;
+    @FXML private TableColumn<ReportResult, String> dateColumn;
+    @FXML private TableColumn<ReportResult, String> typeColumn;
+    @FXML private TableColumn<ReportResult, String> reporterColumn;
+    @FXML private TableColumn<ReportResult, String> reasonColumn;
+    @FXML private TableColumn<ReportResult, String> contentColumn;
+    @FXML private TableColumn<ReportResult, Void> actionColumn;
+
+    @FXML private Label statusLabel;
+    @FXML private Button prevButton;
+    @FXML private Label pageLabel;
+    @FXML private Button nextButton;
+    @FXML private Button refreshButton;
+    @FXML private ProgressIndicator loadingIndicator;
+
+    private final ApiService apiService = new ApiService();
+    private HelloApplication application;
+
+    private int currentPage = 0;
+    private static final int PAGE_SIZE = 20;
+
+    @FXML
+    public void initialize() {
+        loadingIndicator.setVisible(false);
+
+        // Configure table columns
+        dateColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getCreatedAt()));
+        typeColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getType()));
+        reporterColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getReporterUsername()));
+        reasonColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getReason()));
+        contentColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getContentPreview()));
+
+        setupActionColumn();
+
+        fetchReports(currentPage);
+    }
+
+    private void setupActionColumn() {
+        actionColumn.setCellFactory(param -> new TableCell<>() {
+            private final Button dismissBtn = new Button("Ignorer");
+            private final Button deleteBtn = new Button("Supprimer");
+            private final HBox buttons = new HBox(5, dismissBtn, deleteBtn);
+
+            {
+                dismissBtn.getStyleClass().add("search-button");
+                deleteBtn.getStyleClass().add("logout-button");
+
+                dismissBtn.setOnAction(event -> {
+                    ReportResult report = getTableView().getItems().get(getIndex());
+                    confirmAndDismiss(report);
+                });
+
+                deleteBtn.setOnAction(event -> {
+                    ReportResult report = getTableView().getItems().get(getIndex());
+                    confirmAndDeleteContent(report);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item != null || getIndex() >= getTableView().getItems().size() || getTableView().getItems().get(getIndex()) == null) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(buttons);
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void onRefresh() {
+        fetchReports(currentPage);
+    }
+
+    @FXML
+    private void onPrevPage() {
+        if (currentPage > 0) {
+            fetchReports(currentPage - 1);
+        }
+    }
+
+    @FXML
+    private void onNextPage() {
+        fetchReports(currentPage + 1);
+    }
+
+    public void setApplication(HelloApplication application) {
+        this.application = application;
+    }
+
+    private void fetchReports(int page) {
+        setLoading(true);
+        statusLabel.setText("Chargement des signalements...");
+
+        Task<PagedResponse<ReportResult>> fetchTask = new Task<>() {
+            @Override
+            protected PagedResponse<ReportResult> call() throws Exception {
+                return apiService.getReports(page, PAGE_SIZE);
+            }
+        };
+
+        fetchTask.setOnSucceeded(event -> Platform.runLater(() -> {
+            PagedResponse<ReportResult> response = fetchTask.getValue();
+            setLoading(false);
+
+            reportsTable.getItems().setAll(response.getContent());
+            currentPage = response.getMetadata().getPage();
+
+            // Update pagination UI
+            prevButton.setDisable(currentPage == 0);
+            nextButton.setDisable(currentPage >= response.getMetadata().getTotalPages() - 1);
+            pageLabel.setText("Page " + (currentPage + 1) + " / " + Math.max(1, response.getMetadata().getTotalPages()));
+
+            statusLabel.setText(response.getMetadata().getTotalElements() + " signalement(s).");
+        }));
+
+        fetchTask.setOnFailed(event -> Platform.runLater(() -> {
+            setLoading(false);
+            Throwable ex = fetchTask.getException();
+            if (ex instanceof ApiService.UnauthorizedException) {
+                redirectToLogin();
+                return;
+            }
+            statusLabel.setText("Erreur : " + ex.getMessage());
+        }));
+
+        new Thread(fetchTask, "fetch-reports-thread").start();
+    }
+
+    private void confirmAndDismiss(ReportResult report) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation");
+        alert.setHeaderText("Ignorer le signalement de " + report.getReporterUsername() + " ?");
+        alert.setContentText("Le signalement sera supprimé mais le contenu signalé restera en place.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            dismissReport(report.getId());
+        }
+    }
+
+    private void confirmAndDeleteContent(ReportResult report) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation de suppression");
+        alert.setHeaderText("Supprimer le contenu signalé (" + report.getType() + ") ?");
+        alert.setContentText("Le contenu signalé et tous ses signalements associés seront supprimés. Cette action est irréversible.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            deleteReportedContent(report);
+        }
+    }
+
+    private void dismissReport(String id) {
+        setLoading(true);
+        statusLabel.setText("Suppression du signalement...");
+
+        Task<Void> dismissTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                apiService.dismissReport(id);
+                return null;
+            }
+        };
+
+        dismissTask.setOnSucceeded(event -> Platform.runLater(() -> {
+            statusLabel.setText("Signalement ignoré avec succès.");
+            fetchReports(currentPage);
+        }));
+
+        dismissTask.setOnFailed(event -> Platform.runLater(() -> {
+            setLoading(false);
+            Throwable ex = dismissTask.getException();
+            if (ex instanceof ApiService.UnauthorizedException) {
+                redirectToLogin();
+                return;
+            }
+            statusLabel.setText("Erreur : " + ex.getMessage());
+        }));
+
+        new Thread(dismissTask, "dismiss-report-thread").start();
+    }
+
+    private void deleteReportedContent(ReportResult report) {
+        setLoading(true);
+        statusLabel.setText("Suppression du contenu...");
+
+        Task<Void> deleteTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                if ("review".equals(report.getType())) {
+                    apiService.deleteReview(report.getId());
+                }
+                // For both review and comment reports, dismiss the report after content deletion
+                // The cascade delete on the entity will handle report cleanup automatically
+                return null;
+            }
+        };
+
+        deleteTask.setOnSucceeded(event -> Platform.runLater(() -> {
+            statusLabel.setText("Contenu supprimé avec succès.");
+            fetchReports(currentPage);
+        }));
+
+        deleteTask.setOnFailed(event -> Platform.runLater(() -> {
+            setLoading(false);
+            Throwable ex = deleteTask.getException();
+            if (ex instanceof ApiService.UnauthorizedException) {
+                redirectToLogin();
+                return;
+            }
+            statusLabel.setText("Erreur lors de la suppression : " + ex.getMessage());
+        }));
+
+        new Thread(deleteTask, "delete-content-thread").start();
+    }
+
+    private void setLoading(boolean loading) {
+        loadingIndicator.setVisible(loading);
+        refreshButton.setDisable(loading);
+    }
+
+    private void redirectToLogin() {
+        if (application != null) {
+            application.showLoginView();
+        }
+    }
+}

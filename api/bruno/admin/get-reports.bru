@@ -1,0 +1,83 @@
+meta {
+  name: Get Reports
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/admin/reports?page=0&size=20
+  body: none
+  auth: bearer
+}
+
+query {
+  page: 0
+  size: 20
+  ~type: review
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Reports
+
+  Retrieves a paginated list of all reports. Optionally filterable by type. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Query Parameters
+
+  | Parameter | Type   | Default        | Description                                      |
+  |-----------|--------|----------------|--------------------------------------------------|
+  | page      | int    | 0              | Page number (0-based)                            |
+  | size      | int    | 20             | Number of items per page (max 100)               |
+  | sort      | string | createdAt,desc | Sort field and direction                         |
+  | type      | string | _(optional)_   | Filter by report type: `review` or `comment`     |
+
+  ## Response
+
+  Returns a paginated JSON response `PagedResponseDto<AdminReportDto>`:
+  - `id`: Report UUID
+  - `reporterUsername`: Pseudo of the user who filed the report
+  - `reason`: Report reason/content
+  - `type`: Type of reported content (`review` or `comment`)
+  - `contentPreview`: Truncated preview of the reported content (max 100 chars)
+  - `createdAt`: Date of report creation
+
+  ## Example Response
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "reporterUsername": "john_doe",
+        "reason": "Spam content",
+        "type": "review",
+        "contentPreview": "This is an offensive review that...",
+        "createdAt": "2023-10-15T12:00:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+}

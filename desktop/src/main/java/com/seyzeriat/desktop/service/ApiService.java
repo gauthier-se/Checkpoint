@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
+import com.seyzeriat.desktop.dto.ReportResult;
 import com.seyzeriat.desktop.dto.ReviewResult;
 import com.seyzeriat.desktop.dto.UserResult;
 
@@ -220,6 +221,65 @@ public class ApiService {
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to delete review with status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    /**
+     * Fetches a paginated list of all reports from the admin API.
+     *
+     * @param page the page number (0-based)
+     * @param size number of items per page
+     * @return the paginated reports
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public PagedResponse<ReportResult> getReports(int page, int size)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/reports?page=" + page + "&size=" + size;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch reports with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), new TypeReference<PagedResponse<ReportResult>>() {});
+    }
+
+    /**
+     * Dismisses (deletes) a report using the admin API.
+     *
+     * @param id the report ID
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public void dismissReport(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/reports/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .DELETE();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 204 && response.statusCode() != 200) {
+            throw new IOException("Failed to dismiss report with status " + response.statusCode() + ": " + response.body());
         }
     }
 

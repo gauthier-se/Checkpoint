@@ -2,6 +2,8 @@ package com.checkpoint.api.repositories;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.checkpoint.api.entities.Report;
@@ -19,4 +21,20 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
      * @return true if a report already exists
      */
     boolean existsByUserIdAndReviewId(UUID userId, UUID reviewId);
+
+    /**
+     * Finds all reports where the reported content is a review (review is not null).
+     *
+     * @param pageable pagination and sorting details
+     * @return a page of reports targeting reviews
+     */
+    Page<Report> findByReviewIsNotNull(Pageable pageable);
+
+    /**
+     * Finds all reports where the reported content is a comment (comment is not null).
+     *
+     * @param pageable pagination and sorting details
+     * @return a page of reports targeting comments
+     */
+    Page<Report> findByCommentIsNotNull(Pageable pageable);
 }
