@@ -46,6 +46,9 @@ public class User {
     @Column(name = "is_private", nullable = false)
     private Boolean isPrivate = false;
 
+    @Column(nullable = false)
+    private Boolean banned = false;
+
     @Column(name = "xp_point", nullable = false)
     private Integer xpPoint = 0;
 
@@ -218,6 +221,14 @@ public class User {
 
     public void setIsPrivate(Boolean isPrivate) {
         this.isPrivate = isPrivate;
+    }
+
+    public Boolean getBanned() {
+        return banned;
+    }
+
+    public void setBanned(Boolean banned) {
+        this.banned = banned;
     }
 
     public Integer getXpPoint() {

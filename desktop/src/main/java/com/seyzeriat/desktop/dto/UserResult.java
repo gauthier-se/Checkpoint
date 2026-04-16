@@ -12,6 +12,7 @@ public class UserResult {
     private String id;
     private String username;
     private String email;
+    private boolean banned;
 
     public UserResult() {}
 
@@ -23,4 +24,7 @@ public class UserResult {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public boolean isBanned() { return banned; }
+    public void setBanned(boolean banned) { this.banned = banned; }
 }

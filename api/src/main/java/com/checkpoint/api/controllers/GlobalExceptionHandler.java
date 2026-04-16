@@ -47,6 +47,7 @@ import com.checkpoint.api.exceptions.NotificationNotFoundException;
 import com.checkpoint.api.exceptions.UnauthorizedCommentAccessException;
 import com.checkpoint.api.exceptions.UnauthorizedListAccessException;
 import com.checkpoint.api.exceptions.UnauthorizedNotificationAccessException;
+import com.checkpoint.api.exceptions.UserBannedException;
 import com.checkpoint.api.exceptions.UserNotFoundException;
 
 /**
@@ -517,6 +518,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles UserBannedException when a banned user attempts to authenticate.
+     *
+     * @param ex the exception
+     * @return error response with 403 status
+     */
+    @ExceptionHandler(UserBannedException.class)
+    public ResponseEntity<ErrorResponse> handleUserBanned(UserBannedException ex) {
+        log.warn("Banned user attempted access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /**

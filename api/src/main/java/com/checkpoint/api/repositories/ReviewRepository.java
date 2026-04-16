@@ -67,6 +67,14 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     long countByUserPseudo(String pseudo);
 
     /**
+     * Counts the number of reviews written by a user with the given ID.
+     *
+     * @param userId the user's ID
+     * @return the review count
+     */
+    long countByUserId(UUID userId);
+
+    /**
      * Finds all reviews that have at least one report.
      *
      * @param pageable pagination and sorting details

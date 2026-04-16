@@ -1,0 +1,75 @@
+meta {
+  name: Get User By ID
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users/{{userId}}
+  body: none
+  auth: bearer
+}
+
+vars:pre-request {
+  userId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get User By ID
+
+  Retrieve detailed profile information for a specific user. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Path Parameters
+
+  - `userId`: The user's UUID
+
+  ## Response
+
+  Returns a JSON object with full user profile:
+  - `id`: User UUID
+  - `username`: User pseudo/display name
+  - `email`: User email address
+  - `bio`: User bio text (nullable)
+  - `picture`: Profile picture URL (nullable)
+  - `isPrivate`: Whether profile is private
+  - `banned`: Whether user is banned
+  - `xpPoint`: Experience points
+  - `level`: User level
+  - `createdAt`: Account creation date
+  - `reviewCount`: Number of reviews written
+  - `reportCount`: Number of reports received against user's content
+
+  ## Example Response
+
+  ```json
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "alice",
+    "email": "alice@example.com",
+    "bio": "Passionate gamer",
+    "picture": "uploads/profiles/alice.jpg",
+    "isPrivate": false,
+    "banned": false,
+    "xpPoint": 1500,
+    "level": 8,
+    "createdAt": "2025-01-15T10:30:00",
+    "reviewCount": 12,
+    "reportCount": 1
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: User with the specified ID does not exist
+}
