@@ -1,5 +1,6 @@
 package com.seyzeriat.desktop.controller;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import com.seyzeriat.desktop.HelloApplication;
@@ -11,6 +12,8 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -19,6 +22,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 
 public class ReviewModerationController {
 
@@ -63,14 +67,22 @@ public class ReviewModerationController {
 
     private void setupActionColumn() {
         actionColumn.setCellFactory(param -> new TableCell<>() {
+            private final Button reportsBtn = new Button("Signalements");
+            private final Button authorBtn = new Button("Auteur");
+            private final Button banBtn = new Button("Bannir");
             private final Button deleteBtn = new Button("Supprimer");
+            private final HBox container = new HBox(6, reportsBtn, authorBtn, banBtn, deleteBtn);
 
             {
-                deleteBtn.getStyleClass().add("logout-button"); // reuse destructive style
-                deleteBtn.setOnAction(event -> {
-                    ReviewResult review = getTableView().getItems().get(getIndex());
-                    confirmAndDelete(review);
-                });
+                reportsBtn.getStyleClass().add("search-button");
+                authorBtn.getStyleClass().add("search-button");
+                banBtn.getStyleClass().add("logout-button");
+                deleteBtn.getStyleClass().add("logout-button");
+
+                reportsBtn.setOnAction(event -> showReports(getTableView().getItems().get(getIndex())));
+                authorBtn.setOnAction(event -> showAuthor(getTableView().getItems().get(getIndex())));
+                banBtn.setOnAction(event -> confirmAndBan(getTableView().getItems().get(getIndex())));
+                deleteBtn.setOnAction(event -> confirmAndDelete(getTableView().getItems().get(getIndex())));
             }
 
             @Override
@@ -79,7 +91,7 @@ public class ReviewModerationController {
                 if (empty || item != null || getIndex() >= getTableView().getItems().size() || getTableView().getItems().get(getIndex()) == null) {
                     setGraphic(null);
                 } else {
-                    setGraphic(deleteBtn);
+                    setGraphic(container);
                 }
             }
         });
@@ -143,6 +155,98 @@ public class ReviewModerationController {
         }));
 
         new Thread(fetchTask, "fetch-reported-reviews-thread").start();
+    }
+
+    private void showReports(ReviewResult review) {
+        if (application == null) {
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/seyzeriat/desktop/review-reports-view.fxml"));
+            Node detailView = loader.load();
+
+            ReviewReportsController controller = loader.getController();
+            controller.setApplication(application);
+            controller.loadReview(review);
+
+            application.setContent(detailView);
+        } catch (IOException e) {
+            statusLabel.setText("Erreur lors de l'ouverture des signalements : " + e.getMessage());
+        }
+    }
+
+    private void showAuthor(ReviewResult review) {
+        if (application == null) {
+            return;
+        }
+
+        if (review.getAuthorId() == null) {
+            statusLabel.setText("Auteur indisponible pour cet avis.");
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/seyzeriat/desktop/user-detail-view.fxml"));
+            Node detailView = loader.load();
+
+            UserDetailController controller = loader.getController();
+            controller.setApplication(application);
+            controller.loadUser(review.getAuthorId());
+
+            application.setContent(detailView);
+        } catch (IOException e) {
+            statusLabel.setText("Erreur lors de l'ouverture du profil : " + e.getMessage());
+        }
+    }
+
+    private void confirmAndBan(ReviewResult review) {
+        if (review.getAuthorId() == null) {
+            statusLabel.setText("Auteur indisponible pour cet avis.");
+            return;
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation");
+        alert.setHeaderText("Bannir l'utilisateur " + review.getAuthorUsername() + " ?");
+        alert.setContentText("L'utilisateur ne pourra plus se connecter à CheckPoint.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            banAuthor(review.getAuthorId());
+        }
+    }
+
+    private void banAuthor(String authorId) {
+        setLoading(true);
+        statusLabel.setText("Bannissement en cours...");
+
+        Task<Void> banTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                apiService.banUser(authorId);
+                return null;
+            }
+        };
+
+        banTask.setOnSucceeded(event -> Platform.runLater(() -> {
+            statusLabel.setText("Utilisateur banni avec succès.");
+            fetchReviews(currentPage);
+        }));
+
+        banTask.setOnFailed(event -> Platform.runLater(() -> {
+            setLoading(false);
+            Throwable ex = banTask.getException();
+            if (ex instanceof ApiService.UnauthorizedException) {
+                redirectToLogin();
+                return;
+            }
+            statusLabel.setText("Erreur : " + ex.getMessage());
+        }));
+
+        new Thread(banTask, "ban-review-author-thread").start();
     }
 
     private void confirmAndDelete(ReviewResult review) {

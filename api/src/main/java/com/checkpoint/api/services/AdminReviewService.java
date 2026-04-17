@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
+import com.checkpoint.api.dto.admin.AdminReviewReportDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 
 /**
@@ -28,6 +29,15 @@ public interface AdminReviewService {
      * @return the paginated reported reviews with their report counts
      */
     PagedResponseDto<AdminReportedReviewDto> getReportedReviews(Pageable pageable);
+
+    /**
+     * Retrieves a paginated list of reports filed against a specific review.
+     *
+     * @param reviewId the ID of the review to inspect
+     * @param pageable pagination and sorting details
+     * @return the paginated reports targeting the review
+     */
+    PagedResponseDto<AdminReviewReportDto> getReviewReports(UUID reviewId, Pageable pageable);
 
     /**
      * Deletes a review by its ID.

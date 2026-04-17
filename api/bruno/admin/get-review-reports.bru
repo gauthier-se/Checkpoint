@@ -1,0 +1,78 @@
+meta {
+  name: Get Review Reports
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/admin/reviews/:id/reports?page=0&size=20
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id:
+}
+
+query {
+  page: 0
+  size: 20
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Review Reports
+
+  Retrieves a paginated list of reports filed against a specific review. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Path Parameters
+
+  - `id`: UUID of the review to inspect
+
+  ## Response
+
+  Returns a paginated JSON response `PagedResponseDto<AdminReviewReportDto>` containing reports targeting the review:
+  - `id`: Report UUID
+  - `reporterUsername`: User pseudo of the reporter
+  - `reason`: Reason provided by the reporter
+  - `createdAt`: Date the report was filed
+
+  ## Example Response
+
+  ```json
+  {
+    "content": [
+      {
+        "id": "8f14e45f-ceea-467a-a3b8-1f2f9d58d3b4",
+        "reporterUsername": "jane_doe",
+        "reason": "Spam",
+        "createdAt": "2023-10-16T09:30:00"
+      }
+    ],
+    "metadata": {
+      "page": 0,
+      "size": 20,
+      "totalElements": 1,
+      "totalPages": 1,
+      "first": true,
+      "last": true,
+      "hasNext": false,
+      "hasPrevious": false
+    }
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: No review exists with the given ID
+}

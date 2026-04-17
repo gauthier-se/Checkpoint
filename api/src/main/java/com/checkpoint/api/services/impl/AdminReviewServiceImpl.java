@@ -11,8 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
+import com.checkpoint.api.dto.admin.AdminReviewReportDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
+import com.checkpoint.api.entities.Report;
 import com.checkpoint.api.entities.Review;
+import com.checkpoint.api.exceptions.ReviewNotFoundException;
+import com.checkpoint.api.repositories.ReportRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.services.AdminReviewService;
 
@@ -23,9 +27,11 @@ public class AdminReviewServiceImpl implements AdminReviewService {
     private static final Logger log = LoggerFactory.getLogger(AdminReviewServiceImpl.class);
 
     private final ReviewRepository reviewRepository;
+    private final ReportRepository reportRepository;
 
-    public AdminReviewServiceImpl(ReviewRepository reviewRepository) {
+    public AdminReviewServiceImpl(ReviewRepository reviewRepository, ReportRepository reportRepository) {
         this.reviewRepository = reviewRepository;
+        this.reportRepository = reportRepository;
     }
 
     @Override
@@ -57,10 +63,32 @@ public class AdminReviewServiceImpl implements AdminReviewService {
         Page<AdminReportedReviewDto> dtoPage = reviewsPage.map(review -> new AdminReportedReviewDto(
                 review.getId(),
                 review.getContent(),
+                review.getUser() != null ? review.getUser().getId() : null,
                 review.getUser() != null ? review.getUser().getPseudo() : null,
                 review.getVideoGame() != null ? review.getVideoGame().getTitle() : null,
                 review.getReports().size(),
                 review.getCreatedAt()
+        ));
+
+        return PagedResponseDto.from(dtoPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponseDto<AdminReviewReportDto> getReviewReports(UUID reviewId, Pageable pageable) {
+        log.info("Fetching reports for review {} (pageable = {})", reviewId, pageable);
+
+        if (!reviewRepository.existsById(reviewId)) {
+            throw new ReviewNotFoundException("Review not found with id: " + reviewId);
+        }
+
+        Page<Report> reportsPage = reportRepository.findByReviewId(reviewId, pageable);
+
+        Page<AdminReviewReportDto> dtoPage = reportsPage.map(report -> new AdminReviewReportDto(
+                report.getId(),
+                report.getUser() != null ? report.getUser().getPseudo() : null,
+                report.getContent(),
+                report.getCreatedAt()
         ));
 
         return PagedResponseDto.from(dtoPage);

@@ -33,6 +33,15 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
     Page<Report> findByReviewIsNotNull(Pageable pageable);
 
     /**
+     * Finds all reports filed against a specific review.
+     *
+     * @param reviewId the review's ID
+     * @param pageable pagination and sorting details
+     * @return a page of reports targeting the given review
+     */
+    Page<Report> findByReviewId(UUID reviewId, Pageable pageable);
+
+    /**
      * Counts the number of reports targeting a user's content (reviews or comments).
      *
      * @param userId the user's ID
