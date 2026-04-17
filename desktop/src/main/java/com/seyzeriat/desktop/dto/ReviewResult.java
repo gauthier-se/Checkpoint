@@ -10,6 +10,7 @@ public class ReviewResult {
     private String id;
     private String content;
     private Boolean haveSpoilers;
+    private String authorId;
     private String authorUsername;
     private String gameTitle;
     private String createdAt;
@@ -25,6 +26,9 @@ public class ReviewResult {
 
     public Boolean getHaveSpoilers() { return haveSpoilers; }
     public void setHaveSpoilers(Boolean haveSpoilers) { this.haveSpoilers = haveSpoilers; }
+
+    public String getAuthorId() { return authorId; }
+    public void setAuthorId(String authorId) { this.authorId = authorId; }
 
     public String getAuthorUsername() { return authorUsername; }
     public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }

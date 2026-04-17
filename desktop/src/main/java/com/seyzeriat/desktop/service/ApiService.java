@@ -15,6 +15,7 @@ import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
 import com.seyzeriat.desktop.dto.ReportResult;
+import com.seyzeriat.desktop.dto.ReviewReportResult;
 import com.seyzeriat.desktop.dto.ReviewResult;
 import com.seyzeriat.desktop.dto.UserDetailResult;
 import com.seyzeriat.desktop.dto.UserResult;
@@ -197,6 +198,39 @@ public class ApiService {
         }
 
         return objectMapper.readValue(response.body(), new TypeReference<PagedResponse<ReviewResult>>() {});
+    }
+
+    /**
+     * Fetches a paginated list of reports filed against a specific review.
+     *
+     * @param reviewId the review ID
+     * @param page     the page number (0-based)
+     * @param size     number of items per page
+     * @return the paginated reports for the review
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public PagedResponse<ReviewReportResult> getReviewReports(String reviewId, int page, int size)
+            throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/reviews/" + reviewId + "/reports?page=" + page + "&size=" + size;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch review reports with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), new TypeReference<PagedResponse<ReviewReportResult>>() {});
     }
 
     /**

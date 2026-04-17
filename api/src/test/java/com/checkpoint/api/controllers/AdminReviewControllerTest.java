@@ -1,7 +1,9 @@
 package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,7 +26,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.checkpoint.api.dto.admin.AdminReportedReviewDto;
 import com.checkpoint.api.dto.admin.AdminReviewDto;
+import com.checkpoint.api.dto.admin.AdminReviewReportDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
+import com.checkpoint.api.exceptions.ReviewNotFoundException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AdminReviewService;
@@ -75,7 +79,8 @@ class AdminReviewControllerTest {
     void getReportedReviews_shouldReturnPaginatedList() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
-        AdminReportedReviewDto dto1 = new AdminReportedReviewDto(id1, "Offensive review", "user1", "Game 1", 3, LocalDateTime.now());
+        UUID authorId = UUID.randomUUID();
+        AdminReportedReviewDto dto1 = new AdminReportedReviewDto(id1, "Offensive review", authorId, "user1", "Game 1", 3, LocalDateTime.now());
         PagedResponseDto.PageMetadata meta = new PagedResponseDto.PageMetadata(0, 20, 1, 1, true, true, false, false);
         PagedResponseDto<AdminReportedReviewDto> response = new PagedResponseDto<>(List.of(dto1), meta);
 
@@ -89,11 +94,52 @@ class AdminReviewControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].id").value(id1.toString()))
                 .andExpect(jsonPath("$.content[0].content").value("Offensive review"))
+                .andExpect(jsonPath("$.content[0].authorId").value(authorId.toString()))
                 .andExpect(jsonPath("$.content[0].authorUsername").value("user1"))
                 .andExpect(jsonPath("$.content[0].gameTitle").value("Game 1"))
                 .andExpect(jsonPath("$.content[0].reportCount").value(3));
 
         verify(adminReviewService).getReportedReviews(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/reviews/{id}/reports should return paginated reports for the review")
+    void getReviewReports_shouldReturnPaginatedList() throws Exception {
+        // Given
+        UUID reviewId = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+        AdminReviewReportDto dto1 = new AdminReviewReportDto(reportId, "reporter1", "Spam", LocalDateTime.now());
+        PagedResponseDto.PageMetadata meta = new PagedResponseDto.PageMetadata(0, 20, 1, 1, true, true, false, false);
+        PagedResponseDto<AdminReviewReportDto> response = new PagedResponseDto<>(List.of(dto1), meta);
+
+        when(adminReviewService.getReviewReports(eq(reviewId), any(Pageable.class))).thenReturn(response);
+
+        // When / Then
+        mockMvc.perform(get("/api/admin/reviews/{id}/reports", reviewId)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(reportId.toString()))
+                .andExpect(jsonPath("$.content[0].reporterUsername").value("reporter1"))
+                .andExpect(jsonPath("$.content[0].reason").value("Spam"));
+
+        verify(adminReviewService).getReviewReports(eq(reviewId), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/reviews/{id}/reports should return 404 when review does not exist")
+    void getReviewReports_shouldReturn404WhenReviewMissing() throws Exception {
+        // Given
+        UUID reviewId = UUID.randomUUID();
+        doThrow(new ReviewNotFoundException("Review not found with id: " + reviewId))
+                .when(adminReviewService).getReviewReports(eq(reviewId), any(Pageable.class));
+
+        // When / Then
+        mockMvc.perform(get("/api/admin/reviews/{id}/reports", reviewId))
+                .andExpect(status().isNotFound());
+
+        verify(adminReviewService).getReviewReports(eq(reviewId), any(Pageable.class));
     }
 
     @Test

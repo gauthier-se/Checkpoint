@@ -34,6 +34,7 @@ docs {
   Returns a paginated JSON response `PagedResponseDto<AdminReportedReviewDto>` containing reported reviews:
   - `id`: Review UUID
   - `content`: Review content
+  - `authorId`: UUID of the review's author
   - `authorUsername`: User pseudo of the author
   - `gameTitle`: Title of the game
   - `reportCount`: Number of reports filed against this review
@@ -47,6 +48,7 @@ docs {
       {
         "id": "123e4567-e89b-12d3-a456-426614174000",
         "content": "Offensive review content",
+        "authorId": "55cb1858-c9f4-4d83-9b1a-3d2b2b2c2a2a",
         "authorUsername": "john_doe",
         "gameTitle": "Super Mario Odyssey",
         "reportCount": 3,
