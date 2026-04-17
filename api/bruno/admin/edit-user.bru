@@ -1,0 +1,58 @@
+meta {
+  name: Edit User
+  type: http
+  seq: 16
+}
+
+put {
+  url: {{baseUrl}}/api/admin/users/{{userId}}
+  body: json
+  auth: bearer
+}
+
+vars:pre-request {
+  userId: 550e8400-e29b-41d4-a716-446655440000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "clearBio": true,
+    "clearPicture": false,
+    "isPrivate": null
+  }
+}
+
+docs {
+  # Edit User
+
+  Edit a user's profile fields as admin. Requires admin authentication.
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Path Parameters
+
+  - `userId`: The user's UUID
+
+  ## Request Body
+
+  - `clearBio` (Boolean): If true, clears the user's bio
+  - `clearPicture` (Boolean): If true, clears the user's profile picture
+  - `isPrivate` (Boolean, nullable): If provided, sets the user's profile visibility
+
+  ## Response
+
+  Returns the updated user detail (same format as Get User By ID).
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **404 Not Found**: User with the specified ID does not exist
+}

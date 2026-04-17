@@ -16,6 +16,7 @@ import com.seyzeriat.desktop.dto.ImportedGameResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
 import com.seyzeriat.desktop.dto.ReportResult;
 import com.seyzeriat.desktop.dto.ReviewResult;
+import com.seyzeriat.desktop.dto.UserDetailResult;
 import com.seyzeriat.desktop.dto.UserResult;
 
 /**
@@ -280,6 +281,120 @@ public class ApiService {
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to dismiss report with status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    /**
+     * Fetches detailed profile information for a specific user.
+     *
+     * @param id the user ID
+     * @return the detailed user profile
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public UserDetailResult getUserDetail(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/users/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch user detail with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), UserDetailResult.class);
+    }
+
+    /**
+     * Edits a user's profile fields via the admin API.
+     *
+     * @param id   the user ID
+     * @param body the JSON body with edit fields
+     * @return the updated user detail
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public UserDetailResult editUser(String id, String body) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/users/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body));
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to edit user with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), UserDetailResult.class);
+    }
+
+    /**
+     * Bans a user account via the admin API.
+     *
+     * @param id the user ID
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public void banUser(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/users/" + id + "/ban";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 204 && response.statusCode() != 200) {
+            throw new IOException("Failed to ban user with status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    /**
+     * Unbans a user account via the admin API.
+     *
+     * @param id the user ID
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public void unbanUser(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/users/" + id + "/unban";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 204 && response.statusCode() != 200) {
+            throw new IOException("Failed to unban user with status " + response.statusCode() + ": " + response.body());
         }
     }
 

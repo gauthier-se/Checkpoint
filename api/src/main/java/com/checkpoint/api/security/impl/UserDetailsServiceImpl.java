@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.exceptions.UserBannedException;
 import com.checkpoint.api.repositories.UserRepository;
 
 /**
@@ -31,6 +32,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with email: " + email));
+
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new UserBannedException(email);
+        }
 
         String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
 

@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.checkpoint.api.entities.Report;
 
@@ -29,6 +31,15 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
      * @return a page of reports targeting reviews
      */
     Page<Report> findByReviewIsNotNull(Pageable pageable);
+
+    /**
+     * Counts the number of reports targeting a user's content (reviews or comments).
+     *
+     * @param userId the user's ID
+     * @return the total report count against the user's content
+     */
+    @Query("SELECT COUNT(r) FROM Report r WHERE r.review.user.id = :userId OR r.comment.user.id = :userId")
+    long countReportsAgainstUser(@Param("userId") UUID userId);
 
     /**
      * Finds all reports where the reported content is a comment (comment is not null).

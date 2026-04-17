@@ -222,7 +222,13 @@ public class HelloApplication extends Application {
         }
     }
 
-    private void setContent(Node content) {
+    /**
+     * Replaces the content area with the given node.
+     * Public so child controllers can navigate to other views.
+     *
+     * @param content the node to display
+     */
+    public void setContent(Node content) {
         contentArea.getChildren().setAll(content);
     }
 }
