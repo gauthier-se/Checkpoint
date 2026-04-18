@@ -2,6 +2,7 @@ package com.checkpoint.api.services;
 
 import java.util.List;
 
+import com.checkpoint.api.dto.admin.BulkImportResultDto;
 import com.checkpoint.api.dto.admin.ExternalGameDto;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
@@ -33,4 +34,25 @@ public interface AdminGameService {
      * @throws ExternalApiUnavailableException if IGDB API is unreachable
      */
     VideoGame importGameByExternalId(Long externalId);
+
+    /**
+     * Bulk-imports the top-rated games from IGDB. Already-imported games are
+     * skipped (deduplication by igdbId). Runs synchronously.
+     *
+     * @param limit          maximum number of games to fetch from IGDB
+     * @param minRatingCount minimum number of IGDB ratings to qualify as "popular"
+     * @return summary of the operation
+     * @throws ExternalApiUnavailableException if IGDB API is unreachable
+     */
+    BulkImportResultDto bulkImportTopRatedGames(int limit, int minRatingCount);
+
+    /**
+     * Bulk-imports recently released games from IGDB. Already-imported games
+     * are skipped (deduplication by igdbId). Runs synchronously.
+     *
+     * @param limit maximum number of games to fetch from IGDB
+     * @return summary of the operation
+     * @throws ExternalApiUnavailableException if IGDB API is unreachable
+     */
+    BulkImportResultDto bulkImportRecentGames(int limit);
 }

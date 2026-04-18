@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.checkpoint.api.dto.admin.BulkImportResultDto;
 import com.checkpoint.api.dto.admin.ExternalGameDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.entities.VideoGame;
@@ -31,6 +32,7 @@ public class AdminGameController {
     private static final Logger log = LoggerFactory.getLogger(AdminGameController.class);
     private static final int DEFAULT_SEARCH_LIMIT = 20;
     private static final int MAX_SEARCH_LIMIT = 50;
+    private static final int MAX_BULK_LIMIT = 500;
 
     private final AdminGameService adminGameService;
 
@@ -82,6 +84,53 @@ public class AdminGameController {
 
         log.info("Successfully imported game: {} (internal ID: {})", importedGame.getTitle(), importedGame.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Bulk-imports the top-rated games from IGDB. Already-imported games are
+     * skipped (deduplication by IGDB ID). Runs synchronously and may take
+     * several minutes for large batches due to IGDB rate limiting.
+     *
+     * @param limit          number of games to fetch (default 100, max 500)
+     * @param minRatingCount minimum IGDB rating count to qualify (default 100)
+     * @return summary of the operation
+     */
+    @PostMapping("/games/import/top-rated")
+    public ResponseEntity<BulkImportResultDto> bulkImportTopRated(
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(defaultValue = "100") int minRatingCount) {
+
+        int effectiveLimit = Math.min(Math.max(1, limit), MAX_BULK_LIMIT);
+        int effectiveMinRating = Math.max(0, minRatingCount);
+        log.info("Admin bulk top-rated import request: limit={}, minRatingCount={}",
+                effectiveLimit, effectiveMinRating);
+
+        BulkImportResultDto result = adminGameService.bulkImportTopRatedGames(effectiveLimit, effectiveMinRating);
+
+        log.info("Bulk top-rated import done: {} imported, {} skipped, {} failed (of {} fetched)",
+                result.imported(), result.skipped(), result.failed(), result.totalFetched());
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Bulk-imports recently released games from IGDB. Already-imported games
+     * are skipped (deduplication by IGDB ID). Runs synchronously.
+     *
+     * @param limit number of games to fetch (default 100, max 500)
+     * @return summary of the operation
+     */
+    @PostMapping("/games/import/recent")
+    public ResponseEntity<BulkImportResultDto> bulkImportRecent(
+            @RequestParam(defaultValue = "100") int limit) {
+
+        int effectiveLimit = Math.min(Math.max(1, limit), MAX_BULK_LIMIT);
+        log.info("Admin bulk recent import request: limit={}", effectiveLimit);
+
+        BulkImportResultDto result = adminGameService.bulkImportRecentGames(effectiveLimit);
+
+        log.info("Bulk recent import done: {} imported, {} skipped, {} failed (of {} fetched)",
+                result.imported(), result.skipped(), result.failed(), result.totalFetched());
+        return ResponseEntity.ok(result);
     }
 
     /**

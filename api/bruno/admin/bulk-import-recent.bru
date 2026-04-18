@@ -1,0 +1,64 @@
+meta {
+  name: Bulk Import Recent Releases
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/admin/games/import/recent?limit=50
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: 50
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Bulk Import Recent Releases
+
+  Batch-imports recently released games from IGDB into the local database.
+  Already-imported games are skipped (deduplication via `igdbId`).
+  Runs synchronously and may take several minutes for large batches due
+  to IGDB rate limiting (1 req/sec).
+
+  ## Authentication
+
+  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Required Role**: `ROLE_ADMIN`
+
+  ## Query Parameters
+
+  - **limit** (optional, default 100, max 500): Number of games to fetch from IGDB
+
+  ## Response
+
+  Returns a summary of the operation:
+  - `totalFetched`: Number of games returned by IGDB
+  - `imported`: Number of newly persisted games
+  - `skipped`: Number of games skipped (already exist)
+  - `failed`: Number of games whose import threw an exception
+  - `errors`: List of titles (or IGDB IDs) for failed games
+
+  ## Example Response
+
+  ```json
+  {
+    "totalFetched": 50,
+    "imported": 48,
+    "skipped": 1,
+    "failed": 1,
+    "errors": ["Unreleased Demo"]
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+  - **403 Forbidden**: User does not have `ROLE_ADMIN`
+  - **503 Service Unavailable**: IGDB API is down or rate limited
+}

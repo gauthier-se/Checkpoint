@@ -2,6 +2,7 @@ package com.checkpoint.api.services;
 
 import java.util.List;
 
+import com.checkpoint.api.dto.igdb.IgdbGameDto;
 import com.checkpoint.api.entities.VideoGame;
 
 /**
@@ -44,7 +45,29 @@ public interface GameImportService {
     List<VideoGame> importTopRatedGames(int limit, int minRatingCount);
 
     /**
+     * Imports a pre-fetched list of games in bulk, skipping any game whose
+     * {@code igdbId} already exists in the database. Failures on individual
+     * games are caught and reported in the returned stats — the operation
+     * does not abort.
+     *
+     * @param games the IGDB game DTOs to import
+     * @return statistics describing the outcome
+     */
+    BulkImportStats bulkImport(List<IgdbGameDto> games);
+
+    /**
      * Result object containing import statistics.
      */
     record ImportResult(int created, int updated, int failed, List<VideoGame> games) {}
+
+    /**
+     * Aggregated counts produced by {@link #bulkImport(List)}.
+     *
+     * @param totalFetched number of games supplied for import
+     * @param imported     number of newly persisted games
+     * @param skipped      number of games skipped because they already exist
+     * @param failed       number of games whose import threw an exception
+     * @param errors       titles (or IGDB IDs) of games that failed to import
+     */
+    record BulkImportStats(int totalFetched, int imported, int skipped, int failed, List<String> errors) {}
 }

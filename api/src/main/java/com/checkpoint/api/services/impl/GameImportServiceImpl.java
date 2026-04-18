@@ -91,6 +91,39 @@ public class GameImportServiceImpl implements GameImportService {
         return importGames(games);
     }
 
+    @Override
+    public BulkImportStats bulkImport(List<IgdbGameDto> games) {
+        int totalFetched = games.size();
+        int imported = 0;
+        int skipped = 0;
+        int failed = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (IgdbGameDto dto : games) {
+            try {
+                if (videoGameRepository.existsByIgdbId(dto.id())) {
+                    skipped++;
+                    continue;
+                }
+                importSingleGame(dto);
+                imported++;
+            } catch (Exception e) {
+                failed++;
+                String label = dto.name() != null && !dto.name().isBlank()
+                        ? dto.name()
+                        : "IGDB#" + dto.id();
+                errors.add(label);
+                log.error("Bulk import failed for '{}' (IGDB ID: {}): {}",
+                        dto.name(), dto.id(), e.getMessage(), e);
+            }
+        }
+
+        log.info("Bulk import completed: {} imported, {} skipped, {} failed out of {} fetched",
+                imported, skipped, failed, totalFetched);
+
+        return new BulkImportStats(totalFetched, imported, skipped, failed, errors);
+    }
+
     /**
      * Imports a list of games, handling duplicates and relationships.
      *

@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seyzeriat.desktop.dto.BulkImportResult;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
@@ -105,6 +106,74 @@ public class ApiService {
         }
 
         return objectMapper.readValue(response.body(), ImportedGameResult.class);
+    }
+
+    /**
+     * Bulk-imports the top-rated games from IGDB. May take several minutes
+     * for large batches due to IGDB rate limiting (1 req/sec).
+     *
+     * @param limit          number of games to fetch (max 500)
+     * @param minRatingCount minimum IGDB rating count to qualify as popular
+     * @return summary of the operation
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if the token is expired or invalid
+     */
+    public BulkImportResult bulkImportTopRated(int limit, int minRatingCount)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/games/import/top-rated"
+                + "?limit=" + limit + "&minRatingCount=" + minRatingCount;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Bulk top-rated import failed with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), BulkImportResult.class);
+    }
+
+    /**
+     * Bulk-imports recently released games from IGDB. May take several
+     * minutes for large batches due to IGDB rate limiting (1 req/sec).
+     *
+     * @param limit number of games to fetch (max 500)
+     * @return summary of the operation
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if the token is expired or invalid
+     */
+    public BulkImportResult bulkImportRecent(int limit)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/games/import/recent?limit=" + limit;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Bulk recent import failed with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), BulkImportResult.class);
     }
 
     /**
