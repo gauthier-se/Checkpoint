@@ -25,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.checkpoint.api.dto.admin.BulkImportResultDto;
 import com.checkpoint.api.dto.admin.ExternalGameDto;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.exceptions.ExternalApiUnavailableException;
@@ -202,6 +203,126 @@ class AdminGameControllerTest {
                     .thenThrow(new ExternalApiUnavailableException("IGDB API is unavailable"));
 
             mockMvc.perform(post("/api/admin/games/import/1942"))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error").value("Service Unavailable"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/admin/games/import/top-rated")
+    class BulkImportTopRatedTests {
+
+        @Test
+        @DisplayName("Should bulk-import top rated games and return summary")
+        void shouldBulkImportTopRated() throws Exception {
+            BulkImportResultDto summary = new BulkImportResultDto(10, 7, 2, 1, List.of("Failing Game"));
+            when(adminGameService.bulkImportTopRatedGames(50, 200)).thenReturn(summary);
+
+            mockMvc.perform(post("/api/admin/games/import/top-rated")
+                            .param("limit", "50")
+                            .param("minRatingCount", "200"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalFetched").value(10))
+                    .andExpect(jsonPath("$.imported").value(7))
+                    .andExpect(jsonPath("$.skipped").value(2))
+                    .andExpect(jsonPath("$.failed").value(1))
+                    .andExpect(jsonPath("$.errors[0]").value("Failing Game"));
+
+            verify(adminGameService).bulkImportTopRatedGames(50, 200);
+        }
+
+        @Test
+        @DisplayName("Should use defaults when no parameters are provided")
+        void shouldUseDefaults() throws Exception {
+            when(adminGameService.bulkImportTopRatedGames(anyInt(), anyInt()))
+                    .thenReturn(new BulkImportResultDto(0, 0, 0, 0, List.of()));
+
+            mockMvc.perform(post("/api/admin/games/import/top-rated"))
+                    .andExpect(status().isOk());
+
+            verify(adminGameService).bulkImportTopRatedGames(100, 100);
+        }
+
+        @Test
+        @DisplayName("Should cap limit at 500")
+        void shouldCapLimit() throws Exception {
+            when(adminGameService.bulkImportTopRatedGames(anyInt(), anyInt()))
+                    .thenReturn(new BulkImportResultDto(0, 0, 0, 0, List.of()));
+
+            mockMvc.perform(post("/api/admin/games/import/top-rated")
+                            .param("limit", "9999")
+                            .param("minRatingCount", "50"))
+                    .andExpect(status().isOk());
+
+            verify(adminGameService).bulkImportTopRatedGames(500, 50);
+        }
+
+        @Test
+        @DisplayName("Should return 503 when external API is unavailable")
+        void shouldReturn503WhenExternalApiUnavailable() throws Exception {
+            when(adminGameService.bulkImportTopRatedGames(anyInt(), anyInt()))
+                    .thenThrow(new ExternalApiUnavailableException("IGDB API is unavailable"));
+
+            mockMvc.perform(post("/api/admin/games/import/top-rated"))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error").value("Service Unavailable"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/admin/games/import/recent")
+    class BulkImportRecentTests {
+
+        @Test
+        @DisplayName("Should bulk-import recent games and return summary")
+        void shouldBulkImportRecent() throws Exception {
+            BulkImportResultDto summary = new BulkImportResultDto(20, 18, 1, 1, List.of("Broken Game"));
+            when(adminGameService.bulkImportRecentGames(20)).thenReturn(summary);
+
+            mockMvc.perform(post("/api/admin/games/import/recent")
+                            .param("limit", "20"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalFetched").value(20))
+                    .andExpect(jsonPath("$.imported").value(18))
+                    .andExpect(jsonPath("$.skipped").value(1))
+                    .andExpect(jsonPath("$.failed").value(1))
+                    .andExpect(jsonPath("$.errors[0]").value("Broken Game"));
+
+            verify(adminGameService).bulkImportRecentGames(20);
+        }
+
+        @Test
+        @DisplayName("Should use default limit when not provided")
+        void shouldUseDefaultLimit() throws Exception {
+            when(adminGameService.bulkImportRecentGames(anyInt()))
+                    .thenReturn(new BulkImportResultDto(0, 0, 0, 0, List.of()));
+
+            mockMvc.perform(post("/api/admin/games/import/recent"))
+                    .andExpect(status().isOk());
+
+            verify(adminGameService).bulkImportRecentGames(100);
+        }
+
+        @Test
+        @DisplayName("Should cap limit at 500")
+        void shouldCapLimit() throws Exception {
+            when(adminGameService.bulkImportRecentGames(anyInt()))
+                    .thenReturn(new BulkImportResultDto(0, 0, 0, 0, List.of()));
+
+            mockMvc.perform(post("/api/admin/games/import/recent")
+                            .param("limit", "9999"))
+                    .andExpect(status().isOk());
+
+            verify(adminGameService).bulkImportRecentGames(500);
+        }
+
+        @Test
+        @DisplayName("Should return 503 when external API is unavailable")
+        void shouldReturn503WhenExternalApiUnavailable() throws Exception {
+            when(adminGameService.bulkImportRecentGames(anyInt()))
+                    .thenThrow(new ExternalApiUnavailableException("IGDB API is unavailable"));
+
+            mockMvc.perform(post("/api/admin/games/import/recent"))
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error").value("Service Unavailable"));
         }

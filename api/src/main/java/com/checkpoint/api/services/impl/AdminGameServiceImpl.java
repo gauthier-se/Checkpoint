@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.client.IgdbApiClient;
+import com.checkpoint.api.dto.admin.BulkImportResultDto;
 import com.checkpoint.api.dto.admin.ExternalGameDto;
 import com.checkpoint.api.dto.igdb.IgdbGameDto;
 import com.checkpoint.api.entities.VideoGame;
@@ -16,6 +17,7 @@ import com.checkpoint.api.exceptions.ExternalGameNotFoundException;
 import com.checkpoint.api.exceptions.IgdbApiException;
 import com.checkpoint.api.services.AdminGameService;
 import com.checkpoint.api.services.GameImportService;
+import com.checkpoint.api.services.GameImportService.BulkImportStats;
 
 /**
  * Implementation of {@link AdminGameService}.
@@ -91,6 +93,55 @@ public class AdminGameServiceImpl implements AdminGameService {
             log.error("IGDB API error during import: {}", e.getMessage(), e);
             throw new ExternalApiUnavailableException("External game API is currently unavailable", e);
         }
+    }
+
+    @Override
+    public BulkImportResultDto bulkImportTopRatedGames(int limit, int minRatingCount) {
+        log.info("Bulk importing top {} rated games (min {} ratings)", limit, minRatingCount);
+
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be a positive number");
+        }
+        if (minRatingCount < 0) {
+            throw new IllegalArgumentException("Minimum rating count cannot be negative");
+        }
+
+        try {
+            List<IgdbGameDto> games = igdbApiClient.fetchTopRatedGames(limit, minRatingCount);
+            BulkImportStats stats = gameImportService.bulkImport(games);
+            return toDto(stats);
+        } catch (IgdbApiException e) {
+            log.error("IGDB API error during bulk top-rated import: {}", e.getMessage(), e);
+            throw new ExternalApiUnavailableException("External game API is currently unavailable", e);
+        }
+    }
+
+    @Override
+    public BulkImportResultDto bulkImportRecentGames(int limit) {
+        log.info("Bulk importing {} recently released games", limit);
+
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be a positive number");
+        }
+
+        try {
+            List<IgdbGameDto> games = igdbApiClient.fetchRecentlyReleasedGames(limit);
+            BulkImportStats stats = gameImportService.bulkImport(games);
+            return toDto(stats);
+        } catch (IgdbApiException e) {
+            log.error("IGDB API error during bulk recent import: {}", e.getMessage(), e);
+            throw new ExternalApiUnavailableException("External game API is currently unavailable", e);
+        }
+    }
+
+    private BulkImportResultDto toDto(BulkImportStats stats) {
+        return new BulkImportResultDto(
+                stats.totalFetched(),
+                stats.imported(),
+                stats.skipped(),
+                stats.failed(),
+                stats.errors()
+        );
     }
 
     /**
