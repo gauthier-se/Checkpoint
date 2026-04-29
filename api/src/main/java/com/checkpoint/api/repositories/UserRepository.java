@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.checkpoint.api.entities.AuthProvider;
 import com.checkpoint.api.entities.User;
 
 /**
@@ -40,6 +41,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return true if exists, false otherwise
      */
     boolean existsByPseudo(String pseudo);
+
+    /**
+     * Finds a user previously authenticated via the given OAuth2 provider
+     * with the given provider-specific identifier.
+     *
+     * @param provider   the authentication provider
+     * @param providerId the provider-specific user identifier
+     * @return an optional containing the user if found
+     */
+    Optional<User> findByProviderAndProviderId(AuthProvider provider, String providerId);
 
     /**
      * Finds all users who follow the given user (paginated).

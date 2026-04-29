@@ -1,0 +1,45 @@
+meta {
+  name: OAuth2 (Google) - Start Flow
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/oauth2/authorization/google
+  body: none
+  auth: none
+}
+
+docs {
+  # OAuth2 — Sign in with Google
+
+  Entry point of the Google OAuth2 login flow. Hitting this URL in a browser
+  redirects the user to Google's consent screen. After consent, Google calls
+  back to `/api/login/oauth2/code/google` (handled automatically by Spring
+  Security), which then triggers `OAuth2AuthenticationSuccessHandler` and
+  redirects the browser to `${app.frontend-url}/`.
+
+  > Bruno cannot replay the full flow because it requires interactive consent
+  > on Google's domain. This entry exists to document the endpoint; copy the
+  > URL into a browser to actually exercise it.
+
+  ## Behaviour
+
+  - **Browser**: 302 redirect to Google's OAuth consent screen.
+  - **Server (after callback)**: creates or links a local user, sets a
+    `JSESSIONID` cookie, then 302-redirects to the frontend.
+
+  ## Account resolution rules
+
+  1. If a user already exists with `(provider=GOOGLE, providerId=<sub>)`, returns it.
+  2. Else if a user exists with the same email, links the Google identity to that account.
+  3. Else creates a new user with `password=null`, `provider=GOOGLE`, a unique pseudo derived from the Google name, and the `USER` role.
+
+  Banned users are rejected with redirect to `/login?error=oauth_banned`.
+  Any other failure redirects to `/login?error=oauth_failed`.
+
+  ## Configuration
+
+  Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to be set in the environment
+  (Doppler in dev/prod). Without them the OAuth2 chain is dormant and this URL returns 404.
+}

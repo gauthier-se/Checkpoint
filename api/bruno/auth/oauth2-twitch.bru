@@ -1,0 +1,52 @@
+meta {
+  name: OAuth2 (Twitch) - Start Flow
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/oauth2/authorization/twitch
+  body: none
+  auth: none
+}
+
+docs {
+  # OAuth2 — Sign in with Twitch
+
+  Entry point of the Twitch OAuth2 login flow. Hitting this URL in a browser
+  redirects the user to Twitch's consent screen. After consent, Twitch calls
+  back to `/api/login/oauth2/code/twitch` (handled by Spring Security), which
+  triggers `OAuth2AuthenticationSuccessHandler` and redirects the browser to
+  `${app.frontend-url}/`.
+
+  > Bruno cannot replay the full flow because it requires interactive consent
+  > on Twitch's domain. This entry exists to document the endpoint; copy the
+  > URL into a browser to actually exercise it.
+
+  ## Behaviour
+
+  - **Browser**: 302 redirect to Twitch's OAuth consent screen.
+  - **Server (after callback)**: fetches the Twitch user via Helix
+    (`https://api.twitch.tv/helix/users` — note the required `Client-Id` header
+    and `data` array unwrap, both handled by `CheckpointOAuth2UserService`),
+    creates or links a local user, sets a `JSESSIONID` cookie, then
+    302-redirects to the frontend.
+
+  ## Account resolution rules
+
+  1. If a user already exists with `(provider=TWITCH, providerId=<id>)`, returns it.
+  2. Else if a user exists with the same email, links the Twitch identity to that account.
+  3. Else creates a new user with `password=null`, `provider=TWITCH`, a unique pseudo derived from the Twitch display_name (or login), and the `USER` role.
+
+  Banned users are rejected with redirect to `/login?error=oauth_banned`.
+  Any other failure redirects to `/login?error=oauth_failed`.
+
+  ## Scopes
+
+  - `user:read:email` — required to retrieve the user's email from Helix.
+
+  ## Configuration
+
+  Requires `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` to be set in the environment
+  (Doppler in dev/prod). Without them the OAuth2 chain is dormant and this URL returns 404.
+}
