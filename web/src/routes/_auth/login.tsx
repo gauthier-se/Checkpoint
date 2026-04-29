@@ -1,19 +1,34 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { LoginForm } from '@/components/auth/login-form'
 
 type LoginSearchParams = {
   redirect?: string
+  error?: string
+}
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  oauth_failed: 'OAuth login failed. Please try again.',
+  oauth_banned: 'This account has been banned.',
 }
 
 export const Route = createFileRoute('/_auth/login')({
   validateSearch: (search: Record<string, unknown>): LoginSearchParams => ({
     redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+    error: typeof search.error === 'string' ? search.error : undefined,
   }),
   component: LoginPage,
 })
 
 function LoginPage() {
-  const { redirect } = Route.useSearch()
+  const { redirect, error } = Route.useSearch()
+
+  useEffect(() => {
+    if (error) {
+      toast.error(OAUTH_ERROR_MESSAGES[error] ?? OAUTH_ERROR_MESSAGES.oauth_failed)
+    }
+  }, [error])
 
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">

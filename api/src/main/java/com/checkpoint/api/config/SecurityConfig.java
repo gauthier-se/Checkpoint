@@ -1,5 +1,6 @@
 package com.checkpoint.api.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -13,11 +14,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
+import com.checkpoint.api.security.oauth2.CheckpointOAuth2UserService;
+import com.checkpoint.api.security.oauth2.CheckpointOidcUserService;
+import com.checkpoint.api.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.checkpoint.api.security.oauth2.OAuth2AuthenticationSuccessHandler;
 
 /**
  * Dual security configuration providing two filter chains:
@@ -44,11 +50,23 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
+    private final CheckpointOAuth2UserService checkpointOAuth2UserService;
+    private final CheckpointOidcUserService checkpointOidcUserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          ApiAuthenticationEntryPoint apiAuthenticationEntryPoint) {
+                          ApiAuthenticationEntryPoint apiAuthenticationEntryPoint,
+                          CheckpointOAuth2UserService checkpointOAuth2UserService,
+                          CheckpointOidcUserService checkpointOidcUserService,
+                          OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler,
+                          OAuth2AuthenticationFailureHandler oAuth2FailureHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.apiAuthenticationEntryPoint = apiAuthenticationEntryPoint;
+        this.checkpointOAuth2UserService = checkpointOAuth2UserService;
+        this.checkpointOidcUserService = checkpointOidcUserService;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.oAuth2FailureHandler = oAuth2FailureHandler;
     }
 
     /**
@@ -84,8 +102,10 @@ public class SecurityConfig {
      */
     @Bean
     @Order(1)
-    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
-        return http
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                                               ObjectProvider<ClientRegistrationRepository> oauth2Clients)
+            throws Exception {
+        HttpSecurity chain = http
                 .securityMatcher("/api/**")
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -95,6 +115,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/auth/ws-token").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/oauth2/**").permitAll()
+                        .requestMatchers("/api/login/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/genres").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/platforms").permitAll()
@@ -109,8 +131,24 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(apiAuthenticationEntryPoint))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Wire OAuth2 login only when at least one client registration is configured
+        // so test contexts (which omit Google/Twitch credentials) still bootstrap.
+        if (oauth2Clients.getIfAvailable() != null) {
+            chain.oauth2Login(oauth2 -> oauth2
+                    .authorizationEndpoint(endpoint -> endpoint
+                            .baseUri("/api/oauth2/authorization"))
+                    .redirectionEndpoint(endpoint -> endpoint
+                            .baseUri("/api/login/oauth2/code/*"))
+                    .userInfoEndpoint(endpoint -> endpoint
+                            .userService(checkpointOAuth2UserService)
+                            .oidcUserService(checkpointOidcUserService))
+                    .successHandler(oAuth2SuccessHandler)
+                    .failureHandler(oAuth2FailureHandler));
+        }
+
+        return chain.build();
     }
 
     /**

@@ -39,10 +39,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
 
+        // OAuth2 users have a null password; Spring's UserDetails forbids null/empty,
+        // so substitute an unmatchable placeholder. Form login still rejects them
+        // because this is not a valid BCrypt hash, so BCryptPasswordEncoder.matches
+        // always returns false.
+        String password = user.getPassword() != null ? user.getPassword() : OAUTH2_PASSWORD_PLACEHOLDER;
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getPassword(),
+                password,
                 List.of(new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()))
         );
     }
+
+    private static final String OAUTH2_PASSWORD_PLACEHOLDER = "__oauth2_no_password__";
 }
