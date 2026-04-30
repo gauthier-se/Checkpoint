@@ -15,6 +15,7 @@ import com.seyzeriat.desktop.dto.BulkImportResult;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
+import com.seyzeriat.desktop.dto.ReportDetailResult;
 import com.seyzeriat.desktop.dto.ReportResult;
 import com.seyzeriat.desktop.dto.ReviewReportResult;
 import com.seyzeriat.desktop.dto.ReviewResult;
@@ -384,6 +385,62 @@ public class ApiService {
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to dismiss report with status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    /**
+     * Fetches the full details of a specific report, including the target's ID and full content.
+     *
+     * @param id the report ID
+     * @return the report details
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public ReportDetailResult getReportById(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/reports/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch report detail with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), ReportDetailResult.class);
+    }
+
+    /**
+     * Deletes a comment using the admin API, bypassing the ownership check.
+     *
+     * @param id the comment ID
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public void deleteComment(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/comments/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .DELETE();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 204 && response.statusCode() != 200) {
+            throw new IOException("Failed to delete comment with status " + response.statusCode() + ": " + response.body());
         }
     }
 

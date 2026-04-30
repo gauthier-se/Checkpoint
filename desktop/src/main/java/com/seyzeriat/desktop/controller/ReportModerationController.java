@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.seyzeriat.desktop.HelloApplication;
 import com.seyzeriat.desktop.dto.PagedResponse;
+import com.seyzeriat.desktop.dto.ReportDetailResult;
 import com.seyzeriat.desktop.dto.ReportResult;
 import com.seyzeriat.desktop.service.ApiService;
 
@@ -219,11 +220,18 @@ public class ReportModerationController {
         Task<Void> deleteTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                if ("review".equals(report.getType())) {
-                    apiService.deleteReview(report.getId());
+                ReportDetailResult detail = apiService.getReportById(report.getId());
+                String targetId = detail.getTargetId();
+                if (targetId == null) {
+                    throw new IllegalStateException("Report " + report.getId() + " has no target id");
                 }
-                // For both review and comment reports, dismiss the report after content deletion
-                // The cascade delete on the entity will handle report cleanup automatically
+                if ("review".equals(detail.getType())) {
+                    apiService.deleteReview(targetId);
+                } else if ("comment".equals(detail.getType())) {
+                    apiService.deleteComment(targetId);
+                } else {
+                    throw new IllegalStateException("Unknown report type: " + detail.getType());
+                }
                 return null;
             }
         };
