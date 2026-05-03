@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -181,7 +183,7 @@ class NotificationServiceImplTest {
     class GetNotifications {
 
         @Test
-        @DisplayName("should return paged results")
+        @DisplayName("should return paged results without filters")
         void getNotifications_shouldReturnPagedResults() {
             // Given
             when(userRepository.findByEmail("recipient@example.com")).thenReturn(Optional.of(recipient));
@@ -194,17 +196,39 @@ class NotificationServiceImplTest {
             Page<Notification> page = new PageImpl<>(
                     List.of(notification), PageRequest.of(0, 20), 1);
 
-            when(notificationRepository.findByRecipientIdOrderByCreatedAtDesc(
-                    eq(recipient.getId()), any(Pageable.class))).thenReturn(page);
+            when(notificationRepository.findByRecipientWithFilters(
+                    eq(recipient.getId()), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
 
             // When
             PagedResponseDto<NotificationResponseDto> result = notificationService.getNotifications(
-                    "recipient@example.com", 0, 20);
+                    "recipient@example.com", 0, 20, null, null);
 
             // Then
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).senderPseudo()).isEqualTo("senderUser");
             assertThat(result.metadata().totalElements()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("should forward type and isRead filters to repository")
+        void getNotifications_shouldForwardFilters() {
+            // Given
+            when(userRepository.findByEmail("recipient@example.com")).thenReturn(Optional.of(recipient));
+
+            Page<Notification> page = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+
+            when(notificationRepository.findByRecipientWithFilters(
+                    eq(recipient.getId()), eq(NotificationType.LIKE_REVIEW), eq(false),
+                    any(Pageable.class))).thenReturn(page);
+
+            // When
+            PagedResponseDto<NotificationResponseDto> result = notificationService.getNotifications(
+                    "recipient@example.com", 0, 20, NotificationType.LIKE_REVIEW, false);
+
+            // Then
+            assertThat(result.content()).isEmpty();
+            verify(notificationRepository).findByRecipientWithFilters(
+                    eq(recipient.getId()), eq(NotificationType.LIKE_REVIEW), eq(false), any(Pageable.class));
         }
     }
 
@@ -308,6 +332,27 @@ class NotificationServiceImplTest {
 
             // Then
             verify(notificationRepository).markAllAsReadByRecipientId(recipient.getId());
+        }
+    }
+
+    @Nested
+    @DisplayName("markAsReadBulk")
+    class MarkAsReadBulk {
+
+        @Test
+        @DisplayName("should forward IDs and recipient to repository")
+        void markAsReadBulk_shouldCallRepository() {
+            // Given
+            Set<UUID> ids = Set.of(UUID.randomUUID(), UUID.randomUUID());
+            when(userRepository.findByEmail("recipient@example.com")).thenReturn(Optional.of(recipient));
+            when(notificationRepository.markAsReadByIdsAndRecipientId(ids, recipient.getId())).thenReturn(2);
+
+            // When
+            int updated = notificationService.markAsReadBulk(ids, "recipient@example.com");
+
+            // Then
+            assertThat(updated).isEqualTo(2);
+            verify(notificationRepository).markAsReadByIdsAndRecipientId(ids, recipient.getId());
         }
     }
 }

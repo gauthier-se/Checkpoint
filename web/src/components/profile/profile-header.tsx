@@ -1,6 +1,4 @@
 import { Calendar, Pencil, UserMinus, UserPlus } from 'lucide-react'
-
-const API_URL = import.meta.env.VITE_API_URL
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { XpProgressBar } from './xp-progress-bar'
@@ -11,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { toggleFollowMutation } from '@/queries/profile'
 import { useAuth } from '@/hooks/use-auth'
+
+const API_URL = import.meta.env.VITE_API_URL
 
 interface ProfileHeaderProps {
   profile: UserProfile

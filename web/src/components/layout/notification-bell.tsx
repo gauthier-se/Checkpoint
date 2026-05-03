@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { formatDistanceToNow } from 'date-fns'
 import { Bell, CheckCheck } from 'lucide-react'
-import type { Notification, NotificationType } from '@/types/notification'
+import type { Notification } from '@/types/notification'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -17,15 +16,17 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import {
+  NotificationItem,
+  getNotificationHref,
+} from '@/components/notifications/notification-item'
 import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
   notificationsQueryOptions,
   unreadCountQueryOptions,
 } from '@/queries/notifications'
-import { cn } from '@/lib/utils'
 
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(false)
@@ -43,83 +44,17 @@ function useIsMobile(breakpoint = 640) {
   return isMobile
 }
 
-function getNotificationHref(notification: Notification): string {
-  switch (notification.type) {
-    case 'FOLLOW':
-      return `/profile/${notification.senderPseudo}`
-    case 'LIKE_REVIEW':
-    case 'COMMENT_REPLY':
-    case 'LIKE_GAME':
-      return `/games/${notification.referenceId}`
-    case 'LIKE_LIST':
-      return `/lists/${notification.referenceId}`
-    default:
-      return '/'
-  }
-}
-
-function NotificationItem({
-  notification,
-  onClose,
-}: {
-  notification: Notification
-  onClose: () => void
-}) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-
-  const markReadMutation = useMutation({
-    mutationFn: markNotificationAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-    },
-  })
-
-  const handleClick = () => {
-    if (!notification.isRead) {
-      markReadMutation.mutate(notification.id)
-    }
-    onClose()
-    navigate({ to: getNotificationHref(notification) })
-  }
-
-  const timeAgo = formatDistanceToNow(new Date(notification.createdAt), {
-    addSuffix: true,
-  })
-
-  return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        'flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-muted/50',
-        !notification.isRead && 'bg-muted/30',
-      )}
-    >
-      <Avatar className="size-8 shrink-0">
-        {notification.senderPicture && (
-          <AvatarImage src={notification.senderPicture} />
-        )}
-        <AvatarFallback className="text-xs">
-          {notification.senderPseudo?.charAt(0).toUpperCase() ?? '?'}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm leading-snug">{notification.message}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo}</p>
-      </div>
-      {!notification.isRead && (
-        <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
-      )}
-    </button>
-  )
-}
-
 function NotificationPanel({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [page, setPage] = useState(0)
-  const [allNotifications, setAllNotifications] = useState<Array<Notification>>([])
+  const [allNotifications, setAllNotifications] = useState<Array<Notification>>(
+    [],
+  )
 
-  const { data, isLoading } = useQuery(notificationsQueryOptions(page, 20))
+  const { data, isLoading } = useQuery(
+    notificationsQueryOptions({ page, size: 20 }),
+  )
   const { data: unreadData } = useQuery(unreadCountQueryOptions())
 
   useEffect(() => {
@@ -133,6 +68,13 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
     }
   }, [data, page])
 
+  const markReadMutation = useMutation({
+    mutationFn: markNotificationAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
     onSuccess: () => {
@@ -140,6 +82,14 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
       setAllNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     },
   })
+
+  const handleItemClick = (notification: Notification) => {
+    if (!notification.isRead) {
+      markReadMutation.mutate(notification.id)
+    }
+    onClose()
+    navigate({ to: getNotificationHref(notification) })
+  }
 
   const hasUnread = (unreadData?.count ?? 0) > 0
 
@@ -179,7 +129,7 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onClose={onClose}
+                onClick={() => handleItemClick(notification)}
               />
             ))}
             {data?.metadata.hasNext && (
@@ -197,6 +147,20 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
             )}
           </>
         )}
+      </div>
+      <Separator />
+      <div className="px-2 py-1.5">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="w-full text-xs"
+          onClick={onClose}
+        >
+          <Link to="/notifications" search={{ page: 1, filter: 'all' }}>
+            View all notifications
+          </Link>
+        </Button>
       </div>
     </div>
   )

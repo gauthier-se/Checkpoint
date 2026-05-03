@@ -1,8 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import type { User } from '@/types/user'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-
-const API_URL = import.meta.env.VITE_API_URL
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/use-auth'
+
+const API_URL = import.meta.env.VITE_API_URL
 
 export function AvatarDropdown({ user }: { user: User }) {
   const { logout } = useAuth()

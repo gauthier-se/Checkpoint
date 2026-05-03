@@ -13,6 +13,8 @@ get {
 params:query {
   page: 0
   size: 20
+  ~type: LIKE_REVIEW
+  ~isRead: false
 }
 
 auth:bearer {
@@ -22,7 +24,7 @@ auth:bearer {
 docs {
   # Get Notifications
 
-  Returns a paginated list of notifications for the authenticated user, ordered by creation date descending.
+  Returns a paginated list of notifications for the authenticated user, ordered by creation date descending. Optionally filtered by type and/or read status.
 
   ## Authentication
 
@@ -32,6 +34,8 @@ docs {
 
   - **page**: Page number (0-based, default 0)
   - **size**: Page size (default 20, max 100)
+  - **type** *(optional)*: Filter by notification type (`FOLLOW`, `LIKE_REVIEW`, `LIKE_LIST`, `LIKE_GAME`, `COMMENT_REPLY`)
+  - **isRead** *(optional)*: Filter by read status (`true` for read, `false` for unread)
 
   ## Response (200 OK)
 

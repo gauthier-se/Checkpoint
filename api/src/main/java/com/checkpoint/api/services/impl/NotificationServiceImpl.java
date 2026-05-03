@@ -1,5 +1,6 @@
 package com.checkpoint.api.services.impl;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -100,13 +101,14 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public PagedResponseDto<NotificationResponseDto> getNotifications(String userEmail, int page, int size) {
+    public PagedResponseDto<NotificationResponseDto> getNotifications(String userEmail, int page, int size,
+                                                                      NotificationType type, Boolean isRead) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Notification> notificationPage = notificationRepository
-                .findByRecipientIdOrderByCreatedAtDesc(user.getId(), pageable);
+                .findByRecipientWithFilters(user.getId(), type, isRead, pageable);
 
         Page<NotificationResponseDto> dtoPage = notificationPage.map(notificationMapper::toResponseDto);
 
@@ -159,5 +161,21 @@ public class NotificationServiceImpl implements NotificationService {
         int updatedCount = notificationRepository.markAllAsReadByRecipientId(user.getId());
 
         log.info("Marked {} notifications as read for user {}", updatedCount, user.getPseudo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int markAsReadBulk(Set<UUID> ids, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+
+        int updatedCount = notificationRepository.markAsReadByIdsAndRecipientId(ids, user.getId());
+
+        log.info("Bulk-marked {} notifications as read for user {} (requested: {})",
+                updatedCount, user.getPseudo(), ids.size());
+
+        return updatedCount;
     }
 }

@@ -26,7 +26,9 @@ function LoginPage() {
 
   useEffect(() => {
     if (error) {
-      toast.error(OAUTH_ERROR_MESSAGES[error] ?? OAUTH_ERROR_MESSAGES.oauth_failed)
+      toast.error(
+        OAUTH_ERROR_MESSAGES[error] ?? OAUTH_ERROR_MESSAGES.oauth_failed,
+      )
     }
   }, [error])
 

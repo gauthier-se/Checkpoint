@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import type {
+  NotificationType,
   NotificationsResponse,
   UnreadCountResponse,
 } from '@/types/notification'
@@ -20,16 +21,28 @@ export const unreadCountQueryOptions = () => {
   })
 }
 
+export interface NotificationsQueryParams {
+  page?: number
+  size?: number
+  type?: NotificationType
+  isRead?: boolean
+}
+
 export const notificationsQueryOptions = (
-  page: number = 0,
-  size: number = 20,
+  params: NotificationsQueryParams = {},
 ) => {
+  const { page = 0, size = 20, type, isRead } = params
+
+  const qs = new URLSearchParams()
+  qs.set('page', String(page))
+  qs.set('size', String(size))
+  if (type) qs.set('type', type)
+  if (isRead !== undefined) qs.set('isRead', String(isRead))
+
   return queryOptions({
-    queryKey: ['notifications', 'list', page, size],
+    queryKey: ['notifications', 'list', { page, size, type, isRead }],
     queryFn: async (): Promise<NotificationsResponse> => {
-      const res = await apiFetch(
-        `/api/me/notifications?page=${page}&size=${size}`,
-      )
+      const res = await apiFetch(`/api/me/notifications?${qs.toString()}`)
       if (!res.ok) {
         throw new Error('Failed to fetch notifications')
       }
@@ -56,6 +69,19 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
   })
   if (!res.ok) {
     throw new Error('Failed to mark all notifications as read')
+  }
+}
+
+export const markBulkNotificationsAsRead = async (
+  ids: Array<string>,
+): Promise<void> => {
+  const res = await apiFetch('/api/me/notifications/mark-read', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to mark notifications as read')
   }
 }
 
