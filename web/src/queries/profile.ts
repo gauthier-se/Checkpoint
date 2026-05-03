@@ -140,9 +140,7 @@ export async function updateProfile(
   return res.json()
 }
 
-export async function uploadPicture(
-  file: File,
-): Promise<{ picture: string }> {
+export async function uploadPicture(file: File): Promise<{ picture: string }> {
   const formData = new FormData()
   formData.append('file', file)
   const res = await apiFetch('/api/me/picture', {

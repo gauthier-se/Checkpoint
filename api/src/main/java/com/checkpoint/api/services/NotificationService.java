@@ -1,5 +1,6 @@
 package com.checkpoint.api.services;
 
+import java.util.Set;
 import java.util.UUID;
 
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
@@ -27,14 +28,18 @@ public interface NotificationService {
                                                UUID referenceId, String message);
 
     /**
-     * Returns a paginated list of notifications for the authenticated user.
+     * Returns a paginated list of notifications for the authenticated user,
+     * optionally filtered by type and/or read status.
      *
      * @param userEmail the authenticated user's email
      * @param page      the page number (0-based)
      * @param size      the page size
+     * @param type      the notification type filter (null for no filter)
+     * @param isRead    the read-status filter (null for no filter)
      * @return a paginated response of notification DTOs
      */
-    PagedResponseDto<NotificationResponseDto> getNotifications(String userEmail, int page, int size);
+    PagedResponseDto<NotificationResponseDto> getNotifications(String userEmail, int page, int size,
+                                                               NotificationType type, Boolean isRead);
 
     /**
      * Returns the number of unread notifications for the authenticated user.
@@ -59,4 +64,14 @@ public interface NotificationService {
      * @param userEmail the authenticated user's email
      */
     void markAllAsRead(String userEmail);
+
+    /**
+     * Marks the given notifications as read for the authenticated user.
+     * Notifications that don't belong to the user are silently ignored.
+     *
+     * @param ids       the notification IDs to mark as read
+     * @param userEmail the authenticated user's email
+     * @return the number of notifications actually updated
+     */
+    int markAsReadBulk(Set<UUID> ids, String userEmail);
 }

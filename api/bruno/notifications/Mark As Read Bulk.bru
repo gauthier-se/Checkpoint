@@ -1,0 +1,53 @@
+meta {
+  name: Mark As Read Bulk
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/me/notifications/mark-read
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "ids": [
+      "00000000-0000-0000-0000-000000000000",
+      "11111111-1111-1111-1111-111111111111"
+    ]
+  }
+}
+
+docs {
+  # Mark As Read Bulk
+
+  Marks the supplied set of notifications as read for the authenticated user. Notifications that don't belong to the user (or are already read) are silently ignored.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Request Body
+
+  ```json
+  {
+    "ids": ["uuid-1", "uuid-2", "..."]
+  }
+  ```
+
+  - **ids**: Non-empty set of notification UUIDs to mark as read.
+
+  ## Response (204 No Content)
+
+  Empty body on success.
+
+  ## Error Responses
+
+  - **400 Bad Request**: `ids` is empty or missing
+  - **401 Unauthorized**: Not authenticated
+}

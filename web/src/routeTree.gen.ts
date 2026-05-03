@@ -29,6 +29,7 @@ import { Route as AppNewsNewsIdRouteImport } from './routes/_app/news/$newsId'
 import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
+import { Route as AppProtectedNotificationsRouteImport } from './routes/_app/_protected/notifications'
 import { Route as AppProtectedSettingsProfileRouteImport } from './routes/_app/_protected/settings/profile'
 import { Route as AppProtectedListsNewRouteImport } from './routes/_app/_protected/lists/new'
 import { Route as AppProtectedUsernameTagsIndexRouteImport } from './routes/_app/_protected/$username/tags/index'
@@ -133,6 +134,12 @@ const AppProtectedProfileRoute = AppProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppProtectedRoute,
 } as any)
+const AppProtectedNotificationsRoute =
+  AppProtectedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AppProtectedRoute,
+  } as any)
 const AppProtectedSettingsProfileRoute =
   AppProtectedSettingsProfileRouteImport.update({
     id: '/settings/profile',
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/': typeof AppIndexRoute
+  '/notifications': typeof AppProtectedNotificationsRoute
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
@@ -203,6 +211,7 @@ export interface FileRoutesByTo {
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/': typeof AppIndexRoute
+  '/notifications': typeof AppProtectedNotificationsRoute
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
@@ -232,6 +241,7 @@ export interface FileRoutesById {
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/_protected/notifications': typeof AppProtectedNotificationsRoute
   '/_app/_protected/profile': typeof AppProtectedProfileRoute
   '/_app/games/$gameId': typeof AppGamesGameIdRoute
   '/_app/lists/$listId': typeof AppListsListIdRoute
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/'
+    | '/notifications'
     | '/profile'
     | '/games/$gameId'
     | '/lists/$listId'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/'
+    | '/notifications'
     | '/profile'
     | '/games/$gameId'
     | '/lists/$listId'
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/_auth/register'
     | '/_auth/reset-password'
     | '/_app/'
+    | '/_app/_protected/notifications'
     | '/_app/_protected/profile'
     | '/_app/games/$gameId'
     | '/_app/lists/$listId'
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedProfileRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/_protected/notifications': {
+      id: '/_app/_protected/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppProtectedNotificationsRouteImport
+      parentRoute: typeof AppProtectedRoute
+    }
     '/_app/_protected/settings/profile': {
       id: '/_app/_protected/settings/profile'
       path: '/settings/profile'
@@ -522,6 +542,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppProtectedRouteChildren {
+  AppProtectedNotificationsRoute: typeof AppProtectedNotificationsRoute
   AppProtectedProfileRoute: typeof AppProtectedProfileRoute
   AppProtectedListsNewRoute: typeof AppProtectedListsNewRoute
   AppProtectedSettingsProfileRoute: typeof AppProtectedSettingsProfileRoute
@@ -531,6 +552,7 @@ interface AppProtectedRouteChildren {
 }
 
 const AppProtectedRouteChildren: AppProtectedRouteChildren = {
+  AppProtectedNotificationsRoute: AppProtectedNotificationsRoute,
   AppProtectedProfileRoute: AppProtectedProfileRoute,
   AppProtectedListsNewRoute: AppProtectedListsNewRoute,
   AppProtectedSettingsProfileRoute: AppProtectedSettingsProfileRoute,

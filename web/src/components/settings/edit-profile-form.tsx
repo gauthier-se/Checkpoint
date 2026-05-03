@@ -18,11 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/hooks/use-auth'
-import {
-  deletePicture,
-  updateProfile,
-  uploadPicture,
-} from '@/queries/profile'
+import { deletePicture, updateProfile, uploadPicture } from '@/queries/profile'
 
 const API_URL = import.meta.env.VITE_API_URL
 
