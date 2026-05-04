@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seyzeriat.desktop.dto.BulkImportResult;
 import com.seyzeriat.desktop.dto.ExternalGameResult;
 import com.seyzeriat.desktop.dto.ImportedGameResult;
+import com.seyzeriat.desktop.dto.NewsRequestPayload;
+import com.seyzeriat.desktop.dto.NewsResult;
 import com.seyzeriat.desktop.dto.PagedResponse;
 import com.seyzeriat.desktop.dto.ReportDetailResult;
 import com.seyzeriat.desktop.dto.ReportResult;
@@ -556,6 +558,200 @@ public class ApiService {
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to unban user with status " + response.statusCode() + ": " + response.body());
         }
+    }
+
+    /**
+     * Fetches a paginated list of all news articles (drafts + published) from the admin API.
+     *
+     * @param page the page number (0-based)
+     * @param size number of items per page
+     * @param sort sort string in the form {@code field,direction} (e.g. {@code createdAt,desc})
+     * @return the paginated news articles
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public PagedResponse<NewsResult> getNews(int page, int size, String sort)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/news?page=" + page + "&size=" + size
+                + "&sort=" + URLEncoder.encode(sort, StandardCharsets.UTF_8);
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to fetch news with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), new TypeReference<PagedResponse<NewsResult>>() {});
+    }
+
+    /**
+     * Creates a new news article (draft) via the admin API.
+     *
+     * @param payload the news creation request body
+     * @return the created news article
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public NewsResult createNews(NewsRequestPayload payload)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/news";
+        String body = objectMapper.writeValueAsString(payload);
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body));
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 201 && response.statusCode() != 200) {
+            throw new IOException("Failed to create news with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), NewsResult.class);
+    }
+
+    /**
+     * Updates an existing news article via the admin API.
+     *
+     * @param id      the news article ID
+     * @param payload the news update request body
+     * @return the updated news article
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public NewsResult updateNews(String id, NewsRequestPayload payload)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/news/" + id;
+        String body = objectMapper.writeValueAsString(payload);
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body));
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to update news with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), NewsResult.class);
+    }
+
+    /**
+     * Deletes a news article via the admin API.
+     *
+     * @param id the news article ID
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public void deleteNews(String id) throws IOException, InterruptedException, UnauthorizedException {
+        String url = BASE_URL + "/api/admin/news/" + id;
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .DELETE();
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 204 && response.statusCode() != 200) {
+            throw new IOException("Failed to delete news with status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    /**
+     * Publishes a news article via the admin API.
+     *
+     * @param id the news article ID
+     * @return the published news article
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public NewsResult publishNews(String id)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/news/" + id + "/publish";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to publish news with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), NewsResult.class);
+    }
+
+    /**
+     * Unpublishes a news article via the admin API.
+     *
+     * @param id the news article ID
+     * @return the unpublished news article
+     * @throws IOException           if the request fails
+     * @throws InterruptedException  if the request is interrupted
+     * @throws UnauthorizedException if token is missing/expired or user lacks ROLE_ADMIN
+     */
+    public NewsResult unpublishNews(String id)
+            throws IOException, InterruptedException, UnauthorizedException {
+
+        String url = BASE_URL + "/api/admin/news/" + id + "/unpublish";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody());
+
+        addAuthHeader(builder);
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        checkUnauthorized(response);
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to unpublish news with status " + response.statusCode() + ": " + response.body());
+        }
+
+        return objectMapper.readValue(response.body(), NewsResult.class);
     }
 
     // ─── Auth interceptor helpers ──────────────────────────────────────
