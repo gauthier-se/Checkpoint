@@ -1,0 +1,67 @@
+meta {
+  name: Update Preferences
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/me/notification-preferences
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "followEnabled": false,
+    "likeReviewEnabled": true,
+    "likeListEnabled": true,
+    "likeGameEnabled": true,
+    "commentReplyEnabled": false
+  }
+}
+
+docs {
+  # Update Notification Preferences
+
+  Partially updates the authenticated user's notification preferences. Only non-null fields are applied; omitted/null fields keep their current value. If no preferences row exists, defaults are lazy-created before the update is applied.
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Request Body
+
+  All fields are optional booleans (omit or set to `null` to leave unchanged):
+
+  ```json
+  {
+    "followEnabled": false,
+    "likeReviewEnabled": true,
+    "likeListEnabled": true,
+    "likeGameEnabled": true,
+    "commentReplyEnabled": false
+  }
+  ```
+
+  ## Response (200 OK)
+
+  Returns the full updated preferences DTO:
+
+  ```json
+  {
+    "followEnabled": false,
+    "likeReviewEnabled": true,
+    "likeListEnabled": true,
+    "likeGameEnabled": true,
+    "commentReplyEnabled": false
+  }
+  ```
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}
