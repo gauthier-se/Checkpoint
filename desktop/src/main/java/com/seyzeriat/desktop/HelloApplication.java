@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.seyzeriat.desktop.controller.BulkImportController;
 import com.seyzeriat.desktop.controller.ImportGamesController;
 import com.seyzeriat.desktop.controller.LoginController;
+import com.seyzeriat.desktop.controller.NewsManagementController;
 import com.seyzeriat.desktop.controller.ReportModerationController;
 import com.seyzeriat.desktop.controller.ReviewModerationController;
 import com.seyzeriat.desktop.controller.UserManagementController;
@@ -114,6 +115,7 @@ public class HelloApplication extends Application {
         Button usersBtn = createNavButton("Utilisateurs", this::showUsersView);
         Button reviewsBtn = createNavButton("Modération des avis", this::showReviewsView);
         Button reportsBtn = createNavButton("Modération des signalements", this::showReportsView);
+        Button newsBtn = createNavButton("Actualités", this::showNewsView);
 
         // Set home as active by default
         homeBtn.getStyleClass().add("active");
@@ -129,7 +131,7 @@ public class HelloApplication extends Application {
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
         logoutBtn.setOnAction(event -> showLoginView());
 
-        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, bulkImportBtn, usersBtn, reviewsBtn, reportsBtn, spacer, logoutBtn);
+        sidebar.getChildren().addAll(appTitle, homeBtn, importBtn, bulkImportBtn, usersBtn, reviewsBtn, reportsBtn, newsBtn, spacer, logoutBtn);
         return sidebar;
     }
 
@@ -233,6 +235,21 @@ public class HelloApplication extends Application {
             controller.setApplication(this);
 
             setContent(reportsView);
+        } catch (IOException e) {
+            Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
+            setContent(error);
+        }
+    }
+
+    private void showNewsView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("news-management-view.fxml"));
+            Node newsView = loader.load();
+
+            NewsManagementController controller = loader.getController();
+            controller.setApplication(this);
+
+            setContent(newsView);
         } catch (IOException e) {
             Label error = new Label("Erreur lors du chargement de la vue : " + e.getMessage());
             setContent(error);
