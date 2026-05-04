@@ -41,6 +41,7 @@ import com.checkpoint.api.mapper.NotificationMapper;
 import com.checkpoint.api.mapper.impl.NotificationMapperImpl;
 import com.checkpoint.api.repositories.NotificationRepository;
 import com.checkpoint.api.repositories.UserRepository;
+import com.checkpoint.api.services.NotificationPreferencesService;
 
 /**
  * Unit tests for {@link NotificationServiceImpl}.
@@ -57,6 +58,9 @@ class NotificationServiceImplTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private NotificationPreferencesService preferencesService;
+
     private NotificationMapper notificationMapper;
     private NotificationServiceImpl notificationService;
 
@@ -67,7 +71,7 @@ class NotificationServiceImplTest {
     void setUp() {
         notificationMapper = new NotificationMapperImpl();
         notificationService = new NotificationServiceImpl(
-                notificationRepository, userRepository, notificationMapper, messagingTemplate);
+                notificationRepository, userRepository, notificationMapper, messagingTemplate, preferencesService);
 
         recipient = new User();
         recipient.setId(UUID.randomUUID());
@@ -89,6 +93,7 @@ class NotificationServiceImplTest {
         @DisplayName("should persist notification and push via WebSocket")
         void createNotification_shouldPersistAndPushViaWebSocket() {
             // Given
+            when(preferencesService.isEnabled(recipient.getId(), NotificationType.FOLLOW)).thenReturn(true);
             when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
             when(userRepository.findById(sender.getId())).thenReturn(Optional.of(sender));
 
@@ -153,9 +158,28 @@ class NotificationServiceImplTest {
         }
 
         @Test
+        @DisplayName("should skip persistence and WS push when type is disabled in preferences")
+        void createNotification_shouldSkipWhenTypeDisabled() {
+            // Given
+            when(preferencesService.isEnabled(recipient.getId(), NotificationType.FOLLOW)).thenReturn(false);
+
+            // When
+            NotificationResponseDto result = notificationService.createNotification(
+                    recipient.getId(), sender.getId(), NotificationType.FOLLOW, null,
+                    "senderUser started following you");
+
+            // Then
+            assertThat(result).isNull();
+            verify(notificationRepository, never()).save(any(Notification.class));
+            verify(messagingTemplate, never()).convertAndSendToUser(
+                    any(String.class), any(String.class), any(NotificationResponseDto.class));
+        }
+
+        @Test
         @DisplayName("should handle null sender for system notifications")
         void createNotification_shouldHandleNullSender() {
             // Given
+            when(preferencesService.isEnabled(recipient.getId(), NotificationType.FOLLOW)).thenReturn(true);
             when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
 
             Notification savedNotification = new Notification(

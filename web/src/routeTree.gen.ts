@@ -30,7 +30,10 @@ import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
 import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protected/profile'
 import { Route as AppProtectedNotificationsRouteImport } from './routes/_app/_protected/notifications'
+import { Route as AppProtectedSettingsRouteRouteImport } from './routes/_app/_protected/settings/route'
+import { Route as AppProtectedSettingsIndexRouteImport } from './routes/_app/_protected/settings/index'
 import { Route as AppProtectedSettingsProfileRouteImport } from './routes/_app/_protected/settings/profile'
+import { Route as AppProtectedSettingsNotificationsRouteImport } from './routes/_app/_protected/settings/notifications'
 import { Route as AppProtectedListsNewRouteImport } from './routes/_app/_protected/lists/new'
 import { Route as AppProtectedUsernameTagsIndexRouteImport } from './routes/_app/_protected/$username/tags/index'
 import { Route as AppProtectedUsernameGamesIndexRouteImport } from './routes/_app/_protected/$username/games/index'
@@ -140,11 +143,29 @@ const AppProtectedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AppProtectedRoute,
   } as any)
+const AppProtectedSettingsRouteRoute =
+  AppProtectedSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AppProtectedRoute,
+  } as any)
+const AppProtectedSettingsIndexRoute =
+  AppProtectedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppProtectedSettingsRouteRoute,
+  } as any)
 const AppProtectedSettingsProfileRoute =
   AppProtectedSettingsProfileRouteImport.update({
-    id: '/settings/profile',
-    path: '/settings/profile',
-    getParentRoute: () => AppProtectedRoute,
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AppProtectedSettingsRouteRoute,
+  } as any)
+const AppProtectedSettingsNotificationsRoute =
+  AppProtectedSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AppProtectedSettingsRouteRoute,
   } as any)
 const AppProtectedListsNewRoute = AppProtectedListsNewRouteImport.update({
   id: '/lists/new',
@@ -185,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof AuthRegisterRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/': typeof AppIndexRoute
+  '/settings': typeof AppProtectedSettingsRouteRouteWithChildren
   '/notifications': typeof AppProtectedNotificationsRoute
   '/profile': typeof AppProtectedProfileRoute
   '/games/$gameId': typeof AppGamesGameIdRoute
@@ -196,7 +218,9 @@ export interface FileRoutesByFullPath {
   '/members': typeof AppMembersIndexRoute
   '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
+  '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/settings/': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
@@ -222,7 +246,9 @@ export interface FileRoutesByTo {
   '/members': typeof AppMembersIndexRoute
   '/news': typeof AppNewsIndexRoute
   '/lists/new': typeof AppProtectedListsNewRoute
+  '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/settings': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/$username/games': typeof AppProtectedUsernameGamesIndexRoute
@@ -241,6 +267,7 @@ export interface FileRoutesById {
   '/_auth/register': typeof AuthRegisterRoute
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/_protected/settings': typeof AppProtectedSettingsRouteRouteWithChildren
   '/_app/_protected/notifications': typeof AppProtectedNotificationsRoute
   '/_app/_protected/profile': typeof AppProtectedProfileRoute
   '/_app/games/$gameId': typeof AppGamesGameIdRoute
@@ -252,7 +279,9 @@ export interface FileRoutesById {
   '/_app/members/': typeof AppMembersIndexRoute
   '/_app/news/': typeof AppNewsIndexRoute
   '/_app/_protected/lists/new': typeof AppProtectedListsNewRoute
+  '/_app/_protected/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/_app/_protected/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/_app/_protected/settings/': typeof AppProtectedSettingsIndexRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/_app/profile_/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
   '/_app/_protected/$username/games/': typeof AppProtectedUsernameGamesIndexRoute
@@ -269,6 +298,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/'
+    | '/settings'
     | '/notifications'
     | '/profile'
     | '/games/$gameId'
@@ -280,7 +310,9 @@ export interface FileRouteTypes {
     | '/members'
     | '/news'
     | '/lists/new'
+    | '/settings/notifications'
     | '/settings/profile'
+    | '/settings/'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
     | '/$username/games'
@@ -306,7 +338,9 @@ export interface FileRouteTypes {
     | '/members'
     | '/news'
     | '/lists/new'
+    | '/settings/notifications'
     | '/settings/profile'
+    | '/settings'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
     | '/$username/games'
@@ -324,6 +358,7 @@ export interface FileRouteTypes {
     | '/_auth/register'
     | '/_auth/reset-password'
     | '/_app/'
+    | '/_app/_protected/settings'
     | '/_app/_protected/notifications'
     | '/_app/_protected/profile'
     | '/_app/games/$gameId'
@@ -335,7 +370,9 @@ export interface FileRouteTypes {
     | '/_app/members/'
     | '/_app/news/'
     | '/_app/_protected/lists/new'
+    | '/_app/_protected/settings/notifications'
     | '/_app/_protected/settings/profile'
+    | '/_app/_protected/settings/'
     | '/_app/_protected/lists/$listId/edit'
     | '/_app/profile_/$username/tags/$tagName'
     | '/_app/_protected/$username/games/'
@@ -496,12 +533,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedNotificationsRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/_protected/settings': {
+      id: '/_app/_protected/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppProtectedSettingsRouteRouteImport
+      parentRoute: typeof AppProtectedRoute
+    }
+    '/_app/_protected/settings/': {
+      id: '/_app/_protected/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AppProtectedSettingsIndexRouteImport
+      parentRoute: typeof AppProtectedSettingsRouteRoute
+    }
     '/_app/_protected/settings/profile': {
       id: '/_app/_protected/settings/profile'
-      path: '/settings/profile'
+      path: '/profile'
       fullPath: '/settings/profile'
       preLoaderRoute: typeof AppProtectedSettingsProfileRouteImport
-      parentRoute: typeof AppProtectedRoute
+      parentRoute: typeof AppProtectedSettingsRouteRoute
+    }
+    '/_app/_protected/settings/notifications': {
+      id: '/_app/_protected/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AppProtectedSettingsNotificationsRouteImport
+      parentRoute: typeof AppProtectedSettingsRouteRoute
     }
     '/_app/_protected/lists/new': {
       id: '/_app/_protected/lists/new'
@@ -541,21 +599,40 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppProtectedSettingsRouteRouteChildren {
+  AppProtectedSettingsNotificationsRoute: typeof AppProtectedSettingsNotificationsRoute
+  AppProtectedSettingsProfileRoute: typeof AppProtectedSettingsProfileRoute
+  AppProtectedSettingsIndexRoute: typeof AppProtectedSettingsIndexRoute
+}
+
+const AppProtectedSettingsRouteRouteChildren: AppProtectedSettingsRouteRouteChildren =
+  {
+    AppProtectedSettingsNotificationsRoute:
+      AppProtectedSettingsNotificationsRoute,
+    AppProtectedSettingsProfileRoute: AppProtectedSettingsProfileRoute,
+    AppProtectedSettingsIndexRoute: AppProtectedSettingsIndexRoute,
+  }
+
+const AppProtectedSettingsRouteRouteWithChildren =
+  AppProtectedSettingsRouteRoute._addFileChildren(
+    AppProtectedSettingsRouteRouteChildren,
+  )
+
 interface AppProtectedRouteChildren {
+  AppProtectedSettingsRouteRoute: typeof AppProtectedSettingsRouteRouteWithChildren
   AppProtectedNotificationsRoute: typeof AppProtectedNotificationsRoute
   AppProtectedProfileRoute: typeof AppProtectedProfileRoute
   AppProtectedListsNewRoute: typeof AppProtectedListsNewRoute
-  AppProtectedSettingsProfileRoute: typeof AppProtectedSettingsProfileRoute
   AppProtectedListsListIdEditRoute: typeof AppProtectedListsListIdEditRoute
   AppProtectedUsernameGamesIndexRoute: typeof AppProtectedUsernameGamesIndexRoute
   AppProtectedUsernameTagsIndexRoute: typeof AppProtectedUsernameTagsIndexRoute
 }
 
 const AppProtectedRouteChildren: AppProtectedRouteChildren = {
+  AppProtectedSettingsRouteRoute: AppProtectedSettingsRouteRouteWithChildren,
   AppProtectedNotificationsRoute: AppProtectedNotificationsRoute,
   AppProtectedProfileRoute: AppProtectedProfileRoute,
   AppProtectedListsNewRoute: AppProtectedListsNewRoute,
-  AppProtectedSettingsProfileRoute: AppProtectedSettingsProfileRoute,
   AppProtectedListsListIdEditRoute: AppProtectedListsListIdEditRoute,
   AppProtectedUsernameGamesIndexRoute: AppProtectedUsernameGamesIndexRoute,
   AppProtectedUsernameTagsIndexRoute: AppProtectedUsernameTagsIndexRoute,

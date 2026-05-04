@@ -23,6 +23,7 @@ import com.checkpoint.api.exceptions.UnauthorizedNotificationAccessException;
 import com.checkpoint.api.mapper.NotificationMapper;
 import com.checkpoint.api.repositories.NotificationRepository;
 import com.checkpoint.api.repositories.UserRepository;
+import com.checkpoint.api.services.NotificationPreferencesService;
 import com.checkpoint.api.services.NotificationService;
 
 /**
@@ -39,15 +40,18 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRepository userRepository;
     private final NotificationMapper notificationMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationPreferencesService preferencesService;
 
     public NotificationServiceImpl(NotificationRepository notificationRepository,
                                    UserRepository userRepository,
                                    NotificationMapper notificationMapper,
-                                   SimpMessagingTemplate messagingTemplate) {
+                                   SimpMessagingTemplate messagingTemplate,
+                                   NotificationPreferencesService preferencesService) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.notificationMapper = notificationMapper;
         this.messagingTemplate = messagingTemplate;
+        this.preferencesService = preferencesService;
     }
 
     /**
@@ -69,6 +73,12 @@ public class NotificationServiceImpl implements NotificationService {
                         senderId, recipientId, type, referenceId)) {
             log.debug("Skipping duplicate notification — type: {}, sender: {}, recipient: {}, reference: {}",
                     type, senderId, recipientId, referenceId);
+            return null;
+        }
+
+        // Preference gating: skip persistence + WS push when the recipient has opted out of this type
+        if (!preferencesService.isEnabled(recipientId, type)) {
+            log.debug("Skipping notification — recipient {} has disabled type {}", recipientId, type);
             return null;
         }
 

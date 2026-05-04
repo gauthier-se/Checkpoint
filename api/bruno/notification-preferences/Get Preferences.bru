@@ -1,0 +1,43 @@
+meta {
+  name: Get Preferences
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/me/notification-preferences
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Notification Preferences
+
+  Returns the per-type notification preferences for the authenticated user. If no preferences row exists yet, defaults are lazy-created (all types enabled).
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "followEnabled": true,
+    "likeReviewEnabled": true,
+    "likeListEnabled": true,
+    "likeGameEnabled": true,
+    "commentReplyEnabled": true
+  }
+  ```
+
+  Each boolean controls whether the matching `NotificationType` (`FOLLOW`, `LIKE_REVIEW`, `LIKE_LIST`, `LIKE_GAME`, `COMMENT_REPLY`) produces notifications. When `false`, both DB persistence and the WebSocket push are skipped.
+
+  ## Error Responses
+
+  - **401 Unauthorized**: Not authenticated
+}
