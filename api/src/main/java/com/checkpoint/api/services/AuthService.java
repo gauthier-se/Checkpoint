@@ -5,12 +5,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Service interface for authentication operations.
- * Supports hybrid authentication: JWT for Desktop, session for Web.
+ * Supports hybrid authentication: JWT in HttpOnly cookie for Web, JWT in Authorization header for Desktop.
  */
 public interface AuthService {
 
@@ -23,24 +22,19 @@ public interface AuthService {
     String authenticateAndGenerateToken(LoginRequestDto request);
 
     /**
-     * Authenticates a user and creates a server-side session (for Web clients).
+     * Authenticates a user and writes a {@code checkpoint_token} HttpOnly cookie (for Web clients).
      *
      * @param request         the login credentials
-     * @param servletRequest  the HTTP servlet request (to create session)
-     * @param servletResponse the HTTP servlet response
+     * @param servletResponse the HTTP servlet response to write the cookie on
      */
-    void authenticateAndCreateSession(LoginRequestDto request,
-                                      HttpServletRequest servletRequest,
-                                      HttpServletResponse servletResponse);
+    void authenticateAndSetCookie(LoginRequestDto request, HttpServletResponse servletResponse);
 
     /**
-     * Logs out a web user by invalidating the session.
+     * Clears the {@code checkpoint_token} cookie by setting {@code Max-Age=0} (for Web logout).
      *
-     * @param servletRequest  the HTTP servlet request
-     * @param servletResponse the HTTP servlet response
+     * @param servletResponse the HTTP servlet response to write the expired cookie on
      */
-    void logoutSession(HttpServletRequest servletRequest,
-                       HttpServletResponse servletResponse);
+    void clearAuthCookie(HttpServletResponse servletResponse);
 
     /**
      * Retrieves profile information for the currently authenticated user.
@@ -73,9 +67,6 @@ public interface AuthService {
 
     /**
      * Generates a short-lived JWT for WebSocket authentication.
-     *
-     * <p>Used by web clients that are session-authenticated to obtain a token
-     * for the STOMP WebSocket connection.</p>
      *
      * @param userDetails the authenticated user principal
      * @return a JWT token string

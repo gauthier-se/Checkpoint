@@ -19,20 +19,16 @@ import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.services.AuthService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 /**
- * Hybrid authentication controller.
+ * Authentication controller supporting two client types:
  *
- * <p>Provides a unified login endpoint that returns the appropriate credential type
- * based on the client:</p>
  * <ul>
  *   <li><strong>Desktop</strong> ({@code X-Client-Type: Desktop} header or
  *       {@code POST /api/auth/token}): returns a JWT in the response body.</li>
- *   <li><strong>Web</strong> (default): creates a server-side session with a
- *       {@code JSESSIONID} cookie.</li>
+ *   <li><strong>Web</strong> (default): sets a {@code checkpoint_token} HttpOnly cookie.</li>
  * </ul>
  */
 @RestController
@@ -48,21 +44,19 @@ public class AuthController {
     /**
      * Unified login endpoint.
      *
-     * <p>If the {@code X-Client-Type} header is set to {@code Desktop},
-     * a JWT token is returned. Otherwise, a server-side session is created.</p>
+     * <p>Desktop clients (identified by the {@code X-Client-Type: Desktop} header) receive a
+     * JWT in the response body. Web clients receive a {@code checkpoint_token} HttpOnly cookie.</p>
      *
      * @param loginRequest    the login credentials
      * @param clientType      optional header to specify the client type
-     * @param servletRequest  the HTTP servlet request
-     * @param servletResponse the HTTP servlet response
-     * @return JWT token (Desktop) or success message (Web)
+     * @param servletResponse the HTTP servlet response (used to write the cookie for Web clients)
+     * @return JWT token body (Desktop) or success message (Web)
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequestDto loginRequest,
             @org.springframework.web.bind.annotation.RequestHeader(
                     value = "X-Client-Type", required = false) String clientType,
-            HttpServletRequest servletRequest,
             HttpServletResponse servletResponse) {
 
         if ("Desktop".equalsIgnoreCase(clientType)) {
@@ -70,14 +64,12 @@ public class AuthController {
             return ResponseEntity.ok(new LoginResponseDto(token));
         }
 
-        authService.authenticateAndCreateSession(loginRequest, servletRequest, servletResponse);
+        authService.authenticateAndSetCookie(loginRequest, servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Login successful"));
     }
 
     /**
      * Endpoint for user registration.
-     *
-     * <p>Creates a new user account with the provided pseudo, email, and password.</p>
      *
      * @param registerRequest the registration details
      * @return 201 Created on success
@@ -93,8 +85,6 @@ public class AuthController {
     /**
      * Dedicated JWT token endpoint for Desktop clients.
      *
-     * <p>Always returns a JWT token regardless of headers.</p>
-     *
      * @param loginRequest the login credentials
      * @return JWT token in the response body
      */
@@ -109,29 +99,22 @@ public class AuthController {
     /**
      * Logout endpoint.
      *
-     * <p>For Web clients, invalidates the server-side session.
-     * For Desktop/JWT clients, this is effectively a no-op (JWT is stateless).
-     * Token blacklisting can be added in the future.</p>
+     * <p>Expires the {@code checkpoint_token} cookie and clears the security context.</p>
      *
-     * @param servletRequest  the HTTP servlet request
-     * @param servletResponse the HTTP servlet response
+     * @param servletResponse the HTTP servlet response to write the expired cookie on
      * @return success message
      */
     @PostMapping("/logout")
-    public ResponseEntity<AuthMessageDto> logout(
-            HttpServletRequest servletRequest,
-            HttpServletResponse servletResponse) {
-
-        authService.logoutSession(servletRequest, servletResponse);
+    public ResponseEntity<AuthMessageDto> logout(HttpServletResponse servletResponse) {
+        authService.clearAuthCookie(servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Logout successful"));
     }
 
     /**
      * Generates a short-lived JWT for WebSocket authentication.
      *
-     * <p>Web clients use session cookies for REST API calls but need a JWT
-     * to authenticate the STOMP WebSocket connection. This endpoint bridges
-     * the two authentication mechanisms.</p>
+     * <p>Web clients authenticated via the {@code checkpoint_token} cookie can call
+     * this endpoint to obtain a JWT for the STOMP WebSocket connection.</p>
      *
      * @param userDetails the authenticated user principal (injected by Spring Security)
      * @return JWT token in the response body
@@ -147,8 +130,6 @@ public class AuthController {
     /**
      * Returns profile information for the currently authenticated user.
      *
-     * <p>Works with both JWT (Desktop) and session cookie (Web) authentication.</p>
-     *
      * @param userDetails the authenticated user principal (injected by Spring Security)
      * @return user profile including ID, username, email, and role
      */
@@ -160,8 +141,6 @@ public class AuthController {
 
     /**
      * Endpoint for requesting a password reset.
-     *
-     * <p>Generates a reset token and logs the reset link.</p>
      *
      * @param request the forgot password request
      * @return 200 OK
@@ -176,8 +155,6 @@ public class AuthController {
 
     /**
      * Endpoint for resetting a password.
-     *
-     * <p>Verifies the token and updates the user's password.</p>
      *
      * @param request the reset password request
      * @return 200 OK

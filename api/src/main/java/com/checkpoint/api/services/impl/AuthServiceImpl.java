@@ -1,55 +1,52 @@
 package com.checkpoint.api.services.impl;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.entities.PasswordResetToken;
+import com.checkpoint.api.entities.Role;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
+import com.checkpoint.api.repositories.PasswordResetTokenRepository;
+import com.checkpoint.api.repositories.RoleRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.AuthService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
-import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
-import com.checkpoint.api.entities.PasswordResetToken;
-import com.checkpoint.api.repositories.PasswordResetTokenRepository;
-import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.services.EmailService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import com.checkpoint.api.exceptions.RegistrationConflictException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import com.checkpoint.api.dto.auth.RegisterRequestDto;
-import com.checkpoint.api.entities.Role;
-import com.checkpoint.api.repositories.RoleRepository;
 
 /**
  * Implementation of {@link AuthService}.
  * Delegates credential validation to Spring Security's {@link AuthenticationManager},
- * then either generates a JWT token (Desktop) or creates a session (Web).
+ * then either generates a JWT token (Desktop) or writes a JWT HttpOnly cookie (Web).
  */
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final String COOKIE_NAME = "checkpoint_token";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -59,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final boolean cookieSecure;
+    private final long jwtExpirationMs;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtService jwtService,
@@ -67,7 +66,9 @@ public class AuthServiceImpl implements AuthService {
                            PasswordEncoder passwordEncoder,
                            RoleRepository roleRepository,
                            PasswordResetTokenRepository passwordResetTokenRepository,
-                           EmailService emailService) {
+                           EmailService emailService,
+                           @Value("${app.cookie.secure:true}") boolean cookieSecure,
+                           @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -76,6 +77,8 @@ public class AuthServiceImpl implements AuthService {
         this.roleRepository = roleRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
+        this.cookieSecure = cookieSecure;
+        this.jwtExpirationMs = jwtExpirationMs;
     }
 
     @Override
@@ -89,31 +92,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void authenticateAndCreateSession(LoginRequestDto request,
-                                             HttpServletRequest servletRequest,
-                                             HttpServletResponse servletResponse) {
-        Authentication authentication = authenticationManager.authenticate(
+    public void authenticateAndSetCookie(LoginRequestDto request, HttpServletResponse servletResponse) {
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
+        String token = jwtService.generateToken(userDetails);
 
-        HttpSession session = servletRequest.getSession(true);
-        session.setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                securityContext
-        );
+        ResponseCookie cookie = buildCookie(token, jwtExpirationMs / 1000);
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     @Override
-    public void logoutSession(HttpServletRequest servletRequest,
-                              HttpServletResponse servletResponse) {
-        HttpSession session = servletRequest.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
+    public void clearAuthCookie(HttpServletResponse servletResponse) {
+        ResponseCookie cookie = buildCookie("", 0);
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         SecurityContextHolder.clearContext();
     }
 
@@ -167,10 +161,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void forgotPassword(ForgotPasswordRequestDto request) {
         userRepository.findByEmail(request.email()).ifPresent(user -> {
-            // Clear old tokens for this user
             passwordResetTokenRepository.deleteByUserId(user.getId());
 
-            // Generate new token valid for 15 minutes
             String token = UUID.randomUUID().toString();
             PasswordResetToken resetToken = new PasswordResetToken(
                     token,
@@ -179,7 +171,6 @@ public class AuthServiceImpl implements AuthService {
             );
             passwordResetTokenRepository.save(resetToken);
 
-            // Send email using EmailService
             String resetLink = "http://localhost:3000/reset-password?token=" + token;
             emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
         });
@@ -200,12 +191,21 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
-        // Invalidate token after use
         passwordResetTokenRepository.delete(resetToken);
     }
 
     @Override
     public String generateWsToken(UserDetails userDetails) {
         return jwtService.generateToken(userDetails);
+    }
+
+    private ResponseCookie buildCookie(String value, long maxAgeSeconds) {
+        return ResponseCookie.from(COOKIE_NAME, value)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Lax")
+                .path("/api")
+                .maxAge(maxAgeSeconds)
+                .build();
     }
 }

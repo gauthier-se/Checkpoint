@@ -2,27 +2,24 @@ package com.checkpoint.api.security.oauth2;
 
 import java.io.IOException;
 
-import jakarta.servlet.ServletException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
-import org.springframework.security.web.context.DelegatingSecurityContextRepository;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
+import com.checkpoint.api.security.JwtService;
+
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -30,33 +27,37 @@ import jakarta.servlet.http.HttpServletResponse;
  * Handles successful OAuth2 logins by:
  *
  * <ol>
- *   <li>Resolving the {@link UserDetails} for the email returned by the provider
- *       (carried by the OAuth2 principal's {@code name}).</li>
- *   <li>Replacing the OAuth2 authentication in the security context with the
- *       same {@link UsernamePasswordAuthenticationToken} produced by form login,
- *       so the rest of the application sees a uniform principal type.</li>
- *   <li>Persisting the security context to the HTTP session, then redirecting
- *       to the configured frontend URL.</li>
+ *   <li>Resolving the {@link UserDetails} for the email returned by the provider.</li>
+ *   <li>Generating a JWT and writing it as a {@code checkpoint_token} HttpOnly cookie.</li>
+ *   <li>Redirecting to the configured frontend URL.</li>
  * </ol>
+ *
+ * No server-side session is created — the flow is fully stateless.
  */
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private static final Logger log = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
+    private static final String COOKIE_NAME = "checkpoint_token";
 
     private final UserDetailsService userDetailsService;
-    private final SecurityContextRepository securityContextRepository;
+    private final JwtService jwtService;
     private final SimpleUrlAuthenticationSuccessHandler delegate;
     private final String fallbackTargetUrl;
+    private final boolean cookieSecure;
+    private final long jwtExpirationMs;
 
     public OAuth2AuthenticationSuccessHandler(UserDetailsService userDetailsService,
-                                              @Value("${app.frontend-url:http://localhost:3000}") String frontendUrl) {
+                                              JwtService jwtService,
+                                              @Value("${app.frontend-url:http://localhost:3000}") String frontendUrl,
+                                              @Value("${app.cookie.secure:true}") boolean cookieSecure,
+                                              @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs) {
         this.userDetailsService = userDetailsService;
-        this.securityContextRepository = new DelegatingSecurityContextRepository(
-                new HttpSessionSecurityContextRepository(),
-                new RequestAttributeSecurityContextRepository());
+        this.jwtService = jwtService;
         this.fallbackTargetUrl = frontendUrl + "/";
         this.delegate = new SimpleUrlAuthenticationSuccessHandler(this.fallbackTargetUrl);
+        this.cookieSecure = cookieSecure;
+        this.jwtExpirationMs = jwtExpirationMs;
     }
 
     @Override
@@ -71,19 +72,22 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+        String token = jwtService.generateToken(userDetails);
+
+        ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, token)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Lax")
+                .path("/api")
+                .maxAge(jwtExpirationMs / 1000)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(token);
-        SecurityContextHolder.setContext(context);
-        // Persist the rewritten context so the next request reads back a
-        // UsernamePasswordAuthenticationToken (with UserDetails as principal),
-        // not the original OAuth2AuthenticationToken stored by the OAuth2 filter.
-        securityContextRepository.saveContext(context, request, response);
-
         log.info("OAuth2 login successful for {}", email);
-        delegate.onAuthenticationSuccess(request, response, token);
+        delegate.onAuthenticationSuccess(request, response, authToken);
     }
 
     private static String extractEmail(Authentication authentication) {
