@@ -52,7 +52,9 @@ export function TwoFactorSettings() {
       toast.success('Two-factor authentication enabled.')
       setSetupState('idle')
       setQrCodeDataUrl(null)
-      await queryClient.invalidateQueries({ queryKey: authQueryOptions.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: authQueryOptions.queryKey,
+      })
     },
   })
 
@@ -71,7 +73,9 @@ export function TwoFactorSettings() {
         return
       }
       toast.success('Two-factor authentication disabled.')
-      await queryClient.invalidateQueries({ queryKey: authQueryOptions.queryKey })
+      await queryClient.invalidateQueries({
+        queryKey: authQueryOptions.queryKey,
+      })
     },
   })
 

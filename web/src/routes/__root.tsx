@@ -8,6 +8,7 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { HotkeysProvider } from '@tanstack/react-hotkeys'
+import { ThemeProvider } from 'next-themes'
 import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
@@ -49,7 +50,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script
@@ -60,22 +61,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <HotkeysProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster richColors closeButton position="top-right" />
-            <TanStackDevtools
-              config={{
-                position: 'bottom-right',
-              }}
-              plugins={[
-                {
-                  name: 'Tanstack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-              ]}
-            />
-            <Scripts />
-          </TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            storageKey="theme"
+            disableTransitionOnChange
+          >
+            <TooltipProvider>
+              {children}
+              <Toaster richColors closeButton position="top-right" />
+              <TanStackDevtools
+                config={{
+                  position: 'bottom-right',
+                }}
+                plugins={[
+                  {
+                    name: 'Tanstack Router',
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                ]}
+              />
+              <Scripts />
+            </TooltipProvider>
+          </ThemeProvider>
         </HotkeysProvider>
       </body>
     </html>
