@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Heart, Lock } from 'lucide-react'
 import type { UserProfile } from '@/types/profile'
+import { PriorityBadge } from '@/components/collection/priority-badge'
 import { userWishlistQueryOptions } from '@/queries/profile'
 
 interface ProfileWishlistTabProps {
@@ -76,14 +77,17 @@ export function ProfileWishlistTab({ profile, page }: ProfileWishlistTabProps) {
             </div>
           )}
           <p className="text-sm font-medium leading-tight">{game.title}</p>
-          {game.releaseDate && (
-            <p className="text-muted-foreground text-xs">
-              {new Date(game.releaseDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-              })}
-            </p>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {game.releaseDate && (
+              <p className="text-muted-foreground text-xs">
+                {new Date(game.releaseDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                })}
+              </p>
+            )}
+            <PriorityBadge priority={game.priority} />
+          </div>
         </Link>
       ))}
     </div>

@@ -11,6 +11,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import type { Priority } from '@/types/collection'
 import type { GameDetail } from '@/types/game'
 import type { GameInteractionStatusDto } from '@/types/interaction'
 import type { GameStatus } from '@/types/library'
@@ -34,7 +35,9 @@ import {
   gameInteractionStatusQueryOptions,
   toggleBacklog,
   toggleWishlist,
+  updateBacklogPriority,
   updateLibraryStatus,
+  updateWishlistPriority,
 } from '@/queries/games'
 
 interface GameQuickActionsProps {
@@ -53,7 +56,8 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
 
   // Mutations with optimistic updates
   const wishlistMutation = useMutation({
-    mutationFn: () => toggleWishlist(game.id, status?.inWishlist ?? false),
+    mutationFn: (priority: Priority | null) =>
+      toggleWishlist(game.id, status?.inWishlist ?? false, priority),
     onMutate: async () => {
       await queryClient.cancelQueries(
         gameInteractionStatusQueryOptions(game.id),
@@ -94,8 +98,41 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
     },
   })
 
+  const wishlistPriorityMutation = useMutation({
+    mutationFn: (priority: Priority | null) =>
+      updateWishlistPriority(game.id, priority),
+    onMutate: async (priority) => {
+      await queryClient.cancelQueries(
+        gameInteractionStatusQueryOptions(game.id),
+      )
+      const previous = queryClient.getQueryData<GameInteractionStatusDto>(
+        gameInteractionStatusQueryOptions(game.id).queryKey,
+      )
+      queryClient.setQueryData<GameInteractionStatusDto>(
+        gameInteractionStatusQueryOptions(game.id).queryKey,
+        (old) => (old ? { ...old, wishlistPriority: priority } : old),
+      )
+      return { previous }
+    },
+    onError: (_err, _variables, context) => {
+      toast.error('Failed to update priority')
+      if (context?.previous) {
+        queryClient.setQueryData(
+          gameInteractionStatusQueryOptions(game.id).queryKey,
+          context.previous,
+        )
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries(
+        gameInteractionStatusQueryOptions(game.id),
+      )
+    },
+  })
+
   const backlogMutation = useMutation({
-    mutationFn: () => toggleBacklog(game.id, status?.inBacklog ?? false),
+    mutationFn: (priority: Priority | null) =>
+      toggleBacklog(game.id, status?.inBacklog ?? false, priority),
     onMutate: async () => {
       await queryClient.cancelQueries(
         gameInteractionStatusQueryOptions(game.id),
@@ -132,6 +169,38 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
       } else {
         toast.success('Removed from backlog')
       }
+    },
+  })
+
+  const backlogPriorityMutation = useMutation({
+    mutationFn: (priority: Priority | null) =>
+      updateBacklogPriority(game.id, priority),
+    onMutate: async (priority) => {
+      await queryClient.cancelQueries(
+        gameInteractionStatusQueryOptions(game.id),
+      )
+      const previous = queryClient.getQueryData<GameInteractionStatusDto>(
+        gameInteractionStatusQueryOptions(game.id).queryKey,
+      )
+      queryClient.setQueryData<GameInteractionStatusDto>(
+        gameInteractionStatusQueryOptions(game.id).queryKey,
+        (old) => (old ? { ...old, backlogPriority: priority } : old),
+      )
+      return { previous }
+    },
+    onError: (_err, _variables, context) => {
+      toast.error('Failed to update priority')
+      if (context?.previous) {
+        queryClient.setQueryData(
+          gameInteractionStatusQueryOptions(game.id).queryKey,
+          context.previous,
+        )
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries(
+        gameInteractionStatusQueryOptions(game.id),
+      )
     },
   })
 
@@ -195,34 +264,226 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   const renderButtons = () => {
     const disabled = !user
     const isWishlisted = status?.inWishlist
+    const wishlistPriority = status?.wishlistPriority ?? null
     const isBacklog = status?.inBacklog
+    const backlogPriority = status?.backlogPriority ?? null
     const libraryStatus = status?.libraryStatus
+
+    const PRIORITY_LABEL: Record<Priority, string> = {
+      LOW: 'Low',
+      MEDIUM: 'Medium',
+      HIGH: 'High',
+    }
 
     const buttons = (
       <div className="flex flex-wrap items-center gap-2">
         {/* Wishlist Button */}
-        <Button
-          variant={isWishlisted ? 'default' : 'outline'}
-          size="sm"
-          className="gap-2"
-          disabled={disabled || wishlistMutation.isPending}
-          onClick={() => wishlistMutation.mutate()}
-        >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
-          Wishlist
-        </Button>
+        {isWishlisted ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2 focus:ring-0"
+                disabled={
+                  disabled ||
+                  wishlistMutation.isPending ||
+                  wishlistPriorityMutation.isPending
+                }
+              >
+                <Heart className="w-4 h-4 fill-current" />
+                Wishlist
+                {wishlistPriority && ` · ${PRIORITY_LABEL[wishlistPriority]}`}
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                onClick={() => wishlistPriorityMutation.mutate(null)}
+              >
+                {wishlistPriority === null && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={wishlistPriority === null ? '' : 'ml-6'}>
+                  None
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => wishlistPriorityMutation.mutate('LOW')}
+              >
+                {wishlistPriority === 'LOW' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={wishlistPriority === 'LOW' ? '' : 'ml-6'}>
+                  Low
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => wishlistPriorityMutation.mutate('MEDIUM')}
+              >
+                {wishlistPriority === 'MEDIUM' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={wishlistPriority === 'MEDIUM' ? '' : 'ml-6'}>
+                  Medium
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => wishlistPriorityMutation.mutate('HIGH')}
+              >
+                {wishlistPriority === 'HIGH' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={wishlistPriority === 'HIGH' ? '' : 'ml-6'}>
+                  High
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => wishlistMutation.mutate(null)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove from wishlist
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 focus:ring-0"
+                disabled={disabled || wishlistMutation.isPending}
+              >
+                <Heart className="w-4 h-4" />
+                Wishlist
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => wishlistMutation.mutate(null)}>
+                Add to wishlist
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => wishlistMutation.mutate('LOW')}>
+                Add as Low
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => wishlistMutation.mutate('MEDIUM')}
+              >
+                Add as Medium
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => wishlistMutation.mutate('HIGH')}>
+                Add as High
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Backlog Button */}
-        <Button
-          variant={isBacklog ? 'default' : 'outline'}
-          size="sm"
-          className="gap-2"
-          disabled={disabled || backlogMutation.isPending}
-          onClick={() => backlogMutation.mutate()}
-        >
-          <Bookmark className={`w-4 h-4 ${isBacklog ? 'fill-current' : ''}`} />
-          Backlog
-        </Button>
+        {isBacklog ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2 focus:ring-0"
+                disabled={
+                  disabled ||
+                  backlogMutation.isPending ||
+                  backlogPriorityMutation.isPending
+                }
+              >
+                <Bookmark className="w-4 h-4 fill-current" />
+                Backlog
+                {backlogPriority && ` · ${PRIORITY_LABEL[backlogPriority]}`}
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                onClick={() => backlogPriorityMutation.mutate(null)}
+              >
+                {backlogPriority === null && <Check className="w-4 h-4 mr-2" />}
+                <span className={backlogPriority === null ? '' : 'ml-6'}>
+                  None
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => backlogPriorityMutation.mutate('LOW')}
+              >
+                {backlogPriority === 'LOW' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={backlogPriority === 'LOW' ? '' : 'ml-6'}>
+                  Low
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => backlogPriorityMutation.mutate('MEDIUM')}
+              >
+                {backlogPriority === 'MEDIUM' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={backlogPriority === 'MEDIUM' ? '' : 'ml-6'}>
+                  Medium
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => backlogPriorityMutation.mutate('HIGH')}
+              >
+                {backlogPriority === 'HIGH' && (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                <span className={backlogPriority === 'HIGH' ? '' : 'ml-6'}>
+                  High
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => backlogMutation.mutate(null)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove from backlog
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 focus:ring-0"
+                disabled={disabled || backlogMutation.isPending}
+              >
+                <Bookmark className="w-4 h-4" />
+                Backlog
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => backlogMutation.mutate(null)}>
+                Add to backlog
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => backlogMutation.mutate('LOW')}>
+                Add as Low
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => backlogMutation.mutate('MEDIUM')}
+              >
+                Add as Medium
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => backlogMutation.mutate('HIGH')}>
+                Add as High
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Library Dropdown */}
         <DropdownMenu>

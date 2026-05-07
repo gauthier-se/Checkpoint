@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.checkpoint.api.dto.collection.GameInteractionStatusDto;
+import com.checkpoint.api.entities.Backlog;
 import com.checkpoint.api.entities.Rate;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
 import com.checkpoint.api.entities.UserGamePlay;
+import com.checkpoint.api.entities.Wish;
 import com.checkpoint.api.enums.GameStatus;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.repositories.BacklogRepository;
 import com.checkpoint.api.repositories.RateRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
@@ -61,8 +64,13 @@ public class GameInteractionServiceImpl implements GameInteractionService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + userEmail));
 
-        boolean inWishlist = wishRepository.existsByUserIdAndVideoGameId(user.getId(), videoGameId);
-        boolean inBacklog = backlogRepository.existsByUserIdAndVideoGameId(user.getId(), videoGameId);
+        Optional<Wish> wishOpt = wishRepository.findByUserIdAndVideoGameId(user.getId(), videoGameId);
+        boolean inWishlist = wishOpt.isPresent();
+        Priority wishlistPriority = wishOpt.map(Wish::getPriority).orElse(null);
+
+        Optional<Backlog> backlogOpt = backlogRepository.findByUserIdAndVideoGameId(user.getId(), videoGameId);
+        boolean inBacklog = backlogOpt.isPresent();
+        Priority backlogPriority = backlogOpt.map(Backlog::getPriority).orElse(null);
 
         Optional<UserGame> userGameOpt = userGameRepository.findByUserIdAndVideoGameId(user.getId(), videoGameId);
         boolean inLibrary = userGameOpt.isPresent();
@@ -81,7 +89,9 @@ public class GameInteractionServiceImpl implements GameInteractionService {
 
         return new GameInteractionStatusDto(
                 inWishlist,
+                wishlistPriority,
                 inBacklog,
+                backlogPriority,
                 inLibrary,
                 libraryStatus,
                 playCount,

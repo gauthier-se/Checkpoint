@@ -39,6 +39,40 @@ public interface BacklogRepository extends JpaRepository<Backlog, UUID> {
     Page<Backlog> findByUserIdWithVideoGame(@Param("userId") UUID userId, Pageable pageable);
 
     /**
+     * Returns the user's backlog ordered by priority descending: HIGH → MEDIUM → LOW → NULL.
+     * Matches {@code ?sort=priority,desc}. Pageable's own sort is ignored.
+     */
+    @Query("""
+            SELECT b FROM Backlog b
+            JOIN FETCH b.videoGame
+            WHERE b.user.id = :userId
+            ORDER BY CASE b.priority
+                       WHEN com.checkpoint.api.enums.Priority.HIGH   THEN 3
+                       WHEN com.checkpoint.api.enums.Priority.MEDIUM THEN 2
+                       WHEN com.checkpoint.api.enums.Priority.LOW    THEN 1
+                       ELSE 0
+                     END DESC
+            """)
+    Page<Backlog> findByUserIdWithVideoGameOrderByPriorityDesc(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
+     * Returns the user's backlog ordered by priority ascending: NULL → LOW → MEDIUM → HIGH.
+     * Matches {@code ?sort=priority,asc}. Pageable's own sort is ignored.
+     */
+    @Query("""
+            SELECT b FROM Backlog b
+            JOIN FETCH b.videoGame
+            WHERE b.user.id = :userId
+            ORDER BY CASE b.priority
+                       WHEN com.checkpoint.api.enums.Priority.HIGH   THEN 3
+                       WHEN com.checkpoint.api.enums.Priority.MEDIUM THEN 2
+                       WHEN com.checkpoint.api.enums.Priority.LOW    THEN 1
+                       ELSE 0
+                     END
+            """)
+    Page<Backlog> findByUserIdWithVideoGameOrderByPriorityAsc(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
      * Deletes a backlog entry by user ID and video game ID.
      */
     void deleteByUserIdAndVideoGameId(UUID userId, UUID videoGameId);

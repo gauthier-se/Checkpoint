@@ -16,13 +16,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.checkpoint.api.dto.collection.GameInteractionStatusDto;
+import com.checkpoint.api.entities.Backlog;
 import com.checkpoint.api.entities.Rate;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
 import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.entities.Wish;
 import com.checkpoint.api.enums.GameStatus;
 import com.checkpoint.api.enums.PlayStatus;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.repositories.BacklogRepository;
 import com.checkpoint.api.repositories.RateRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
@@ -80,12 +83,17 @@ class GameInteractionServiceImplTest {
         UserGame userGame = new UserGame(testUser, testGame, GameStatus.PLAYING);
         Rate rate = new Rate(testUser, testGame, 5);
 
+        Wish wish = new Wish(testUser, testGame);
+        wish.setPriority(Priority.HIGH);
+        Backlog backlog = new Backlog(testUser, testGame);
+        backlog.setPriority(Priority.MEDIUM);
+
         UserGamePlay mostRecentScoredPlay = new UserGamePlay(testUser, testGame, null, PlayStatus.COMPLETED);
         mostRecentScoredPlay.setScore(4);
 
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-        when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
-        when(backlogRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
+        when(wishRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.of(wish));
+        when(backlogRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.of(backlog));
         when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.of(userGame));
         when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(3L);
         when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.of(rate));
@@ -99,7 +107,9 @@ class GameInteractionServiceImplTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.inWishlist()).isTrue();
+        assertThat(result.wishlistPriority()).isEqualTo(Priority.HIGH);
         assertThat(result.inBacklog()).isTrue();
+        assertThat(result.backlogPriority()).isEqualTo(Priority.MEDIUM);
         assertThat(result.inLibrary()).isTrue();
         assertThat(result.libraryStatus()).isEqualTo(GameStatus.PLAYING);
         assertThat(result.playCount()).isEqualTo(3);
@@ -113,8 +123,8 @@ class GameInteractionServiceImplTest {
     void shouldReturnStatusWhenNoneExist() {
         // Given
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
-        when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(false);
-        when(backlogRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(false);
+        when(wishRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
+        when(backlogRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
         when(userGameRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(Optional.empty());
         when(userGamePlayRepository.countByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(0L);
         when(rateRepository.findByUserPseudoAndVideoGameId(testUser.getPseudo(), testGame.getId())).thenReturn(Optional.empty());
@@ -127,7 +137,9 @@ class GameInteractionServiceImplTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.inWishlist()).isFalse();
+        assertThat(result.wishlistPriority()).isNull();
         assertThat(result.inBacklog()).isFalse();
+        assertThat(result.backlogPriority()).isNull();
         assertThat(result.inLibrary()).isFalse();
         assertThat(result.libraryStatus()).isNull();
         assertThat(result.playCount()).isEqualTo(0);

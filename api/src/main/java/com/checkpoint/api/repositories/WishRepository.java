@@ -39,6 +39,40 @@ public interface WishRepository extends JpaRepository<Wish, UUID> {
     Page<Wish> findByUserIdWithVideoGame(@Param("userId") UUID userId, Pageable pageable);
 
     /**
+     * Returns the user's wishlist ordered by priority descending: HIGH → MEDIUM → LOW → NULL.
+     * Matches {@code ?sort=priority,desc}. Pageable's own sort is ignored.
+     */
+    @Query("""
+            SELECT w FROM Wish w
+            JOIN FETCH w.videoGame
+            WHERE w.user.id = :userId
+            ORDER BY CASE w.priority
+                       WHEN com.checkpoint.api.enums.Priority.HIGH   THEN 3
+                       WHEN com.checkpoint.api.enums.Priority.MEDIUM THEN 2
+                       WHEN com.checkpoint.api.enums.Priority.LOW    THEN 1
+                       ELSE 0
+                     END DESC
+            """)
+    Page<Wish> findByUserIdWithVideoGameOrderByPriorityDesc(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
+     * Returns the user's wishlist ordered by priority ascending: NULL → LOW → MEDIUM → HIGH.
+     * Matches {@code ?sort=priority,asc}. Pageable's own sort is ignored.
+     */
+    @Query("""
+            SELECT w FROM Wish w
+            JOIN FETCH w.videoGame
+            WHERE w.user.id = :userId
+            ORDER BY CASE w.priority
+                       WHEN com.checkpoint.api.enums.Priority.HIGH   THEN 3
+                       WHEN com.checkpoint.api.enums.Priority.MEDIUM THEN 2
+                       WHEN com.checkpoint.api.enums.Priority.LOW    THEN 1
+                       ELSE 0
+                     END
+            """)
+    Page<Wish> findByUserIdWithVideoGameOrderByPriorityAsc(@Param("userId") UUID userId, Pageable pageable);
+
+    /**
      * Returns all games in a user's wishlist by pseudo (paginated), with video game eagerly fetched.
      *
      * @param pseudo   the user's pseudo

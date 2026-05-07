@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,6 +17,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
+import com.checkpoint.api.enums.Priority;
 
 /**
  * Association entity between User and VideoGame for backlog.
@@ -45,6 +49,10 @@ public class Backlog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_game_id", nullable = false)
     private VideoGame videoGame;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", length = 10)
+    private Priority priority;
 
     @PrePersist
     protected void onCreate() {
@@ -102,5 +110,13 @@ public class Backlog {
 
     public void setVideoGame(VideoGame videoGame) {
         this.videoGame = videoGame;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
     }
 }

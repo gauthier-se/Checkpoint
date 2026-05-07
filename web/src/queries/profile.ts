@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { UserProfile } from '@/types/profile'
 import type { ReviewsResponse } from '@/types/review'
+import type { Priority } from '@/types/collection'
 import type { PaginationMetadata } from '@/types/game'
 import { apiFetch } from '@/services/api'
 
@@ -10,6 +11,7 @@ export interface WishlistItem {
   title: string
   coverUrl: string | null
   releaseDate: string | null
+  priority: Priority | null
   addedAt: string
 }
 

@@ -5,7 +5,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,7 @@ import com.checkpoint.api.dto.collection.WishResponseDto;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.entities.Wish;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.exceptions.GameAlreadyInWishlistException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
@@ -48,8 +51,9 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
-    public WishResponseDto addToWishlist(String userEmail, UUID videoGameId) {
-        log.debug("Adding game {} to wishlist for user {}", videoGameId, userEmail);
+    public WishResponseDto addToWishlist(String userEmail, UUID videoGameId, Priority priority) {
+        log.debug("Adding game {} to wishlist for user {} with priority {}",
+                videoGameId, userEmail, priority);
 
         User user = findUserByEmail(userEmail);
         VideoGame videoGame = findVideoGameById(videoGameId);
@@ -59,6 +63,7 @@ public class WishlistServiceImpl implements WishlistService {
         }
 
         Wish wish = new Wish(user, videoGame);
+        wish.setPriority(priority);
         Wish saved = wishRepository.save(wish);
 
         log.info("Game {} added to wishlist for user {}", videoGame.getTitle(), userEmail);
@@ -87,8 +92,34 @@ public class WishlistServiceImpl implements WishlistService {
 
         User user = findUserByEmail(userEmail);
 
+        Sort.Order priorityOrder = pageable.getSort().getOrderFor("priority");
+        if (priorityOrder != null) {
+            Pageable unsortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            Page<Wish> page = priorityOrder.isAscending()
+                    ? wishRepository.findByUserIdWithVideoGameOrderByPriorityAsc(user.getId(), unsortedPage)
+                    : wishRepository.findByUserIdWithVideoGameOrderByPriorityDesc(user.getId(), unsortedPage);
+            return page.map(wishMapper::toResponseDto);
+        }
+
         return wishRepository.findByUserIdWithVideoGame(user.getId(), pageable)
                 .map(wishMapper::toResponseDto);
+    }
+
+    @Override
+    public WishResponseDto updatePriority(String userEmail, UUID videoGameId, Priority priority) {
+        log.debug("Updating priority of game {} in wishlist for user {} to {}",
+                videoGameId, userEmail, priority);
+
+        User user = findUserByEmail(userEmail);
+        Wish wish = wishRepository.findByUserIdAndVideoGameId(user.getId(), videoGameId)
+                .orElseThrow(() -> new GameNotInWishlistException(videoGameId));
+
+        wish.setPriority(priority);
+        Wish saved = wishRepository.save(wish);
+
+        log.info("Priority of game {} in wishlist for user {} set to {}",
+                videoGameId, userEmail, priority);
+        return wishMapper.toResponseDto(saved);
     }
 
     @Override

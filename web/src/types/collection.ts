@@ -1,6 +1,8 @@
 import type { PaginationMetadata } from './game'
 import type { TagSummary } from './tag'
 
+export type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
+
 // Wishlist
 export interface WishResponse {
   id: string
@@ -8,6 +10,7 @@ export interface WishResponse {
   title: string
   coverUrl: string | null
   releaseDate: string | null
+  priority: Priority | null
   addedAt: string
 }
 
@@ -23,6 +26,7 @@ export interface BacklogResponse {
   title: string
   coverUrl: string | null
   releaseDate: string | null
+  priority: Priority | null
   addedAt: string
 }
 

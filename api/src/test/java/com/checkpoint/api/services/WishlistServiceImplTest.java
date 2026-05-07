@@ -3,6 +3,7 @@ package com.checkpoint.api.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,11 +26,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.checkpoint.api.dto.collection.WishResponseDto;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.entities.Wish;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.exceptions.GameAlreadyInWishlistException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
@@ -84,7 +87,7 @@ class WishlistServiceImplTest {
         testResponseDto = new WishResponseDto(
                 testWish.getId(), testGame.getId(), testGame.getTitle(),
                 testGame.getCoverUrl(), testGame.getReleaseDate(),
-                testWish.getCreatedAt());
+                null, testWish.getCreatedAt());
     }
 
     @Nested
@@ -102,7 +105,7 @@ class WishlistServiceImplTest {
             when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
 
             // When
-            WishResponseDto result = service.addToWishlist("user@example.com", testGame.getId());
+            WishResponseDto result = service.addToWishlist("user@example.com", testGame.getId(), null);
 
             // Then
             assertThat(result.videoGameId()).isEqualTo(testGame.getId());
@@ -115,6 +118,25 @@ class WishlistServiceImplTest {
         }
 
         @Test
+        @DisplayName("should add game with given priority")
+        void shouldAddGameWithPriority() {
+            // Given
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(videoGameRepository.findById(testGame.getId())).thenReturn(Optional.of(testGame));
+            when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(false);
+            when(wishRepository.save(any(Wish.class))).thenReturn(testWish);
+            when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
+
+            // When
+            service.addToWishlist("user@example.com", testGame.getId(), Priority.HIGH);
+
+            // Then
+            ArgumentCaptor<Wish> captor = ArgumentCaptor.forClass(Wish.class);
+            verify(wishRepository).save(captor.capture());
+            assertThat(captor.getValue().getPriority()).isEqualTo(Priority.HIGH);
+        }
+
+        @Test
         @DisplayName("should throw GameAlreadyInWishlistException when game already in wishlist")
         void shouldThrowWhenGameAlreadyInWishlist() {
             // Given
@@ -123,7 +145,7 @@ class WishlistServiceImplTest {
             when(wishRepository.existsByUserIdAndVideoGameId(testUser.getId(), testGame.getId())).thenReturn(true);
 
             // When / Then
-            assertThatThrownBy(() -> service.addToWishlist("user@example.com", testGame.getId()))
+            assertThatThrownBy(() -> service.addToWishlist("user@example.com", testGame.getId(), null))
                     .isInstanceOf(GameAlreadyInWishlistException.class)
                     .hasMessageContaining(testGame.getId().toString());
 
@@ -140,7 +162,7 @@ class WishlistServiceImplTest {
             when(videoGameRepository.findById(unknownGameId)).thenReturn(Optional.empty());
 
             // When / Then
-            assertThatThrownBy(() -> service.addToWishlist("user@example.com", unknownGameId))
+            assertThatThrownBy(() -> service.addToWishlist("user@example.com", unknownGameId, null))
                     .isInstanceOf(GameNotFoundException.class)
                     .hasMessageContaining(unknownGameId.toString());
         }
@@ -152,7 +174,7 @@ class WishlistServiceImplTest {
             when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
             // When / Then
-            assertThatThrownBy(() -> service.addToWishlist("unknown@example.com", testGame.getId()))
+            assertThatThrownBy(() -> service.addToWishlist("unknown@example.com", testGame.getId(), null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("unknown@example.com");
         }
@@ -237,6 +259,113 @@ class WishlistServiceImplTest {
             // Then
             assertThat(result.getContent()).isEmpty();
             assertThat(result.getTotalElements()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("getUserWishlist with priority sort")
+    class GetUserWishlistByPriority {
+
+        @Test
+        @DisplayName("should call priority-desc repository when sort field is priority,desc")
+        void shouldUsePriorityDescQuery_whenSortIsPriorityDesc() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "priority"));
+            Page<Wish> wishPage = new PageImpl<>(List.of(testWish));
+
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(wishRepository.findByUserIdWithVideoGameOrderByPriorityDesc(eq(testUser.getId()), any(Pageable.class)))
+                    .thenReturn(wishPage);
+            when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
+
+            // When
+            Page<WishResponseDto> result = service.getUserWishlist("user@example.com", pageable);
+
+            // Then
+            assertThat(result.getContent()).hasSize(1);
+            verify(wishRepository).findByUserIdWithVideoGameOrderByPriorityDesc(eq(testUser.getId()), any(Pageable.class));
+            verify(wishRepository, never()).findByUserIdWithVideoGame(any(), any());
+        }
+
+        @Test
+        @DisplayName("should call priority-asc repository when sort field is priority,asc")
+        void shouldUsePriorityAscQuery_whenSortIsPriorityAsc() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "priority"));
+            Page<Wish> wishPage = new PageImpl<>(List.of(testWish));
+
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(wishRepository.findByUserIdWithVideoGameOrderByPriorityAsc(eq(testUser.getId()), any(Pageable.class)))
+                    .thenReturn(wishPage);
+            when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
+
+            // When
+            Page<WishResponseDto> result = service.getUserWishlist("user@example.com", pageable);
+
+            // Then
+            assertThat(result.getContent()).hasSize(1);
+            verify(wishRepository).findByUserIdWithVideoGameOrderByPriorityAsc(eq(testUser.getId()), any(Pageable.class));
+            verify(wishRepository, never()).findByUserIdWithVideoGame(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("updatePriority")
+    class UpdatePriority {
+
+        @Test
+        @DisplayName("should update and return DTO when wish exists")
+        void shouldUpdateAndReturnDto() {
+            // Given
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(wishRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(testWish));
+            when(wishRepository.save(testWish)).thenReturn(testWish);
+            when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
+
+            // When
+            WishResponseDto result = service.updatePriority("user@example.com", testGame.getId(), Priority.HIGH);
+
+            // Then
+            assertThat(result).isEqualTo(testResponseDto);
+            assertThat(testWish.getPriority()).isEqualTo(Priority.HIGH);
+            verify(wishRepository).save(testWish);
+        }
+
+        @Test
+        @DisplayName("should clear priority when null is passed")
+        void shouldClearPriority_whenNullPassed() {
+            // Given
+            testWish.setPriority(Priority.HIGH);
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(wishRepository.findByUserIdAndVideoGameId(testUser.getId(), testGame.getId()))
+                    .thenReturn(Optional.of(testWish));
+            when(wishRepository.save(testWish)).thenReturn(testWish);
+            when(wishMapper.toResponseDto(testWish)).thenReturn(testResponseDto);
+
+            // When
+            service.updatePriority("user@example.com", testGame.getId(), null);
+
+            // Then
+            assertThat(testWish.getPriority()).isNull();
+            verify(wishRepository).save(testWish);
+        }
+
+        @Test
+        @DisplayName("should throw GameNotInWishlistException when wish not found")
+        void shouldThrow_whenWishNotFound() {
+            // Given
+            UUID unknownId = UUID.randomUUID();
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(wishRepository.findByUserIdAndVideoGameId(testUser.getId(), unknownId))
+                    .thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> service.updatePriority("user@example.com", unknownId, Priority.LOW))
+                    .isInstanceOf(GameNotInWishlistException.class)
+                    .hasMessageContaining(unknownId.toString());
+
+            verify(wishRepository, never()).save(any());
         }
     }
 
