@@ -1,0 +1,48 @@
+meta {
+  name: 2FA Login (Web)
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/auth/2fa/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "code": "123456"
+  }
+}
+
+docs {
+  # 2FA Login (Web)
+
+  Completes the two-step login for Web clients.
+
+  Called after `POST /api/auth/login` returns `{ "twoFactorRequired": true }`.
+  The intermediate token is automatically sent via the `checkpoint_2fa` HttpOnly cookie
+  (set by the login endpoint) — no manual token handling needed.
+
+  On success, the final `checkpoint_token` and `checkpoint_refresh` cookies are set.
+
+  ## Request Body
+
+  - **code** (required): 6-digit TOTP code from the authenticator app
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "message": "Login successful"
+  }
+  ```
+
+  The `checkpoint_token` (access) and `checkpoint_refresh` HttpOnly cookies are set.
+
+  ## Errors
+
+  - **400 Bad Request**: Code is blank
+  - **401 Unauthorized**: Invalid TOTP code or expired/missing intermediate token
+}

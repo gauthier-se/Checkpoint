@@ -80,6 +80,9 @@ class AuthServiceImplTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
+    @Mock
+    private TwoFactorService twoFactorService;
+
     private AuthServiceImpl authService;
 
     @BeforeEach
@@ -94,6 +97,7 @@ class AuthServiceImplTest {
                 passwordResetTokenRepository,
                 emailService,
                 refreshTokenService,
+                twoFactorService,
                 false,       // cookieSecure = false in tests
                 86400000L,   // jwtExpirationMs = 24h
                 604800000L   // refreshExpirationMs = 7d

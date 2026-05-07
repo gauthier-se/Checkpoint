@@ -32,6 +32,7 @@ import { Route as AppProtectedProfileRouteImport } from './routes/_app/_protecte
 import { Route as AppProtectedNotificationsRouteImport } from './routes/_app/_protected/notifications'
 import { Route as AppProtectedSettingsRouteRouteImport } from './routes/_app/_protected/settings/route'
 import { Route as AppProtectedSettingsIndexRouteImport } from './routes/_app/_protected/settings/index'
+import { Route as AppProtectedSettingsSecurityRouteImport } from './routes/_app/_protected/settings/security'
 import { Route as AppProtectedSettingsProfileRouteImport } from './routes/_app/_protected/settings/profile'
 import { Route as AppProtectedSettingsNotificationsRouteImport } from './routes/_app/_protected/settings/notifications'
 import { Route as AppProtectedListsNewRouteImport } from './routes/_app/_protected/lists/new'
@@ -155,6 +156,12 @@ const AppProtectedSettingsIndexRoute =
     path: '/',
     getParentRoute: () => AppProtectedSettingsRouteRoute,
   } as any)
+const AppProtectedSettingsSecurityRoute =
+  AppProtectedSettingsSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => AppProtectedSettingsRouteRoute,
+  } as any)
 const AppProtectedSettingsProfileRoute =
   AppProtectedSettingsProfileRouteImport.update({
     id: '/profile',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/lists/new': typeof AppProtectedListsNewRoute
   '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/settings/security': typeof AppProtectedSettingsSecurityRoute
   '/settings/': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -248,6 +256,7 @@ export interface FileRoutesByTo {
   '/lists/new': typeof AppProtectedListsNewRoute
   '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/settings/security': typeof AppProtectedSettingsSecurityRoute
   '/settings': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/profile/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -281,6 +290,7 @@ export interface FileRoutesById {
   '/_app/_protected/lists/new': typeof AppProtectedListsNewRoute
   '/_app/_protected/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/_app/_protected/settings/profile': typeof AppProtectedSettingsProfileRoute
+  '/_app/_protected/settings/security': typeof AppProtectedSettingsSecurityRoute
   '/_app/_protected/settings/': typeof AppProtectedSettingsIndexRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
   '/_app/profile_/$username/tags/$tagName': typeof AppProfileUsernameTagsTagNameRoute
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/lists/new'
     | '/settings/notifications'
     | '/settings/profile'
+    | '/settings/security'
     | '/settings/'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/lists/new'
     | '/settings/notifications'
     | '/settings/profile'
+    | '/settings/security'
     | '/settings'
     | '/lists/$listId/edit'
     | '/profile/$username/tags/$tagName'
@@ -372,6 +384,7 @@ export interface FileRouteTypes {
     | '/_app/_protected/lists/new'
     | '/_app/_protected/settings/notifications'
     | '/_app/_protected/settings/profile'
+    | '/_app/_protected/settings/security'
     | '/_app/_protected/settings/'
     | '/_app/_protected/lists/$listId/edit'
     | '/_app/profile_/$username/tags/$tagName'
@@ -547,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedSettingsIndexRouteImport
       parentRoute: typeof AppProtectedSettingsRouteRoute
     }
+    '/_app/_protected/settings/security': {
+      id: '/_app/_protected/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof AppProtectedSettingsSecurityRouteImport
+      parentRoute: typeof AppProtectedSettingsRouteRoute
+    }
     '/_app/_protected/settings/profile': {
       id: '/_app/_protected/settings/profile'
       path: '/profile'
@@ -602,6 +622,7 @@ declare module '@tanstack/react-router' {
 interface AppProtectedSettingsRouteRouteChildren {
   AppProtectedSettingsNotificationsRoute: typeof AppProtectedSettingsNotificationsRoute
   AppProtectedSettingsProfileRoute: typeof AppProtectedSettingsProfileRoute
+  AppProtectedSettingsSecurityRoute: typeof AppProtectedSettingsSecurityRoute
   AppProtectedSettingsIndexRoute: typeof AppProtectedSettingsIndexRoute
 }
 
@@ -610,6 +631,7 @@ const AppProtectedSettingsRouteRouteChildren: AppProtectedSettingsRouteRouteChil
     AppProtectedSettingsNotificationsRoute:
       AppProtectedSettingsNotificationsRoute,
     AppProtectedSettingsProfileRoute: AppProtectedSettingsProfileRoute,
+    AppProtectedSettingsSecurityRoute: AppProtectedSettingsSecurityRoute,
     AppProtectedSettingsIndexRoute: AppProtectedSettingsIndexRoute,
   }
 

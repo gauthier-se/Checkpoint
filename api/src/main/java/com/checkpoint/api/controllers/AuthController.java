@@ -20,8 +20,15 @@ import com.checkpoint.api.dto.auth.RefreshTokenRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
+import com.checkpoint.api.dto.auth.TwoFactorDisableRequestDto;
+import com.checkpoint.api.dto.auth.TwoFactorLoginRequestDto;
+import com.checkpoint.api.dto.auth.TwoFactorRequiredResponseDto;
+import com.checkpoint.api.dto.auth.TwoFactorSetupResponseDto;
+import com.checkpoint.api.dto.auth.TwoFactorVerifyRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.exceptions.TwoFactorRequiredException;
 import com.checkpoint.api.services.AuthService;
+import com.checkpoint.api.services.TwoFactorService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -41,9 +48,11 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final TwoFactorService twoFactorService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, TwoFactorService twoFactorService) {
         this.authService = authService;
+        this.twoFactorService = twoFactorService;
     }
 
     /**
@@ -52,10 +61,14 @@ public class AuthController {
      * <p>Desktop clients (identified by the {@code X-Client-Type: Desktop} header) receive a
      * {@link TokenPairDto} in the response body. Web clients receive both cookies.</p>
      *
+     * <p>If the user has 2FA enabled, a {@link TwoFactorRequiredResponseDto} is returned instead.
+     * Desktop clients receive the intermediate token in the body; Web clients receive it via the
+     * {@code checkpoint_2fa} HttpOnly cookie.</p>
+     *
      * @param loginRequest    the login credentials
      * @param clientType      optional header to specify the client type
      * @param servletResponse the HTTP servlet response (used to write cookies for Web clients)
-     * @return token pair (Desktop) or success message (Web)
+     * @return token pair (Desktop), success message (Web), or 2FA required response
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
@@ -63,12 +76,93 @@ public class AuthController {
             @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse servletResponse) {
 
+        try {
+            if ("Desktop".equalsIgnoreCase(clientType)) {
+                TokenPairDto pair = authService.authenticateAndGenerateTokenPair(loginRequest);
+                return ResponseEntity.ok(pair);
+            }
+
+            authService.authenticateAndSetCookie(loginRequest, servletResponse);
+            return ResponseEntity.ok(new AuthMessageDto("Login successful"));
+        } catch (TwoFactorRequiredException ex) {
+            return ResponseEntity.ok(new TwoFactorRequiredResponseDto(true, ex.getIntermediateToken()));
+        }
+    }
+
+    /**
+     * Initiates TOTP setup for the authenticated user.
+     * Generates a new TOTP secret, stores it on the user, and returns a QR code data URL
+     * plus the provisioning URI. 2FA is not yet active until {@code /2fa/verify} is called.
+     *
+     * @param userDetails the authenticated user principal
+     * @return setup response with QR code and provisioning URI
+     */
+    @PostMapping("/2fa/setup")
+    public ResponseEntity<TwoFactorSetupResponseDto> twoFactorSetup(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        TwoFactorSetupResponseDto response = twoFactorService.setup(userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Verifies the first TOTP code after setup and permanently enables 2FA on the account.
+     *
+     * @param request     the verification request containing the 6-digit code
+     * @param userDetails the authenticated user principal
+     * @return success message
+     */
+    @PostMapping("/2fa/verify")
+    public ResponseEntity<AuthMessageDto> twoFactorVerify(
+            @Valid @RequestBody TwoFactorVerifyRequestDto request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        twoFactorService.verifyAndEnable(userDetails.getUsername(), request.code());
+        return ResponseEntity.ok(new AuthMessageDto("Two-factor authentication has been enabled."));
+    }
+
+    /**
+     * Disables 2FA on the account after verifying the current password and a valid TOTP code.
+     *
+     * @param request     the disable request containing the current password and TOTP code
+     * @param userDetails the authenticated user principal
+     * @return success message
+     */
+    @PostMapping("/2fa/disable")
+    public ResponseEntity<AuthMessageDto> twoFactorDisable(
+            @Valid @RequestBody TwoFactorDisableRequestDto request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        twoFactorService.disable(userDetails.getUsername(), request.password(), request.code());
+        return ResponseEntity.ok(new AuthMessageDto("Two-factor authentication has been disabled."));
+    }
+
+    /**
+     * Completes the 2FA login step.
+     *
+     * <p>Web clients send only the TOTP code in the request body; the intermediate token is
+     * read from the {@code checkpoint_2fa} HttpOnly cookie. On success, the final
+     * {@code checkpoint_token} and {@code checkpoint_refresh} cookies are set.</p>
+     *
+     * <p>Desktop clients ({@code X-Client-Type: Desktop}) include both the intermediate token
+     * and the TOTP code in the request body. On success, a {@link TokenPairDto} is returned.</p>
+     *
+     * @param request         the 2FA login request
+     * @param clientType      optional header to identify Desktop clients
+     * @param twoFaCookie     the {@code checkpoint_2fa} cookie value (Web clients)
+     * @param servletResponse the HTTP servlet response to write the final auth cookies on
+     * @return token pair (Desktop) or success message (Web)
+     */
+    @PostMapping("/2fa/login")
+    public ResponseEntity<?> twoFactorLogin(
+            @Valid @RequestBody TwoFactorLoginRequestDto request,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
+            @CookieValue(value = "checkpoint_2fa", required = false) String twoFaCookie,
+            HttpServletResponse servletResponse) {
+
         if ("Desktop".equalsIgnoreCase(clientType)) {
-            TokenPairDto pair = authService.authenticateAndGenerateTokenPair(loginRequest);
+            TokenPairDto pair = authService.completeTwoFactorLoginForDesktop(request);
             return ResponseEntity.ok(pair);
         }
 
-        authService.authenticateAndSetCookie(loginRequest, servletResponse);
+        authService.completeTwoFactorLoginForWeb(request, twoFaCookie, servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Login successful"));
     }
 
