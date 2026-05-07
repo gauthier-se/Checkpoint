@@ -13,7 +13,7 @@ import com.seyzeriat.desktop.dto.LoginResponseDto;
  * Service responsible for authenticating against the Checkpoint API.
  *
  * <p>Sends credentials to {@code POST /api/auth/token} (the dedicated Desktop
- * JWT endpoint) and stores the received token in {@link TokenManager}.</p>
+ * JWT endpoint) and stores the received token pair in {@link TokenManager}.</p>
  */
 public class AuthService {
 
@@ -29,6 +29,7 @@ public class AuthService {
 
     /**
      * Authenticate with email and password.
+     * Stores both the access token and refresh token in {@link TokenManager}.
      *
      * @param email    the user's email
      * @param password the user's password
@@ -49,10 +50,11 @@ public class AuthService {
 
             if (response.statusCode() == 200) {
                 LoginResponseDto dto = objectMapper.readValue(response.body(), LoginResponseDto.class);
-                if (dto.getToken() == null || dto.getToken().isBlank()) {
+                if (dto.getAccessToken() == null || dto.getAccessToken().isBlank()) {
                     throw new AuthenticationException("Le serveur n'a pas retourné de token.");
                 }
-                TokenManager.getInstance().setToken(dto.getToken());
+                TokenManager.getInstance().setToken(dto.getAccessToken());
+                TokenManager.getInstance().setRefreshToken(dto.getRefreshToken());
             } else if (response.statusCode() == 401 || response.statusCode() == 403) {
                 throw new AuthenticationException("Email ou mot de passe incorrect.");
             } else {
@@ -68,7 +70,55 @@ public class AuthService {
     }
 
     /**
-     * Clear the stored token (logout).
+     * Exchanges the stored refresh token for a new token pair.
+     * Updates {@link TokenManager} with the new access and refresh tokens.
+     *
+     * @throws AuthenticationException if no refresh token is stored, the token is invalid/expired,
+     *                                 or the server is unreachable
+     */
+    public void refreshTokens() throws AuthenticationException {
+        String refreshToken = TokenManager.getInstance().getRefreshToken();
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new AuthenticationException("No refresh token available. Please log in again.");
+        }
+
+        String jsonBody = String.format("{\"refreshToken\":\"%s\"}", refreshToken);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/api/auth/refresh"))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("X-Client-Type", "Desktop")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                LoginResponseDto dto = objectMapper.readValue(response.body(), LoginResponseDto.class);
+                if (dto.getAccessToken() == null || dto.getAccessToken().isBlank()) {
+                    throw new AuthenticationException("Le serveur n'a pas retourné de token.");
+                }
+                TokenManager.getInstance().setToken(dto.getAccessToken());
+                TokenManager.getInstance().setRefreshToken(dto.getRefreshToken());
+            } else if (response.statusCode() == 401) {
+                TokenManager.getInstance().clear();
+                throw new AuthenticationException("Session expirée. Veuillez vous reconnecter.");
+            } else {
+                throw new AuthenticationException(
+                        "Erreur serveur (HTTP " + response.statusCode() + "). Veuillez réessayer.");
+            }
+        } catch (IOException e) {
+            throw new AuthenticationException("Impossible de contacter le serveur : " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AuthenticationException("La requête a été interrompue.");
+        }
+    }
+
+    /**
+     * Clear the stored tokens (logout).
      */
     public void logout() {
         TokenManager.getInstance().clear();

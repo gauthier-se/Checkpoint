@@ -31,6 +31,7 @@ import com.checkpoint.api.exceptions.GameAlreadyInBacklogException;
 import com.checkpoint.api.exceptions.GameAlreadyInWishlistException;
 import com.checkpoint.api.exceptions.GameNotInBacklogException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
+import com.checkpoint.api.exceptions.InvalidRefreshTokenException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.ReportNotFoundException;
@@ -764,6 +765,27 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Handles InvalidRefreshTokenException when a refresh token is missing, revoked, or expired.
+     * Returns 401 so clients can redirect to login.
+     *
+     * @param ex the exception
+     * @return error response with 401 status
+     */
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
+        log.warn("Invalid refresh token: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     /**

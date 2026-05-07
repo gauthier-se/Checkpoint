@@ -3,8 +3,8 @@ package com.seyzeriat.desktop.service;
 /**
  * Secure in-memory JWT token manager (singleton).
  *
- * <p>Stores the JWT token in a volatile field so it is never persisted to disk.
- * The token is lost when the application exits, forcing re-authentication on
+ * <p>Stores the access token and refresh token in volatile fields so they are never persisted
+ * to disk. Both tokens are lost when the application exits, forcing re-authentication on
  * the next launch.</p>
  */
 public final class TokenManager {
@@ -12,6 +12,7 @@ public final class TokenManager {
     private static final TokenManager INSTANCE = new TokenManager();
 
     private volatile String token;
+    private volatile String refreshToken;
 
     private TokenManager() {}
 
@@ -20,7 +21,7 @@ public final class TokenManager {
     }
 
     /**
-     * Stores the JWT token.
+     * Stores the JWT access token.
      *
      * @param token the JWT access token
      */
@@ -29,21 +30,38 @@ public final class TokenManager {
     }
 
     /**
-     * Returns the stored JWT token, or {@code null} if not authenticated.
+     * Returns the stored JWT access token, or {@code null} if not authenticated.
      */
     public String getToken() {
         return token;
     }
 
     /**
-     * Clears the stored token (logout / session expiry).
+     * Stores the refresh token.
+     *
+     * @param refreshToken the opaque refresh token
      */
-    public void clear() {
-        this.token = null;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     /**
-     * Returns {@code true} if a token is currently stored.
+     * Returns the stored refresh token, or {@code null} if not available.
+     */
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    /**
+     * Clears both the access token and refresh token (logout / session expiry).
+     */
+    public void clear() {
+        this.token = null;
+        this.refreshToken = null;
+    }
+
+    /**
+     * Returns {@code true} if an access token is currently stored.
      */
     public boolean isAuthenticated() {
         return token != null && !token.isBlank();

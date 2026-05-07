@@ -38,11 +38,13 @@ public class ApiService {
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final AuthService authService;
 
     public ApiService() {
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
         this.objectMapper.findAndRegisterModules();
+        this.authService = new AuthService();
     }
 
     /**
@@ -66,11 +68,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Search failed with status " + response.statusCode() + ": " + response.body());
@@ -98,11 +96,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 201 && response.statusCode() != 200) {
             throw new IOException("Import failed with status " + response.statusCode() + ": " + response.body());
@@ -133,11 +127,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Bulk top-rated import failed with status " + response.statusCode() + ": " + response.body());
@@ -166,11 +156,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Bulk recent import failed with status " + response.statusCode() + ": " + response.body());
@@ -197,11 +183,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch users with status " + response.statusCode() + ": " + response.body());
@@ -228,11 +210,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch reviews with status " + response.statusCode() + ": " + response.body());
@@ -259,11 +237,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch reported reviews with status " + response.statusCode() + ": " + response.body());
@@ -292,11 +266,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch review reports with status " + response.statusCode() + ": " + response.body());
@@ -320,11 +290,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .DELETE();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to delete review with status " + response.statusCode() + ": " + response.body());
@@ -351,11 +317,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch reports with status " + response.statusCode() + ": " + response.body());
@@ -379,11 +341,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .DELETE();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to dismiss report with status " + response.statusCode() + ": " + response.body());
@@ -407,11 +365,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch report detail with status " + response.statusCode() + ": " + response.body());
@@ -435,11 +389,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .DELETE();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to delete comment with status " + response.statusCode() + ": " + response.body());
@@ -463,11 +413,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch user detail with status " + response.statusCode() + ": " + response.body());
@@ -495,11 +441,7 @@ public class ApiService {
                 .header("Content-Type", "application/json")
                 .PUT(HttpRequest.BodyPublishers.ofString(body));
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to edit user with status " + response.statusCode() + ": " + response.body());
@@ -523,11 +465,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to ban user with status " + response.statusCode() + ": " + response.body());
@@ -549,11 +487,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to unban user with status " + response.statusCode() + ": " + response.body());
@@ -582,11 +516,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .GET();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch news with status " + response.statusCode() + ": " + response.body());
@@ -616,11 +546,7 @@ public class ApiService {
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body));
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 201 && response.statusCode() != 200) {
             throw new IOException("Failed to create news with status " + response.statusCode() + ": " + response.body());
@@ -651,11 +577,7 @@ public class ApiService {
                 .header("Content-Type", "application/json")
                 .PUT(HttpRequest.BodyPublishers.ofString(body));
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to update news with status " + response.statusCode() + ": " + response.body());
@@ -679,11 +601,7 @@ public class ApiService {
                 .uri(URI.create(url))
                 .DELETE();
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 204 && response.statusCode() != 200) {
             throw new IOException("Failed to delete news with status " + response.statusCode() + ": " + response.body());
@@ -709,11 +627,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to publish news with status " + response.statusCode() + ": " + response.body());
@@ -741,11 +655,7 @@ public class ApiService {
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody());
 
-        addAuthHeader(builder);
-
-        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-
-        checkUnauthorized(response);
+        HttpResponse<String> response = sendWithAuth(builder);
 
         if (response.statusCode() != 200) {
             throw new IOException("Failed to unpublish news with status " + response.statusCode() + ": " + response.body());
@@ -757,26 +667,43 @@ public class ApiService {
     // ─── Auth interceptor helpers ──────────────────────────────────────
 
     /**
+     * Adds the JWT Authorization header and sends the request, retrying once after a
+     * token refresh if the server returns 401. Throws {@link UnauthorizedException} on
+     * 401 (after failed refresh) or 403.
+     */
+    private HttpResponse<String> sendWithAuth(HttpRequest.Builder builder)
+            throws IOException, InterruptedException, UnauthorizedException {
+        addAuthHeader(builder);
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 401) {
+            try {
+                authService.refreshTokens();
+                addAuthHeader(builder);
+                response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            } catch (AuthService.AuthenticationException e) {
+                TokenManager.getInstance().clear();
+                throw new UnauthorizedException("Session expirée. Veuillez vous reconnecter.");
+            }
+        }
+
+        if (response.statusCode() == 401 || response.statusCode() == 403) {
+            TokenManager.getInstance().clear();
+            throw new UnauthorizedException(
+                    "Session expirée ou accès refusé (HTTP " + response.statusCode() + "). Veuillez vous reconnecter.");
+        }
+
+        return response;
+    }
+
+    /**
      * Injects the JWT {@code Authorization: Bearer {token}} header into the
      * request builder if a token is available in {@link TokenManager}.
      */
     private void addAuthHeader(HttpRequest.Builder builder) {
         String token = TokenManager.getInstance().getToken();
         if (token != null && !token.isBlank()) {
-            builder.header("Authorization", "Bearer " + token);
-        }
-    }
-
-    /**
-     * Checks if the HTTP response indicates an authentication / authorization
-     * failure and throws {@link UnauthorizedException} so the UI layer can
-     * redirect to the login screen.
-     */
-    private void checkUnauthorized(HttpResponse<String> response) throws UnauthorizedException {
-        if (response.statusCode() == 401 || response.statusCode() == 403) {
-            TokenManager.getInstance().clear();
-            throw new UnauthorizedException(
-                    "Session expirée ou accès refusé (HTTP " + response.statusCode() + "). Veuillez vous reconnecter.");
+            builder.setHeader("Authorization", "Bearer " + token);
         }
     }
 

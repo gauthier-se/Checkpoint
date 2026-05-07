@@ -4,9 +4,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,8 +16,10 @@ import com.checkpoint.api.dto.auth.AuthMessageDto;
 import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.LoginResponseDto;
+import com.checkpoint.api.dto.auth.RefreshTokenRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.services.AuthService;
 
@@ -27,8 +31,9 @@ import jakarta.validation.Valid;
  *
  * <ul>
  *   <li><strong>Desktop</strong> ({@code X-Client-Type: Desktop} header or
- *       {@code POST /api/auth/token}): returns a JWT in the response body.</li>
- *   <li><strong>Web</strong> (default): sets a {@code checkpoint_token} HttpOnly cookie.</li>
+ *       {@code POST /api/auth/token}): returns a JWT access token and a refresh token in the response body.</li>
+ *   <li><strong>Web</strong> (default): sets {@code checkpoint_token} (access) and
+ *       {@code checkpoint_refresh} (refresh) HttpOnly cookies.</li>
  * </ul>
  */
 @RestController
@@ -45,23 +50,22 @@ public class AuthController {
      * Unified login endpoint.
      *
      * <p>Desktop clients (identified by the {@code X-Client-Type: Desktop} header) receive a
-     * JWT in the response body. Web clients receive a {@code checkpoint_token} HttpOnly cookie.</p>
+     * {@link TokenPairDto} in the response body. Web clients receive both cookies.</p>
      *
      * @param loginRequest    the login credentials
      * @param clientType      optional header to specify the client type
-     * @param servletResponse the HTTP servlet response (used to write the cookie for Web clients)
-     * @return JWT token body (Desktop) or success message (Web)
+     * @param servletResponse the HTTP servlet response (used to write cookies for Web clients)
+     * @return token pair (Desktop) or success message (Web)
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequestDto loginRequest,
-            @org.springframework.web.bind.annotation.RequestHeader(
-                    value = "X-Client-Type", required = false) String clientType,
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
             HttpServletResponse servletResponse) {
 
         if ("Desktop".equalsIgnoreCase(clientType)) {
-            String token = authService.authenticateAndGenerateToken(loginRequest);
-            return ResponseEntity.ok(new LoginResponseDto(token));
+            TokenPairDto pair = authService.authenticateAndGenerateTokenPair(loginRequest);
+            return ResponseEntity.ok(pair);
         }
 
         authService.authenticateAndSetCookie(loginRequest, servletResponse);
@@ -83,30 +87,66 @@ public class AuthController {
     }
 
     /**
-     * Dedicated JWT token endpoint for Desktop clients.
+     * Dedicated token endpoint for Desktop clients.
+     * Returns a {@link TokenPairDto} containing both the access and refresh tokens.
      *
      * @param loginRequest the login credentials
-     * @return JWT token in the response body
+     * @return token pair in the response body
      */
     @PostMapping("/token")
-    public ResponseEntity<LoginResponseDto> token(
+    public ResponseEntity<TokenPairDto> token(
             @Valid @RequestBody LoginRequestDto loginRequest) {
 
-        String token = authService.authenticateAndGenerateToken(loginRequest);
-        return ResponseEntity.ok(new LoginResponseDto(token));
+        TokenPairDto pair = authService.authenticateAndGenerateTokenPair(loginRequest);
+        return ResponseEntity.ok(pair);
+    }
+
+    /**
+     * Token refresh endpoint.
+     *
+     * <p>Web clients send the {@code checkpoint_refresh} cookie; the response sets new
+     * {@code checkpoint_token} and {@code checkpoint_refresh} cookies (token rotation).</p>
+     *
+     * <p>Desktop clients ({@code X-Client-Type: Desktop}) send the refresh token in the
+     * request body and receive a new {@link TokenPairDto}.</p>
+     *
+     * @param clientType      optional header to identify Desktop clients
+     * @param refreshCookie   the {@code checkpoint_refresh} cookie value (Web clients)
+     * @param body            the refresh token request body (Desktop clients)
+     * @param servletResponse the HTTP servlet response to write new cookies on (Web clients)
+     * @return token pair (Desktop) or success message (Web)
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(
+            @RequestHeader(value = "X-Client-Type", required = false) String clientType,
+            @CookieValue(value = "checkpoint_refresh", required = false) String refreshCookie,
+            @RequestBody(required = false) RefreshTokenRequestDto body,
+            HttpServletResponse servletResponse) {
+
+        if ("Desktop".equalsIgnoreCase(clientType)) {
+            String token = (body != null) ? body.refreshToken() : null;
+            TokenPairDto pair = authService.refreshTokenForDesktop(token);
+            return ResponseEntity.ok(pair);
+        }
+
+        authService.refreshTokenAndSetCookie(refreshCookie, servletResponse);
+        return ResponseEntity.ok(new AuthMessageDto("Token refreshed"));
     }
 
     /**
      * Logout endpoint.
      *
-     * <p>Expires the {@code checkpoint_token} cookie and clears the security context.</p>
+     * <p>Revokes the refresh token, expires both cookies, and clears the security context.</p>
      *
-     * @param servletResponse the HTTP servlet response to write the expired cookie on
+     * @param refreshCookie   the {@code checkpoint_refresh} cookie value, or {@code null}
+     * @param servletResponse the HTTP servlet response to write expired cookies on
      * @return success message
      */
     @PostMapping("/logout")
-    public ResponseEntity<AuthMessageDto> logout(HttpServletResponse servletResponse) {
-        authService.clearAuthCookie(servletResponse);
+    public ResponseEntity<AuthMessageDto> logout(
+            @CookieValue(value = "checkpoint_refresh", required = false) String refreshCookie,
+            HttpServletResponse servletResponse) {
+        authService.clearAuthCookie(refreshCookie, servletResponse);
         return ResponseEntity.ok(new AuthMessageDto("Logout successful"));
     }
 
