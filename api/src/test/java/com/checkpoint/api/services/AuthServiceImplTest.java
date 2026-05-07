@@ -8,23 +8,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.LocalDateTime;
 
-import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
-import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
-import com.checkpoint.api.entities.PasswordResetToken;
-import com.checkpoint.api.exceptions.InvalidTokenException;
-import com.checkpoint.api.exceptions.RegistrationConflictException;
-import com.checkpoint.api.repositories.PasswordResetTokenRepository;
-import com.checkpoint.api.services.EmailService;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,20 +28,24 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.entities.PasswordResetToken;
 import com.checkpoint.api.entities.Role;
+import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.RegistrationConflictException;
+import com.checkpoint.api.repositories.PasswordResetTokenRepository;
 import com.checkpoint.api.repositories.RoleRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.impl.AuthServiceImpl;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthServiceImpl")
@@ -78,8 +75,23 @@ class AuthServiceImplTest {
     @Mock
     private EmailService emailService;
 
-    @InjectMocks
     private AuthServiceImpl authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthServiceImpl(
+                authenticationManager,
+                jwtService,
+                userDetailsService,
+                userRepository,
+                passwordEncoder,
+                roleRepository,
+                passwordResetTokenRepository,
+                emailService,
+                false,      // cookieSecure = false in tests
+                86400000L   // jwtExpirationMs = 24h
+        );
+    }
 
     @Nested
     @DisplayName("authenticateAndGenerateToken")
@@ -134,30 +146,47 @@ class AuthServiceImplTest {
     }
 
     @Nested
-    @DisplayName("authenticateAndCreateSession")
-    class AuthenticateAndCreateSessionTests {
+    @DisplayName("authenticateAndSetCookie")
+    class AuthenticateAndSetCookieTests {
 
         @Test
-        @DisplayName("Should authenticate and create session")
-        void shouldAuthenticateAndCreateSession() {
+        @DisplayName("Should authenticate and write checkpoint_token cookie on response")
+        void shouldAuthenticateAndSetCookie() {
             // Given
             LoginRequestDto request = new LoginRequestDto("user@test.com", "password123");
+            UserDetails userDetails = User.builder()
+                    .username("user@test.com")
+                    .password("encodedPassword")
+                    .roles("USER")
+                    .build();
             Authentication authentication = mock(Authentication.class);
-            HttpServletRequest servletRequest = mock(HttpServletRequest.class);
             HttpServletResponse servletResponse = mock(HttpServletResponse.class);
-            HttpSession session = mock(HttpSession.class);
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
-            when(servletRequest.getSession(true)).thenReturn(session);
+            when(userDetailsService.loadUserByUsername("user@test.com"))
+                    .thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails))
+                    .thenReturn("jwt.token.here");
 
             // When
-            authService.authenticateAndCreateSession(request, servletRequest, servletResponse);
+            authService.authenticateAndSetCookie(request, servletResponse);
 
             // Then
             verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-            verify(servletRequest).getSession(true);
-            verify(session).setAttribute(any(), any());
+            verify(jwtService).generateToken(userDetails);
+
+            ArgumentCaptor<String> headerNameCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
+            verify(servletResponse).addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
+
+            assertThat(headerNameCaptor.getValue()).isEqualTo("Set-Cookie");
+            String cookieHeader = headerValueCaptor.getValue();
+            assertThat(cookieHeader).contains("checkpoint_token=jwt.token.here");
+            assertThat(cookieHeader).contains("HttpOnly");
+            assertThat(cookieHeader).contains("SameSite=Lax");
+            assertThat(cookieHeader).contains("Path=/api");
+            assertThat(cookieHeader).contains("Max-Age=86400");
         }
 
         @Test
@@ -165,16 +194,42 @@ class AuthServiceImplTest {
         void shouldThrowForInvalidCredentials() {
             // Given
             LoginRequestDto request = new LoginRequestDto("user@test.com", "wrongPassword");
-            HttpServletRequest servletRequest = mock(HttpServletRequest.class);
             HttpServletResponse servletResponse = mock(HttpServletResponse.class);
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
-            assertThatThrownBy(() -> authService.authenticateAndCreateSession(
-                    request, servletRequest, servletResponse))
+            assertThatThrownBy(() -> authService.authenticateAndSetCookie(request, servletResponse))
                     .isInstanceOf(BadCredentialsException.class);
+
+            verify(servletResponse, never()).addHeader(any(), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("clearAuthCookie")
+    class ClearAuthCookieTests {
+
+        @Test
+        @DisplayName("Should write an expired checkpoint_token cookie (Max-Age=0)")
+        void shouldWriteExpiredCookie() {
+            // Given
+            HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+
+            // When
+            authService.clearAuthCookie(servletResponse);
+
+            // Then
+            ArgumentCaptor<String> headerNameCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
+            verify(servletResponse).addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
+
+            assertThat(headerNameCaptor.getValue()).isEqualTo("Set-Cookie");
+            String cookieHeader = headerValueCaptor.getValue();
+            assertThat(cookieHeader).contains("checkpoint_token=");
+            assertThat(cookieHeader).contains("Max-Age=0");
+            assertThat(cookieHeader).contains("HttpOnly");
         }
     }
 
@@ -257,44 +312,6 @@ class AuthServiceImplTest {
     }
 
     @Nested
-    @DisplayName("logoutSession")
-    class LogoutSessionTests {
-
-        @Test
-        @DisplayName("Should invalidate existing session on logout")
-        void shouldInvalidateSession() {
-            // Given
-            HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-            HttpServletResponse servletResponse = mock(HttpServletResponse.class);
-            HttpSession session = mock(HttpSession.class);
-
-            when(servletRequest.getSession(false)).thenReturn(session);
-
-            // When
-            authService.logoutSession(servletRequest, servletResponse);
-
-            // Then
-            verify(session).invalidate();
-        }
-
-        @Test
-        @DisplayName("Should handle logout when no session exists")
-        void shouldHandleNoSession() {
-            // Given
-            HttpServletRequest servletRequest = mock(HttpServletRequest.class);
-            HttpServletResponse servletResponse = mock(HttpServletResponse.class);
-
-            when(servletRequest.getSession(false)).thenReturn(null);
-
-            // When
-            authService.logoutSession(servletRequest, servletResponse);
-
-            // Then
-            verify(servletRequest).getSession(false);
-        }
-    }
-
-    @Nested
     @DisplayName("getCurrentUser")
     class GetCurrentUserTests {
 
@@ -360,7 +377,7 @@ class AuthServiceImplTest {
     class ForgotPasswordTests {
 
         @Test
-        @DisplayName("Should generate token and log link if email exists")
+        @DisplayName("Should generate token and send reset email if email exists")
         void shouldGenerateToken() {
             // Given
             com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
@@ -443,7 +460,7 @@ class AuthServiceImplTest {
         void shouldThrowIfTokenExpired() {
             // Given
             com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
-            PasswordResetToken token = new PasswordResetToken("expired-token", user, LocalDateTime.now().minusMinutes(1)); // Expired
+            PasswordResetToken token = new PasswordResetToken("expired-token", user, LocalDateTime.now().minusMinutes(1));
 
             when(passwordResetTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(token));
 

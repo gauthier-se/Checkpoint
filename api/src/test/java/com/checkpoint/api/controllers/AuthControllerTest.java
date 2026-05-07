@@ -38,7 +38,6 @@ import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AuthService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -85,16 +84,15 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.token").value("jwt.token.here"));
 
             verify(authService).authenticateAndGenerateToken(any(LoginRequestDto.class));
-            verify(authService, never()).authenticateAndCreateSession(
-                    any(), any(HttpServletRequest.class), any(HttpServletResponse.class));
+            verify(authService, never()).authenticateAndSetCookie(any(), any(HttpServletResponse.class));
         }
 
         @Test
-        @DisplayName("Should create session for Web client (no header)")
-        void shouldCreateSessionForWebClient() throws Exception {
+        @DisplayName("Should set checkpoint_token cookie for Web client (no header)")
+        void shouldSetCookieForWebClient() throws Exception {
             // Given
-            doNothing().when(authService).authenticateAndCreateSession(
-                    any(LoginRequestDto.class), any(HttpServletRequest.class), any(HttpServletResponse.class));
+            doNothing().when(authService).authenticateAndSetCookie(
+                    any(LoginRequestDto.class), any(HttpServletResponse.class));
 
             // When / Then
             mockMvc.perform(post("/api/auth/login")
@@ -105,8 +103,8 @@ class AuthControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Login successful"));
 
-            verify(authService).authenticateAndCreateSession(
-                    any(LoginRequestDto.class), any(HttpServletRequest.class), any(HttpServletResponse.class));
+            verify(authService).authenticateAndSetCookie(
+                    any(LoginRequestDto.class), any(HttpServletResponse.class));
             verify(authService, never()).authenticateAndGenerateToken(any());
         }
 
@@ -132,8 +130,8 @@ class AuthControllerTest {
         void shouldReturn401ForInvalidWebCredentials() throws Exception {
             // Given
             doThrow(new BadCredentialsException("Bad credentials"))
-                    .when(authService).authenticateAndCreateSession(
-                            any(LoginRequestDto.class), any(HttpServletRequest.class), any(HttpServletResponse.class));
+                    .when(authService).authenticateAndSetCookie(
+                            any(LoginRequestDto.class), any(HttpServletResponse.class));
 
             // When / Then
             mockMvc.perform(post("/api/auth/login")
@@ -374,16 +372,17 @@ class AuthControllerTest {
     class LogoutTests {
 
         @Test
-        @DisplayName("Should return success message on logout")
-        void shouldReturnSuccessOnLogout() throws Exception {
+        @DisplayName("Should clear cookie and return success message on logout")
+        void shouldClearCookieAndReturnSuccess() throws Exception {
             // Given
-            doNothing().when(authService).logoutSession(
-                    any(HttpServletRequest.class), any(HttpServletResponse.class));
+            doNothing().when(authService).clearAuthCookie(any(HttpServletResponse.class));
 
             // When / Then
             mockMvc.perform(post("/api/auth/logout"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Logout successful"));
+
+            verify(authService).clearAuthCookie(any(HttpServletResponse.class));
         }
     }
 

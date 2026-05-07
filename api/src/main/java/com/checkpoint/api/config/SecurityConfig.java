@@ -26,17 +26,19 @@ import com.checkpoint.api.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.checkpoint.api.security.oauth2.OAuth2AuthenticationSuccessHandler;
 
 /**
- * Dual security configuration providing two filter chains:
+ * Security configuration providing two fully stateless filter chains:
  *
  * <ol>
- *   <li><strong>API chain</strong> ({@code /api/**}): Hybrid JWT + session authentication.
- *       Supports both JWT tokens (Desktop) and session cookies (Web).
- *       CSRF is disabled. Evaluated first (order 1).</li>
- *   <li><strong>Web/Form chain</strong> (all other routes): Session-based authentication
- *       with CSRF protection enabled. Evaluated second (order 2).</li>
+ *   <li><strong>WebSocket chain</strong> ({@code /ws/**}): permits all HTTP upgrade
+ *       requests; authentication is handled at the STOMP level. Evaluated first (order 0).</li>
+ *   <li><strong>API chain</strong> ({@code /api/**}): stateless JWT authentication.
+ *       Desktop clients send {@code Authorization: Bearer <token>};
+ *       Web clients send the {@code checkpoint_token} HttpOnly cookie.
+ *       CSRF is disabled (SameSite=Lax on the cookie prevents cross-site submission).
+ *       Evaluated second (order 1).</li>
  * </ol>
  *
- * Public endpoints accessible without credentials in both chains:
+ * Public endpoints accessible without credentials:
  * <ul>
  *   <li>{@code /api/auth/**} — authentication endpoints</li>
  *   <li>{@code GET /api/games/**} — public game catalog</li>
@@ -90,15 +92,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Filter Chain 1 — API (JWT + session-cookie hybrid).
+     * Filter Chain 1 — API (stateless JWT).
      * Matches all requests under {@code /api/**}.
-     * Ordered first so it is evaluated before the web chain.
-     *
-     * <p>Uses {@code IF_REQUIRED} session policy so that:</p>
-     * <ul>
-     *   <li>Web clients authenticate via session cookies ({@code JSESSIONID}).</li>
-     *   <li>Desktop clients authenticate via JWT ({@code Authorization: Bearer …}).</li>
-     * </ul>
+     * JWT is extracted from either the {@code Authorization: Bearer} header (Desktop)
+     * or the {@code checkpoint_token} HttpOnly cookie (Web).
      */
     @Bean
     @Order(1)
@@ -110,7 +107,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/auth/ws-token").authenticated()
@@ -133,8 +130,6 @@ public class SecurityConfig {
                         .authenticationEntryPoint(apiAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // Wire OAuth2 login only when at least one client registration is configured
-        // so test contexts (which omit Google/Twitch credentials) still bootstrap.
         if (oauth2Clients.getIfAvailable() != null) {
             chain.oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(endpoint -> endpoint
@@ -149,25 +144,6 @@ public class SecurityConfig {
         }
 
         return chain.build();
-    }
-
-    /**
-     * Filter Chain 2 — Web/Form (session-based).
-     * Matches all remaining routes ({@code /login}, internal web pages, etc.).
-     * CSRF protection is enabled by default.
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error").permitAll()
-                        .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .defaultSuccessUrl("/", true))
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout"))
-                .build();
     }
 
     @Bean
