@@ -1,0 +1,57 @@
+meta {
+  name: 2FA Login (Desktop)
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/auth/2fa/login
+  body: json
+  auth: none
+}
+
+headers {
+  X-Client-Type: Desktop
+}
+
+body:json {
+  {
+    "intermediateToken": "{{intermediateToken}}",
+    "code": "123456"
+  }
+}
+
+docs {
+  # 2FA Login (Desktop)
+
+  Completes the two-step login for Desktop clients.
+
+  Called after `POST /api/auth/login` (with `X-Client-Type: Desktop`) returns
+  `{ "twoFactorRequired": true, "intermediateToken": "..." }`.
+
+  Send the `intermediateToken` from that response along with the TOTP code.
+  On success, returns a full token pair.
+
+  ## Headers
+
+  - **X-Client-Type**: `Desktop`
+
+  ## Request Body
+
+  - **intermediateToken** (required): The short-lived JWT returned by the login endpoint
+  - **code** (required): 6-digit TOTP code from the authenticator app
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "550e8400-e29b-41d4-a716-446655440000"
+  }
+  ```
+
+  ## Errors
+
+  - **400 Bad Request**: Missing fields
+  - **401 Unauthorized**: Invalid TOTP code or expired/missing intermediate token
+}

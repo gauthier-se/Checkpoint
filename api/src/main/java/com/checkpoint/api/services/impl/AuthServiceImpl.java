@@ -23,13 +23,18 @@ import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
+import com.checkpoint.api.dto.auth.TwoFactorLoginRequestDto;
+import com.checkpoint.api.dto.auth.TwoFactorRequiredResponseDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.entities.PasswordResetToken;
 import com.checkpoint.api.entities.RefreshToken;
 import com.checkpoint.api.entities.Role;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.InvalidTotpCodeException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
+import com.checkpoint.api.exceptions.TwoFactorRequiredException;
+import com.checkpoint.api.services.TwoFactorService;
 import com.checkpoint.api.repositories.PasswordResetTokenRepository;
 import com.checkpoint.api.repositories.RoleRepository;
 import com.checkpoint.api.repositories.UserRepository;
@@ -51,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     private static final String COOKIE_NAME = "checkpoint_token";
     private static final String REFRESH_COOKIE_NAME = "checkpoint_refresh";
+    private static final String TWO_FA_COOKIE_NAME = "checkpoint_2fa";
+    private static final long TWO_FA_COOKIE_MAX_AGE_SECONDS = 300L;
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -61,6 +68,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final RefreshTokenService refreshTokenService;
+    private final TwoFactorService twoFactorService;
     private final boolean cookieSecure;
     private final long jwtExpirationMs;
     private final long refreshExpirationMs;
@@ -74,6 +82,7 @@ public class AuthServiceImpl implements AuthService {
                            PasswordResetTokenRepository passwordResetTokenRepository,
                            EmailService emailService,
                            RefreshTokenService refreshTokenService,
+                           TwoFactorService twoFactorService,
                            @Value("${app.cookie.secure:true}") boolean cookieSecure,
                            @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs,
                            @Value("${jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
@@ -86,6 +95,7 @@ public class AuthServiceImpl implements AuthService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
         this.refreshTokenService = refreshTokenService;
+        this.twoFactorService = twoFactorService;
         this.cookieSecure = cookieSecure;
         this.jwtExpirationMs = jwtExpirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
@@ -98,11 +108,15 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
-        String accessToken = jwtService.generateToken(userDetails);
-
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.email()));
+
+        if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+            throw new TwoFactorRequiredException(twoFactorService.generateIntermediateToken(request.email()));
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
+        String accessToken = jwtService.generateToken(userDetails);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return new TokenPairDto(accessToken, refreshToken.getToken());
@@ -115,14 +129,22 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.email()));
+
+        if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
+            String intermediateToken = twoFactorService.generateIntermediateToken(request.email());
+            ResponseCookie twoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, intermediateToken, TWO_FA_COOKIE_MAX_AGE_SECONDS, "/api/auth/2fa/login");
+            servletResponse.addHeader(HttpHeaders.SET_COOKIE, twoFaCookie.toString());
+            throw new TwoFactorRequiredException(null);
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
         String accessToken = jwtService.generateToken(userDetails);
 
         ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.email()));
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
@@ -194,7 +216,8 @@ public class AuthServiceImpl implements AuthService {
                 roleName,
                 user.getBio(),
                 user.getPicture(),
-                user.getIsPrivate()
+                user.getIsPrivate(),
+                Boolean.TRUE.equals(user.getTwoFactorEnabled())
         );
     }
 
@@ -265,6 +288,51 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String generateWsToken(UserDetails userDetails) {
         return jwtService.generateToken(userDetails);
+    }
+
+    @Override
+    @Transactional
+    public void completeTwoFactorLoginForWeb(TwoFactorLoginRequestDto request, String twoFaCookie, HttpServletResponse servletResponse) {
+        String email = twoFactorService.resolveEmailFromIntermediateToken(twoFaCookie);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        if (!twoFactorService.verifyCode(user.getTotpSecret(), request.code())) {
+            throw new InvalidTotpCodeException("Invalid TOTP code. Please try again.");
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        String accessToken = jwtService.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        ResponseCookie expiredTwoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, "", 0, "/api/auth/2fa/login");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, expiredTwoFaCookie.toString());
+
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+    }
+
+    @Override
+    @Transactional
+    public TokenPairDto completeTwoFactorLoginForDesktop(TwoFactorLoginRequestDto request) {
+        String email = twoFactorService.resolveEmailFromIntermediateToken(request.intermediateToken());
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        if (!twoFactorService.verifyCode(user.getTotpSecret(), request.code())) {
+            throw new InvalidTotpCodeException("Invalid TOTP code. Please try again.");
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        String accessToken = jwtService.generateToken(userDetails);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new TokenPairDto(accessToken, refreshToken.getToken());
     }
 
     private ResponseCookie buildCookie(String name, String value, long maxAgeSeconds, String path) {

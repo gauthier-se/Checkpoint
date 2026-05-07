@@ -1,0 +1,49 @@
+meta {
+  name: 2FA Verify (Enable)
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/auth/2fa/verify
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "code": "123456"
+  }
+}
+
+docs {
+  # 2FA Verify (Enable)
+
+  Verifies the first TOTP code after setup and permanently enables 2FA on the account.
+  Must be called after `POST /api/auth/2fa/setup`.
+
+  ## Headers
+
+  - **Authorization**: `Bearer <token>`
+
+  ## Request Body
+
+  - **code** (required): 6-digit TOTP code from the authenticator app
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "message": "Two-factor authentication has been enabled."
+  }
+  ```
+
+  ## Errors
+
+  - **400 Bad Request**: Code is blank
+  - **401 Unauthorized**: Invalid TOTP code or missing JWT
+}

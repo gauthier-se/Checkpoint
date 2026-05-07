@@ -1,0 +1,42 @@
+meta {
+  name: 2FA Setup
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/auth/2fa/setup
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # 2FA Setup
+
+  Generates a new TOTP secret for the authenticated user and returns a QR code data URL
+  plus the provisioning URI. Two-factor authentication is **not yet active** until the
+  user confirms with a valid code via `POST /api/auth/2fa/verify`.
+
+  ## Headers
+
+  - **Authorization**: `Bearer <token>`
+
+  ## Response (200 OK)
+
+  ```json
+  {
+    "provisioningUri": "otpauth://totp/Checkpoint:user@example.com?secret=BASE32SECRET&issuer=Checkpoint",
+    "qrCodeDataUrl": "data:image/png;base64,..."
+  }
+  ```
+
+  Scan the QR code in Google Authenticator or Authy, then confirm with the first code.
+
+  ## Errors
+
+  - **401 Unauthorized**: Missing or invalid JWT token
+}

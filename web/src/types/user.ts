@@ -6,4 +6,5 @@ export interface User {
   bio: string | null
   picture: string | null
   isPrivate: boolean
+  twoFactorEnabled: boolean
 }

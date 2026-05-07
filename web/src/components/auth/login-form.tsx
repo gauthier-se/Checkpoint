@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -37,9 +38,14 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 })
 
+const totpSchema = z.object({
+  code: z.string().length(6, 'Code must be exactly 6 digits'),
+})
+
 export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
   const navigate = useNavigate()
   const { invalidate } = useAuth()
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false)
 
   const form = useForm({
     defaultValues: {
@@ -62,10 +68,115 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
         return
       }
 
+      const data = await res.json().catch(() => null)
+      if (data?.twoFactorRequired) {
+        setTwoFactorRequired(true)
+        return
+      }
+
       await invalidate()
       await navigate({ to: redirectTo ?? '/' })
     },
   })
+
+  const totpForm = useForm({
+    defaultValues: { code: '' },
+    validators: { onSubmit: totpSchema },
+    onSubmit: async ({ value }) => {
+      const res = await apiFetch('/api/auth/2fa/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        toast.error(data?.message ?? 'Invalid code. Please try again.')
+        return
+      }
+
+      await invalidate()
+      await navigate({ to: redirectTo ?? '/' })
+    },
+  })
+
+  if (twoFactorRequired) {
+    return (
+      <div className={cn('flex flex-col gap-6', className)} {...props}>
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl">Two-Factor Authentication</CardTitle>
+            <CardDescription>
+              Enter the 6-digit code from your authenticator app.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                totpForm.handleSubmit()
+              }}
+            >
+              <FieldGroup>
+                <totpForm.Field
+                  name="code"
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor="totp-code">
+                        Authenticator code
+                      </FieldLabel>
+                      <Input
+                        id="totp-code"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="000000"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                      {field.state.meta.errors.length > 0 && (
+                        <p className="text-sm text-destructive">
+                          {field.state.meta.errors
+                            .map((e) =>
+                              typeof e === 'string' ? e : (e as any).message,
+                            )
+                            .join(', ')}
+                        </p>
+                      )}
+                    </Field>
+                  )}
+                />
+                <Field>
+                  <totpForm.Subscribe
+                    selector={(state) => [state.canSubmit, state.isSubmitting]}
+                    children={([canSubmit, isSubmitting]) => (
+                      <Button
+                        type="submit"
+                        disabled={!canSubmit || isSubmitting}
+                      >
+                        {isSubmitting ? 'Verifying...' : 'Verify'}
+                      </Button>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setTwoFactorRequired(false)}
+                  >
+                    Back
+                  </Button>
+                </Field>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

@@ -59,7 +59,28 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token) && !isIntermediateToken(token);
+    }
+
+    @Override
+    public String generateIntermediateToken(String email, long tokenExpirationMs) {
+        return Jwts.builder()
+                .claim("type", "2fa_intermediate")
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + tokenExpirationMs))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    @Override
+    public boolean isIntermediateToken(String token) {
+        try {
+            String type = extractClaim(token, claims -> claims.get("type", String.class));
+            return "2fa_intermediate".equals(type);
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {

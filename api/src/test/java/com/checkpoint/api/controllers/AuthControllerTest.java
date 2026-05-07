@@ -39,6 +39,7 @@ import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AuthService;
+import com.checkpoint.api.services.TwoFactorService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -57,6 +58,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private TwoFactorService twoFactorService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -485,7 +489,7 @@ class AuthControllerTest {
         void shouldReturnCurrentUserProfile() throws Exception {
             // Given
             UUID userId = UUID.randomUUID();
-            UserMeDto userMeDto = new UserMeDto(userId, "alice", "alice@test.com", "ADMIN", "My bio", null, false);
+            UserMeDto userMeDto = new UserMeDto(userId, "alice", "alice@test.com", "ADMIN", "My bio", null, false, false);
 
             when(authService.getCurrentUser("alice@test.com")).thenReturn(userMeDto);
 
@@ -506,7 +510,7 @@ class AuthControllerTest {
         void shouldReturnUserWithDefaultRole() throws Exception {
             // Given
             UUID userId = UUID.randomUUID();
-            UserMeDto userMeDto = new UserMeDto(userId, "bob", "bob@test.com", "USER", null, null, false);
+            UserMeDto userMeDto = new UserMeDto(userId, "bob", "bob@test.com", "USER", null, null, false, false);
 
             when(authService.getCurrentUser("bob@test.com")).thenReturn(userMeDto);
 

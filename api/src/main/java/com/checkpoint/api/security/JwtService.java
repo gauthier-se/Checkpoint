@@ -42,4 +42,23 @@ public interface JwtService {
      * @return true if the token is valid
      */
     boolean isTokenValid(String token, UserDetails userDetails);
+
+    /**
+     * Generates a short-lived intermediate JWT for the 2FA login flow.
+     * The token contains a {@code type: "2fa_intermediate"} claim and expires after
+     * {@code expirationMs} milliseconds.
+     *
+     * @param email       the user's email (used as the JWT subject)
+     * @param expirationMs token lifetime in milliseconds
+     * @return the generated intermediate JWT
+     */
+    String generateIntermediateToken(String email, long expirationMs);
+
+    /**
+     * Returns {@code true} if the token carries the {@code type: "2fa_intermediate"} claim.
+     *
+     * @param token the JWT token
+     * @return true if this is a 2FA intermediate token
+     */
+    boolean isIntermediateToken(String token);
 }

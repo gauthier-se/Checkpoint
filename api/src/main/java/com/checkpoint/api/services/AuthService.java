@@ -4,6 +4,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
+import com.checkpoint.api.dto.auth.TwoFactorLoginRequestDto;
+import com.checkpoint.api.dto.auth.TwoFactorRequiredResponseDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -95,4 +97,25 @@ public interface AuthService {
      * @return a JWT token string
      */
     String generateWsToken(UserDetails userDetails);
+
+    /**
+     * Completes the 2FA login step for Web clients.
+     * Reads the intermediate token from the {@code checkpoint_2fa} cookie, verifies the TOTP code,
+     * and on success sets the {@code checkpoint_token} and {@code checkpoint_refresh} cookies.
+     *
+     * @param request         the 2FA login request containing the TOTP code
+     * @param twoFaCookie     the value of the {@code checkpoint_2fa} HttpOnly cookie
+     * @param servletResponse the HTTP servlet response to write the final auth cookies on
+     */
+    void completeTwoFactorLoginForWeb(TwoFactorLoginRequestDto request, String twoFaCookie, HttpServletResponse servletResponse);
+
+    /**
+     * Completes the 2FA login step for Desktop clients.
+     * The intermediate token is expected in {@link TwoFactorLoginRequestDto#intermediateToken()}.
+     * On success, returns a full {@link TokenPairDto}.
+     *
+     * @param request the 2FA login request containing the intermediate token and TOTP code
+     * @return token pair for the Desktop client
+     */
+    TokenPairDto completeTwoFactorLoginForDesktop(TwoFactorLoginRequestDto request);
 }

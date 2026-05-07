@@ -33,6 +33,7 @@ import com.checkpoint.api.exceptions.GameNotInBacklogException;
 import com.checkpoint.api.exceptions.GameNotInWishlistException;
 import com.checkpoint.api.exceptions.InvalidRefreshTokenException;
 import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.InvalidTotpCodeException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.ReportNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
@@ -902,6 +903,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Handles InvalidTotpCodeException when a submitted TOTP code is invalid.
+     *
+     * @param ex the exception
+     * @return error response with 401 status
+     */
+    @ExceptionHandler(InvalidTotpCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTotpCode(InvalidTotpCodeException ex) {
+        log.warn("Invalid TOTP code: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     /**
