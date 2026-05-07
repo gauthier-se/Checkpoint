@@ -2,11 +2,13 @@ package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -25,11 +27,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.checkpoint.api.dto.collection.BacklogResponseDto;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.exceptions.GameAlreadyInBacklogException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInBacklogException;
@@ -69,9 +73,9 @@ class BacklogControllerTest {
             UUID backlogId = UUID.randomUUID();
             BacklogResponseDto response = new BacklogResponseDto(
                     backlogId, videoGameId, "The Witcher 3", "cover.jpg",
-                    LocalDate.of(2015, 5, 19), LocalDateTime.now());
+                    LocalDate.of(2015, 5, 19), null, LocalDateTime.now());
 
-            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId)))
+            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId), isNull()))
                     .thenReturn(response);
 
             // When / Then
@@ -83,13 +87,35 @@ class BacklogControllerTest {
         }
 
         @Test
+        @DisplayName("should add with priority when body contains priority")
+        @WithMockUser(username = "user@example.com")
+        void addToBacklog_shouldAddWithPriority() throws Exception {
+            // Given
+            UUID videoGameId = UUID.randomUUID();
+            UUID backlogId = UUID.randomUUID();
+            BacklogResponseDto response = new BacklogResponseDto(
+                    backlogId, videoGameId, "Hades", "cover.jpg",
+                    LocalDate.of(2020, 9, 17), Priority.HIGH, LocalDateTime.now());
+
+            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId), eq(Priority.HIGH)))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(post("/api/me/backlog/{videoGameId}", videoGameId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"priority\":\"HIGH\"}"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.priority").value("HIGH"));
+        }
+
+        @Test
         @DisplayName("should return 409 when game already in backlog")
         @WithMockUser(username = "user@example.com")
         void addToBacklog_shouldReturn409WhenAlreadyInBacklog() throws Exception {
             // Given
             UUID videoGameId = UUID.randomUUID();
 
-            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId)))
+            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId), isNull()))
                     .thenThrow(new GameAlreadyInBacklogException(videoGameId));
 
             // When / Then
@@ -106,7 +132,7 @@ class BacklogControllerTest {
             // Given
             UUID videoGameId = UUID.randomUUID();
 
-            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId)))
+            when(backlogService.addToBacklog(eq("user@example.com"), eq(videoGameId), isNull()))
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
@@ -163,7 +189,7 @@ class BacklogControllerTest {
             UUID backlogId = UUID.randomUUID();
             List<BacklogResponseDto> items = List.of(
                     new BacklogResponseDto(backlogId, videoGameId, "Elden Ring", "cover.jpg",
-                            LocalDate.of(2022, 2, 25), LocalDateTime.now())
+                            LocalDate.of(2022, 2, 25), null, LocalDateTime.now())
             );
             Page<BacklogResponseDto> page = new PageImpl<>(items);
 
@@ -194,6 +220,74 @@ class BacklogControllerTest {
                             .param("sort", "createdAt,asc"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /api/me/backlog/{videoGameId}/priority")
+    class UpdatePriority {
+
+        @Test
+        @DisplayName("should set priority and return 200 with updated entry")
+        @WithMockUser(username = "user@example.com")
+        void updatePriority_shouldReturn200WithUpdatedEntry() throws Exception {
+            // Given
+            UUID videoGameId = UUID.randomUUID();
+            UUID backlogId = UUID.randomUUID();
+            BacklogResponseDto response = new BacklogResponseDto(
+                    backlogId, videoGameId, "Elden Ring", "cover.jpg",
+                    LocalDate.of(2022, 2, 25), Priority.HIGH, LocalDateTime.now());
+
+            when(backlogService.updatePriority(eq("user@example.com"), eq(videoGameId), eq(Priority.HIGH)))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"priority\":\"HIGH\"}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(backlogId.toString()))
+                    .andExpect(jsonPath("$.priority").value("HIGH"));
+        }
+
+        @Test
+        @DisplayName("should clear priority when body priority is null")
+        @WithMockUser(username = "user@example.com")
+        void updatePriority_shouldClearPriority_whenPriorityIsNull() throws Exception {
+            // Given
+            UUID videoGameId = UUID.randomUUID();
+            UUID backlogId = UUID.randomUUID();
+            BacklogResponseDto response = new BacklogResponseDto(
+                    backlogId, videoGameId, "Elden Ring", "cover.jpg",
+                    LocalDate.of(2022, 2, 25), null, LocalDateTime.now());
+
+            when(backlogService.updatePriority(eq("user@example.com"), eq(videoGameId), isNull()))
+                    .thenReturn(response);
+
+            // When / Then
+            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"priority\":null}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.priority").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("should return 404 when game not in backlog")
+        @WithMockUser(username = "user@example.com")
+        void updatePriority_shouldReturn404_whenGameNotInBacklog() throws Exception {
+            // Given
+            UUID videoGameId = UUID.randomUUID();
+
+            when(backlogService.updatePriority(eq("user@example.com"), eq(videoGameId), eq(Priority.MEDIUM)))
+                    .thenThrow(new GameNotInBacklogException(videoGameId));
+
+            // When / Then
+            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"priority\":\"MEDIUM\"}"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404));
         }
     }
 

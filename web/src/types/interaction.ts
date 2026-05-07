@@ -1,9 +1,12 @@
+import type { Priority } from './collection'
 import type { GameStatus } from './library'
 import type { TagSummary } from './tag'
 
 export interface GameInteractionStatusDto {
   inWishlist: boolean
+  wishlistPriority: Priority | null
   inBacklog: boolean
+  backlogPriority: Priority | null
   inLibrary: boolean
   libraryStatus: GameStatus | null
   playCount: number

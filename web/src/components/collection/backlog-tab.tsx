@@ -5,22 +5,40 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { Archive, ArrowRightLeft, Trash2 } from 'lucide-react'
-import type { BacklogListResponse } from '@/types/collection'
+import { useState } from 'react'
+import type { BacklogListResponse, Priority } from '@/types/collection'
 import { CollectionGameCard } from '@/components/collection/collection-game-card'
 import { CollectionPagination } from '@/components/collection/collection-pagination'
 import { EmptyState } from '@/components/collection/empty-state'
+import { PriorityBadge } from '@/components/collection/priority-badge'
+import { PrioritySelect } from '@/components/collection/priority-select'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { updateBacklogPriority } from '@/queries/games'
 import { apiFetch } from '@/services/api'
 
 const PAGE_SIZE = 20
 
-export function backlogQuery(page: number) {
+type BacklogSort = 'addedAt' | 'priority'
+
+const SORT_PARAM: Record<BacklogSort, string> = {
+  addedAt: 'createdAt,desc',
+  priority: 'priority,desc',
+}
+
+export function backlogQuery(page: number, sort: BacklogSort = 'addedAt') {
   return queryOptions({
-    queryKey: ['backlog', 'me', page],
+    queryKey: ['backlog', 'me', page, sort],
     queryFn: async (): Promise<BacklogListResponse> => {
       const apiPage = page - 1
       const res = await apiFetch(
-        `/api/me/backlog?page=${apiPage}&size=${PAGE_SIZE}`,
+        `/api/me/backlog?page=${apiPage}&size=${PAGE_SIZE}&sort=${SORT_PARAM[sort]}`,
       )
       if (!res.ok) throw new Error('Failed to load backlog')
       return res.json()
@@ -33,7 +51,8 @@ interface BacklogTabProps {
 }
 
 export function BacklogTab({ page }: BacklogTabProps) {
-  const { data, isLoading, isError } = useQuery(backlogQuery(page))
+  const [sort, setSort] = useState<BacklogSort>('addedAt')
+  const { data, isLoading, isError } = useQuery(backlogQuery(page, sort))
   const queryClient = useQueryClient()
 
   const removeMutation = useMutation({
@@ -63,6 +82,19 @@ export function BacklogTab({ page }: BacklogTabProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['backlog', 'me'] })
       void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
+    },
+  })
+
+  const priorityMutation = useMutation({
+    mutationFn: ({
+      videoGameId,
+      priority,
+    }: {
+      videoGameId: string
+      priority: Priority | null
+    }) => updateBacklogPriority(videoGameId, priority),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['backlog', 'me'] })
     },
   })
 
@@ -103,6 +135,21 @@ export function BacklogTab({ page }: BacklogTabProps) {
 
   return (
     <div>
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <span className="text-xs text-muted-foreground">Sort by</span>
+        <Select
+          value={sort}
+          onValueChange={(value) => setSort(value as BacklogSort)}
+        >
+          <SelectTrigger size="sm" className="h-8 w-[160px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="addedAt">Date added</SelectItem>
+            <SelectItem value="priority">Priority</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {data.content.map((game) => (
           <CollectionGameCard
@@ -111,16 +158,29 @@ export function BacklogTab({ page }: BacklogTabProps) {
             title={game.title}
             coverUrl={game.coverUrl}
           >
-            {game.releaseDate && (
-              <p className="text-xs text-muted-foreground">
-                {new Date(game.releaseDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </p>
-            )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {game.releaseDate && (
+                <p className="text-xs text-muted-foreground">
+                  {new Date(game.releaseDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+              )}
+              <PriorityBadge priority={game.priority} />
+            </div>
             <div className="mt-auto flex flex-col gap-1 pt-2">
+              <PrioritySelect
+                value={game.priority}
+                disabled={priorityMutation.isPending}
+                onChange={(priority) =>
+                  priorityMutation.mutate({
+                    videoGameId: game.videoGameId,
+                    priority,
+                  })
+                }
+              />
               <Button
                 variant="outline"
                 size="sm"

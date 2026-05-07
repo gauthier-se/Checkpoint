@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.checkpoint.api.dto.collection.WishResponseDto;
+import com.checkpoint.api.enums.Priority;
 
 /**
  * Service for managing a user's wishlist.
@@ -17,9 +18,10 @@ public interface WishlistService {
      *
      * @param userEmail   the authenticated user's email
      * @param videoGameId the video game ID to add
+     * @param priority    initial priority, or {@code null} for none
      * @return the created wish entry
      */
-    WishResponseDto addToWishlist(String userEmail, UUID videoGameId);
+    WishResponseDto addToWishlist(String userEmail, UUID videoGameId, Priority priority);
 
     /**
      * Removes a game from the authenticated user's wishlist.
@@ -46,4 +48,14 @@ public interface WishlistService {
      * @return true if the game is in the wishlist
      */
     boolean isInWishlist(String userEmail, UUID videoGameId);
+
+    /**
+     * Sets or clears the priority on the authenticated user's wishlist entry for a game.
+     *
+     * @param userEmail   the authenticated user's email
+     * @param videoGameId the video game ID
+     * @param priority    the new priority, or {@code null} to clear it
+     * @return the updated wish entry
+     */
+    WishResponseDto updatePriority(String userEmail, UUID videoGameId, Priority priority);
 }

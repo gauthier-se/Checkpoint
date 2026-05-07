@@ -5,7 +5,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,7 @@ import com.checkpoint.api.dto.collection.BacklogResponseDto;
 import com.checkpoint.api.entities.Backlog;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.exceptions.GameAlreadyInBacklogException;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.GameNotInBacklogException;
@@ -48,8 +51,9 @@ public class BacklogServiceImpl implements BacklogService {
     }
 
     @Override
-    public BacklogResponseDto addToBacklog(String userEmail, UUID videoGameId) {
-        log.debug("Adding game {} to backlog for user {}", videoGameId, userEmail);
+    public BacklogResponseDto addToBacklog(String userEmail, UUID videoGameId, Priority priority) {
+        log.debug("Adding game {} to backlog for user {} with priority {}",
+                videoGameId, userEmail, priority);
 
         User user = findUserByEmail(userEmail);
         VideoGame videoGame = findVideoGameById(videoGameId);
@@ -59,6 +63,7 @@ public class BacklogServiceImpl implements BacklogService {
         }
 
         Backlog backlog = new Backlog(user, videoGame);
+        backlog.setPriority(priority);
         Backlog saved = backlogRepository.save(backlog);
 
         log.info("Game {} added to backlog for user {}", videoGame.getTitle(), userEmail);
@@ -87,8 +92,34 @@ public class BacklogServiceImpl implements BacklogService {
 
         User user = findUserByEmail(userEmail);
 
+        Sort.Order priorityOrder = pageable.getSort().getOrderFor("priority");
+        if (priorityOrder != null) {
+            Pageable unsortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            Page<Backlog> page = priorityOrder.isAscending()
+                    ? backlogRepository.findByUserIdWithVideoGameOrderByPriorityAsc(user.getId(), unsortedPage)
+                    : backlogRepository.findByUserIdWithVideoGameOrderByPriorityDesc(user.getId(), unsortedPage);
+            return page.map(backlogMapper::toResponseDto);
+        }
+
         return backlogRepository.findByUserIdWithVideoGame(user.getId(), pageable)
                 .map(backlogMapper::toResponseDto);
+    }
+
+    @Override
+    public BacklogResponseDto updatePriority(String userEmail, UUID videoGameId, Priority priority) {
+        log.debug("Updating priority of game {} in backlog for user {} to {}",
+                videoGameId, userEmail, priority);
+
+        User user = findUserByEmail(userEmail);
+        Backlog backlog = backlogRepository.findByUserIdAndVideoGameId(user.getId(), videoGameId)
+                .orElseThrow(() -> new GameNotInBacklogException(videoGameId));
+
+        backlog.setPriority(priority);
+        Backlog saved = backlogRepository.save(backlog);
+
+        log.info("Priority of game {} in backlog for user {} set to {}",
+                videoGameId, userEmail, priority);
+        return backlogMapper.toResponseDto(saved);
     }
 
     @Override

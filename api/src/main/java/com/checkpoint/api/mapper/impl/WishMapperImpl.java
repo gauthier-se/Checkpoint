@@ -23,6 +23,7 @@ public class WishMapperImpl implements WishMapper {
                 videoGame.getTitle(),
                 videoGame.getCoverUrl(),
                 videoGame.getReleaseDate(),
+                wish.getPriority(),
                 wish.getCreatedAt()
         );
     }

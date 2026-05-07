@@ -23,6 +23,7 @@ public class BacklogMapperImpl implements BacklogMapper {
                 videoGame.getTitle(),
                 videoGame.getCoverUrl(),
                 videoGame.getReleaseDate(),
+                backlog.getPriority(),
                 backlog.getCreatedAt()
         );
     }

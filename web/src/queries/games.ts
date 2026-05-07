@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import type { Priority } from '@/types/collection'
 import type {
   GameInteractionStatusDto,
   GamePlayLogRequestDto,
@@ -60,23 +61,79 @@ export async function removeRating(gameId: string) {
   }
 }
 
-export async function toggleWishlist(gameId: string, currentStatus: boolean) {
-  const method = currentStatus ? 'DELETE' : 'POST'
+export async function toggleWishlist(
+  gameId: string,
+  currentStatus: boolean,
+  priority: Priority | null = null,
+) {
+  if (currentStatus) {
+    const res = await apiFetch(`/api/me/wishlist/${gameId}`, {
+      method: 'DELETE',
+    })
+    if (!res.ok && res.status !== 204) {
+      throw new Error('Failed to toggle wishlist')
+    }
+    return
+  }
   const res = await apiFetch(`/api/me/wishlist/${gameId}`, {
-    method,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priority }),
   })
-  if (!res.ok && res.status !== 204) {
+  if (!res.ok) {
     throw new Error('Failed to toggle wishlist')
   }
 }
 
-export async function toggleBacklog(gameId: string, currentStatus: boolean) {
-  const method = currentStatus ? 'DELETE' : 'POST'
+export async function toggleBacklog(
+  gameId: string,
+  currentStatus: boolean,
+  priority: Priority | null = null,
+) {
+  if (currentStatus) {
+    const res = await apiFetch(`/api/me/backlog/${gameId}`, {
+      method: 'DELETE',
+    })
+    if (!res.ok && res.status !== 204) {
+      throw new Error('Failed to toggle backlog')
+    }
+    return
+  }
   const res = await apiFetch(`/api/me/backlog/${gameId}`, {
-    method,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priority }),
   })
-  if (!res.ok && res.status !== 204) {
+  if (!res.ok) {
     throw new Error('Failed to toggle backlog')
+  }
+}
+
+export async function updateWishlistPriority(
+  gameId: string,
+  priority: Priority | null,
+) {
+  const res = await apiFetch(`/api/me/wishlist/${gameId}/priority`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priority }),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to update wishlist priority')
+  }
+}
+
+export async function updateBacklogPriority(
+  gameId: string,
+  priority: Priority | null,
+) {
+  const res = await apiFetch(`/api/me/backlog/${gameId}/priority`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priority }),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to update backlog priority')
   }
 }
 

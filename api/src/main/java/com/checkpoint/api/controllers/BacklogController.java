@@ -15,14 +15,18 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.collection.BacklogResponseDto;
+import com.checkpoint.api.dto.collection.UpdatePriorityRequestDto;
+import com.checkpoint.api.enums.Priority;
 import com.checkpoint.api.services.BacklogService;
 
 /**
@@ -58,12 +62,15 @@ public class BacklogController {
     @PostMapping("/{videoGameId}")
     public ResponseEntity<BacklogResponseDto> addToBacklog(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable UUID videoGameId) {
+            @PathVariable UUID videoGameId,
+            @RequestBody(required = false) UpdatePriorityRequestDto request) {
 
-        log.info("POST /api/me/backlog/{} - user: {}", videoGameId, userDetails.getUsername());
+        Priority priority = request != null ? request.priority() : null;
+        log.info("POST /api/me/backlog/{} - user: {}, priority: {}",
+                videoGameId, userDetails.getUsername(), priority);
 
         BacklogResponseDto response = backlogService.addToBacklog(
-                userDetails.getUsername(), videoGameId);
+                userDetails.getUsername(), videoGameId, priority);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -117,6 +124,29 @@ public class BacklogController {
     }
 
     /**
+     * Sets or clears the priority of a game in the authenticated user's backlog.
+     *
+     * @param userDetails the authenticated user principal
+     * @param videoGameId the video game ID
+     * @param request     the priority update payload (priority may be {@code null} to clear)
+     * @return the updated backlog entry with 200 status
+     */
+    @PatchMapping("/{videoGameId}/priority")
+    public ResponseEntity<BacklogResponseDto> updatePriority(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID videoGameId,
+            @RequestBody UpdatePriorityRequestDto request) {
+
+        log.info("PATCH /api/me/backlog/{}/priority - user: {}, priority: {}",
+                videoGameId, userDetails.getUsername(), request.priority());
+
+        BacklogResponseDto response = backlogService.updatePriority(
+                userDetails.getUsername(), videoGameId, request.priority());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Checks if a game is in the authenticated user's backlog.
      *
      * @param userDetails the authenticated user principal
@@ -161,6 +191,7 @@ public class BacklogController {
             case "createdat", "created_at", "addedat", "added_at" -> "createdAt";
             case "updatedat", "updated_at" -> "updatedAt";
             case "title", "name" -> "videoGame.title";
+            case "priority" -> "priority";
             default -> "createdAt";
         };
     }

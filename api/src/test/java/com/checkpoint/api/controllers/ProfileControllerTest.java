@@ -175,7 +175,7 @@ class ProfileControllerTest {
             WishResponseDto wish = new WishResponseDto(
                     UUID.randomUUID(), UUID.randomUUID(),
                     "Elden Ring", "https://example.com/cover.jpg",
-                    null, LocalDateTime.now()
+                    null, null, LocalDateTime.now()
             );
             Page<WishResponseDto> page = new PageImpl<>(List.of(wish));
 
