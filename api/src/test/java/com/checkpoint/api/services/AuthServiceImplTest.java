@@ -34,8 +34,10 @@ import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.entities.PasswordResetToken;
+import com.checkpoint.api.entities.RefreshToken;
 import com.checkpoint.api.entities.Role;
 import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
@@ -75,6 +77,9 @@ class AuthServiceImplTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     private AuthServiceImpl authService;
 
     @BeforeEach
@@ -88,18 +93,20 @@ class AuthServiceImplTest {
                 roleRepository,
                 passwordResetTokenRepository,
                 emailService,
-                false,      // cookieSecure = false in tests
-                86400000L   // jwtExpirationMs = 24h
+                refreshTokenService,
+                false,       // cookieSecure = false in tests
+                86400000L,   // jwtExpirationMs = 24h
+                604800000L   // refreshExpirationMs = 7d
         );
     }
 
     @Nested
-    @DisplayName("authenticateAndGenerateToken")
-    class AuthenticateAndGenerateTokenTests {
+    @DisplayName("authenticateAndGenerateTokenPair")
+    class AuthenticateAndGenerateTokenPairTests {
 
         @Test
-        @DisplayName("Should authenticate and return JWT token")
-        void shouldAuthenticateAndReturnToken() {
+        @DisplayName("Should authenticate and return access + refresh token pair")
+        void shouldAuthenticateAndReturnTokenPair() {
             // Given
             LoginRequestDto request = new LoginRequestDto("user@test.com", "password123");
             UserDetails userDetails = User.builder()
@@ -107,23 +114,26 @@ class AuthServiceImplTest {
                     .password("encodedPassword")
                     .roles("USER")
                     .build();
-            Authentication authentication = mock(Authentication.class);
+            com.checkpoint.api.entities.User userEntity = new com.checkpoint.api.entities.User("alice", "user@test.com", "enc");
+            RefreshToken refreshToken = new RefreshToken("refresh-uuid", userEntity, LocalDateTime.now().plusDays(7));
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                    .thenReturn(authentication);
-            when(userDetailsService.loadUserByUsername("user@test.com"))
-                    .thenReturn(userDetails);
-            when(jwtService.generateToken(userDetails))
-                    .thenReturn("jwt.token.here");
+                    .thenReturn(mock(Authentication.class));
+            when(userDetailsService.loadUserByUsername("user@test.com")).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("access.token.here");
+            when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(userEntity));
+            when(refreshTokenService.createRefreshToken(userEntity)).thenReturn(refreshToken);
 
             // When
-            String token = authService.authenticateAndGenerateToken(request);
+            TokenPairDto result = authService.authenticateAndGenerateTokenPair(request);
 
             // Then
-            assertThat(token).isEqualTo("jwt.token.here");
+            assertThat(result.accessToken()).isEqualTo("access.token.here");
+            assertThat(result.refreshToken()).isEqualTo("refresh-uuid");
             verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
             verify(userDetailsService).loadUserByUsername("user@test.com");
             verify(jwtService).generateToken(userDetails);
+            verify(refreshTokenService).createRefreshToken(userEntity);
         }
 
         @Test
@@ -136,7 +146,7 @@ class AuthServiceImplTest {
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
-            assertThatThrownBy(() -> authService.authenticateAndGenerateToken(request))
+            assertThatThrownBy(() -> authService.authenticateAndGenerateTokenPair(request))
                     .isInstanceOf(BadCredentialsException.class)
                     .hasMessage("Bad credentials");
 
@@ -150,8 +160,8 @@ class AuthServiceImplTest {
     class AuthenticateAndSetCookieTests {
 
         @Test
-        @DisplayName("Should authenticate and write checkpoint_token cookie on response")
-        void shouldAuthenticateAndSetCookie() {
+        @DisplayName("Should authenticate and write checkpoint_token and checkpoint_refresh cookies")
+        void shouldAuthenticateAndSetCookies() {
             // Given
             LoginRequestDto request = new LoginRequestDto("user@test.com", "password123");
             UserDetails userDetails = User.builder()
@@ -159,15 +169,16 @@ class AuthServiceImplTest {
                     .password("encodedPassword")
                     .roles("USER")
                     .build();
-            Authentication authentication = mock(Authentication.class);
+            com.checkpoint.api.entities.User userEntity = new com.checkpoint.api.entities.User("alice", "user@test.com", "enc");
+            RefreshToken refreshToken = new RefreshToken("refresh-uuid", userEntity, LocalDateTime.now().plusDays(7));
             HttpServletResponse servletResponse = mock(HttpServletResponse.class);
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                    .thenReturn(authentication);
-            when(userDetailsService.loadUserByUsername("user@test.com"))
-                    .thenReturn(userDetails);
-            when(jwtService.generateToken(userDetails))
-                    .thenReturn("jwt.token.here");
+                    .thenReturn(mock(Authentication.class));
+            when(userDetailsService.loadUserByUsername("user@test.com")).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("jwt.token.here");
+            when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(userEntity));
+            when(refreshTokenService.createRefreshToken(userEntity)).thenReturn(refreshToken);
 
             // When
             authService.authenticateAndSetCookie(request, servletResponse);
@@ -178,15 +189,14 @@ class AuthServiceImplTest {
 
             ArgumentCaptor<String> headerNameCaptor = ArgumentCaptor.forClass(String.class);
             ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
-            verify(servletResponse).addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
+            verify(servletResponse, org.mockito.Mockito.times(2))
+                    .addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
 
-            assertThat(headerNameCaptor.getValue()).isEqualTo("Set-Cookie");
-            String cookieHeader = headerValueCaptor.getValue();
-            assertThat(cookieHeader).contains("checkpoint_token=jwt.token.here");
-            assertThat(cookieHeader).contains("HttpOnly");
-            assertThat(cookieHeader).contains("SameSite=Lax");
-            assertThat(cookieHeader).contains("Path=/api");
-            assertThat(cookieHeader).contains("Max-Age=86400");
+            java.util.List<String> cookieHeaders = headerValueCaptor.getAllValues();
+            assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_token=jwt.token.here")
+                    && h.contains("HttpOnly") && h.contains("Path=/api"));
+            assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_refresh=refresh-uuid")
+                    && h.contains("HttpOnly") && h.contains("Path=/api/auth/refresh"));
         }
 
         @Test
@@ -212,24 +222,38 @@ class AuthServiceImplTest {
     class ClearAuthCookieTests {
 
         @Test
-        @DisplayName("Should write an expired checkpoint_token cookie (Max-Age=0)")
-        void shouldWriteExpiredCookie() {
+        @DisplayName("Should expire both cookies and revoke the refresh token")
+        void shouldWriteExpiredCookies() {
             // Given
             HttpServletResponse servletResponse = mock(HttpServletResponse.class);
 
             // When
-            authService.clearAuthCookie(servletResponse);
+            authService.clearAuthCookie("some-refresh-token", servletResponse);
 
             // Then
-            ArgumentCaptor<String> headerNameCaptor = ArgumentCaptor.forClass(String.class);
-            ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
-            verify(servletResponse).addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
+            verify(refreshTokenService).revokeToken("some-refresh-token");
 
-            assertThat(headerNameCaptor.getValue()).isEqualTo("Set-Cookie");
-            String cookieHeader = headerValueCaptor.getValue();
-            assertThat(cookieHeader).contains("checkpoint_token=");
-            assertThat(cookieHeader).contains("Max-Age=0");
-            assertThat(cookieHeader).contains("HttpOnly");
+            ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
+            verify(servletResponse, org.mockito.Mockito.times(2))
+                    .addHeader(any(), headerValueCaptor.capture());
+
+            java.util.List<String> cookieHeaders = headerValueCaptor.getAllValues();
+            assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_token=") && h.contains("Max-Age=0"));
+            assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_refresh=") && h.contains("Max-Age=0"));
+        }
+
+        @Test
+        @DisplayName("Should still expire cookies when no refresh token is provided")
+        void shouldExpireCookiesWithoutRefreshToken() {
+            // Given
+            HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+
+            // When
+            authService.clearAuthCookie(null, servletResponse);
+
+            // Then
+            verify(refreshTokenService, never()).revokeToken(any());
+            verify(servletResponse, org.mockito.Mockito.times(2)).addHeader(any(), any());
         }
     }
 

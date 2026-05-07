@@ -22,8 +22,10 @@ import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 import com.checkpoint.api.entities.PasswordResetToken;
+import com.checkpoint.api.entities.RefreshToken;
 import com.checkpoint.api.entities.Role;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.exceptions.InvalidTokenException;
@@ -34,19 +36,21 @@ import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.security.JwtService;
 import com.checkpoint.api.services.AuthService;
 import com.checkpoint.api.services.EmailService;
+import com.checkpoint.api.services.RefreshTokenService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Implementation of {@link AuthService}.
  * Delegates credential validation to Spring Security's {@link AuthenticationManager},
- * then either generates a JWT token (Desktop) or writes a JWT HttpOnly cookie (Web).
+ * then either generates a JWT token (Desktop) or writes JWT HttpOnly cookies (Web).
  */
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     private static final String COOKIE_NAME = "checkpoint_token";
+    private static final String REFRESH_COOKIE_NAME = "checkpoint_refresh";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -56,8 +60,10 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
     private final boolean cookieSecure;
     private final long jwtExpirationMs;
+    private final long refreshExpirationMs;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtService jwtService,
@@ -67,8 +73,10 @@ public class AuthServiceImpl implements AuthService {
                            RoleRepository roleRepository,
                            PasswordResetTokenRepository passwordResetTokenRepository,
                            EmailService emailService,
+                           RefreshTokenService refreshTokenService,
                            @Value("${app.cookie.secure:true}") boolean cookieSecure,
-                           @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs) {
+                           @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs,
+                           @Value("${jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
@@ -77,37 +85,97 @@ public class AuthServiceImpl implements AuthService {
         this.roleRepository = roleRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
+        this.refreshTokenService = refreshTokenService;
         this.cookieSecure = cookieSecure;
         this.jwtExpirationMs = jwtExpirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
     }
 
     @Override
-    public String authenticateAndGenerateToken(LoginRequestDto request) {
+    @Transactional
+    public TokenPairDto authenticateAndGenerateTokenPair(LoginRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
-        return jwtService.generateToken(userDetails);
+        String accessToken = jwtService.generateToken(userDetails);
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.email()));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new TokenPairDto(accessToken, refreshToken.getToken());
     }
 
     @Override
+    @Transactional
     public void authenticateAndSetCookie(LoginRequestDto request, HttpServletResponse servletResponse) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
-        String token = jwtService.generateToken(userDetails);
+        String accessToken = jwtService.generateToken(userDetails);
 
-        ResponseCookie cookie = buildCookie(token, jwtExpirationMs / 1000);
-        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.email()));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
     @Override
-    public void clearAuthCookie(HttpServletResponse servletResponse) {
-        ResponseCookie cookie = buildCookie("", 0);
-        servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    @Transactional
+    public void refreshTokenAndSetCookie(String refreshToken, HttpServletResponse servletResponse) {
+        RefreshToken existing = refreshTokenService.validateToken(refreshToken);
+        User user = existing.getUser();
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String newAccessToken = jwtService.generateToken(userDetails);
+
+        refreshTokenService.revokeToken(refreshToken);
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, newAccessToken, jwtExpirationMs / 1000, "/api");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, newRefreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+    }
+
+    @Override
+    @Transactional
+    public TokenPairDto refreshTokenForDesktop(String refreshToken) {
+        RefreshToken existing = refreshTokenService.validateToken(refreshToken);
+        User user = existing.getUser();
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String newAccessToken = jwtService.generateToken(userDetails);
+
+        refreshTokenService.revokeToken(refreshToken);
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new TokenPairDto(newAccessToken, newRefreshToken.getToken());
+    }
+
+    @Override
+    public void clearAuthCookie(String refreshToken, HttpServletResponse servletResponse) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            try {
+                refreshTokenService.revokeToken(refreshToken);
+            } catch (Exception ex) {
+                log.warn("Failed to revoke refresh token on logout: {}", ex.getMessage());
+            }
+        }
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, "", 0, "/api");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, "", 0, "/api/auth/refresh");
+        servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
         SecurityContextHolder.clearContext();
     }
 
@@ -199,12 +267,12 @@ public class AuthServiceImpl implements AuthService {
         return jwtService.generateToken(userDetails);
     }
 
-    private ResponseCookie buildCookie(String value, long maxAgeSeconds) {
-        return ResponseCookie.from(COOKIE_NAME, value)
+    private ResponseCookie buildCookie(String name, String value, long maxAgeSeconds, String path) {
+        return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .sameSite("Lax")
-                .path("/api")
+                .path(path)
                 .maxAge(maxAgeSeconds)
                 .build();
     }

@@ -3,6 +3,7 @@ package com.checkpoint.api.services;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.checkpoint.api.dto.auth.LoginRequestDto;
+import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,27 +15,49 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
 
     /**
-     * Authenticates a user and returns a JWT token (for Desktop clients).
+     * Authenticates a user and returns a token pair (for Desktop clients).
+     * Issues a new access token (JWT) and a long-lived refresh token.
      *
      * @param request the login credentials
-     * @return the generated JWT token
+     * @return a {@link TokenPairDto} containing the access token and refresh token
      */
-    String authenticateAndGenerateToken(LoginRequestDto request);
+    TokenPairDto authenticateAndGenerateTokenPair(LoginRequestDto request);
 
     /**
-     * Authenticates a user and writes a {@code checkpoint_token} HttpOnly cookie (for Web clients).
+     * Authenticates a user and writes both a {@code checkpoint_token} (access) and a
+     * {@code checkpoint_refresh} (refresh) HttpOnly cookie (for Web clients).
      *
      * @param request         the login credentials
-     * @param servletResponse the HTTP servlet response to write the cookie on
+     * @param servletResponse the HTTP servlet response to write the cookies on
      */
     void authenticateAndSetCookie(LoginRequestDto request, HttpServletResponse servletResponse);
 
     /**
-     * Clears the {@code checkpoint_token} cookie by setting {@code Max-Age=0} (for Web logout).
+     * Validates the given refresh token, issues a new access token, and rotates
+     * the refresh token cookie (for Web clients).
      *
-     * @param servletResponse the HTTP servlet response to write the expired cookie on
+     * @param refreshToken    the value of the {@code checkpoint_refresh} cookie
+     * @param servletResponse the HTTP servlet response to write the new cookies on
      */
-    void clearAuthCookie(HttpServletResponse servletResponse);
+    void refreshTokenAndSetCookie(String refreshToken, HttpServletResponse servletResponse);
+
+    /**
+     * Validates the given refresh token, issues a new access token, and rotates
+     * the refresh token (for Desktop clients).
+     *
+     * @param refreshToken the opaque refresh token string
+     * @return a new {@link TokenPairDto}
+     */
+    TokenPairDto refreshTokenForDesktop(String refreshToken);
+
+    /**
+     * Clears auth cookies and revokes the refresh token (for Web logout).
+     * The refresh token parameter is optional; if {@code null} only the cookies are expired.
+     *
+     * @param refreshToken    the value of the {@code checkpoint_refresh} cookie, or {@code null}
+     * @param servletResponse the HTTP servlet response to write the expired cookies on
+     */
+    void clearAuthCookie(String refreshToken, HttpServletResponse servletResponse);
 
     /**
      * Retrieves profile information for the currently authenticated user.

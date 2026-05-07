@@ -32,7 +32,9 @@ import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.exceptions.InvalidRefreshTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
@@ -67,11 +69,11 @@ class AuthControllerTest {
     class LoginTests {
 
         @Test
-        @DisplayName("Should return JWT token for Desktop client (via header)")
+        @DisplayName("Should return token pair for Desktop client (via header)")
         void shouldReturnTokenForDesktopClient() throws Exception {
             // Given
-            when(authService.authenticateAndGenerateToken(any(LoginRequestDto.class)))
-                    .thenReturn("jwt.token.here");
+            when(authService.authenticateAndGenerateTokenPair(any(LoginRequestDto.class)))
+                    .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
             mockMvc.perform(post("/api/auth/login")
@@ -81,9 +83,10 @@ class AuthControllerTest {
                                     {"email": "user@test.com", "password": "password123"}
                                     """))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("jwt.token.here"));
+                    .andExpect(jsonPath("$.accessToken").value("access.token.here"))
+                    .andExpect(jsonPath("$.refreshToken").value("refresh-token-uuid"));
 
-            verify(authService).authenticateAndGenerateToken(any(LoginRequestDto.class));
+            verify(authService).authenticateAndGenerateTokenPair(any(LoginRequestDto.class));
             verify(authService, never()).authenticateAndSetCookie(any(), any(HttpServletResponse.class));
         }
 
@@ -105,14 +108,14 @@ class AuthControllerTest {
 
             verify(authService).authenticateAndSetCookie(
                     any(LoginRequestDto.class), any(HttpServletResponse.class));
-            verify(authService, never()).authenticateAndGenerateToken(any());
+            verify(authService, never()).authenticateAndGenerateTokenPair(any());
         }
 
         @Test
         @DisplayName("Should return 401 for invalid credentials (Desktop)")
         void shouldReturn401ForInvalidDesktopCredentials() throws Exception {
             // Given
-            when(authService.authenticateAndGenerateToken(any(LoginRequestDto.class)))
+            when(authService.authenticateAndGenerateTokenPair(any(LoginRequestDto.class)))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
@@ -188,8 +191,8 @@ class AuthControllerTest {
         @DisplayName("Should handle case-insensitive X-Client-Type header")
         void shouldHandleCaseInsensitiveHeader() throws Exception {
             // Given
-            when(authService.authenticateAndGenerateToken(any(LoginRequestDto.class)))
-                    .thenReturn("jwt.token.here");
+            when(authService.authenticateAndGenerateTokenPair(any(LoginRequestDto.class)))
+                    .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
             mockMvc.perform(post("/api/auth/login")
@@ -199,7 +202,7 @@ class AuthControllerTest {
                                     {"email": "user@test.com", "password": "password123"}
                                     """))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("jwt.token.here"));
+                    .andExpect(jsonPath("$.accessToken").value("access.token.here"));
         }
     }
 
@@ -208,11 +211,11 @@ class AuthControllerTest {
     class TokenTests {
 
         @Test
-        @DisplayName("Should return JWT token")
+        @DisplayName("Should return token pair")
         void shouldReturnToken() throws Exception {
             // Given
-            when(authService.authenticateAndGenerateToken(any(LoginRequestDto.class)))
-                    .thenReturn("jwt.token.here");
+            when(authService.authenticateAndGenerateTokenPair(any(LoginRequestDto.class)))
+                    .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
             mockMvc.perform(post("/api/auth/token")
@@ -221,14 +224,15 @@ class AuthControllerTest {
                                     {"email": "user@test.com", "password": "password123"}
                                     """))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("jwt.token.here"));
+                    .andExpect(jsonPath("$.accessToken").value("access.token.here"))
+                    .andExpect(jsonPath("$.refreshToken").value("refresh-token-uuid"));
         }
 
         @Test
         @DisplayName("Should return 401 for invalid credentials")
         void shouldReturn401ForInvalidCredentials() throws Exception {
             // Given
-            when(authService.authenticateAndGenerateToken(any(LoginRequestDto.class)))
+            when(authService.authenticateAndGenerateTokenPair(any(LoginRequestDto.class)))
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
@@ -372,17 +376,102 @@ class AuthControllerTest {
     class LogoutTests {
 
         @Test
-        @DisplayName("Should clear cookie and return success message on logout")
+        @DisplayName("Should clear cookies and return success message on logout")
         void shouldClearCookieAndReturnSuccess() throws Exception {
             // Given
-            doNothing().when(authService).clearAuthCookie(any(HttpServletResponse.class));
+            doNothing().when(authService).clearAuthCookie(any(), any(HttpServletResponse.class));
 
             // When / Then
             mockMvc.perform(post("/api/auth/logout"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Logout successful"));
 
-            verify(authService).clearAuthCookie(any(HttpServletResponse.class));
+            verify(authService).clearAuthCookie(any(), any(HttpServletResponse.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/auth/refresh")
+    class RefreshTests {
+
+        @Test
+        @DisplayName("Should refresh access token for Web client using cookie")
+        void shouldRefreshForWebClient() throws Exception {
+            // Given
+            doNothing().when(authService).refreshTokenAndSetCookie(any(), any(HttpServletResponse.class));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .cookie(new jakarta.servlet.http.Cookie("checkpoint_refresh", "valid-refresh-token")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").value("Token refreshed"));
+
+            verify(authService).refreshTokenAndSetCookie(any(), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("Should return token pair for Desktop client")
+        void shouldReturnTokenPairForDesktopClient() throws Exception {
+            // Given
+            when(authService.refreshTokenForDesktop(any()))
+                    .thenReturn(new TokenPairDto("new.access.token", "new-refresh-token-uuid"));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Client-Type", "Desktop")
+                            .content("""
+                                    {"refreshToken": "old-refresh-token-uuid"}
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accessToken").value("new.access.token"))
+                    .andExpect(jsonPath("$.refreshToken").value("new-refresh-token-uuid"));
+
+            verify(authService).refreshTokenForDesktop("old-refresh-token-uuid");
+        }
+
+        @Test
+        @DisplayName("Should return 401 when Web refresh token is invalid or expired")
+        void shouldReturn401ForInvalidWebRefreshToken() throws Exception {
+            // Given
+            doThrow(new InvalidRefreshTokenException("Refresh token has expired"))
+                    .when(authService).refreshTokenAndSetCookie(any(), any(HttpServletResponse.class));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .cookie(new jakarta.servlet.http.Cookie("checkpoint_refresh", "expired-token")))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should return 401 when Desktop refresh token is revoked")
+        void shouldReturn401ForRevokedDesktopToken() throws Exception {
+            // Given
+            when(authService.refreshTokenForDesktop(any()))
+                    .thenThrow(new InvalidRefreshTokenException("Refresh token has been revoked"));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Client-Type", "Desktop")
+                            .content("""
+                                    {"refreshToken": "revoked-token"}
+                                    """))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should return 401 when Desktop sends missing refresh token")
+        void shouldReturn401ForMissingDesktopToken() throws Exception {
+            // Given
+            when(authService.refreshTokenForDesktop(null))
+                    .thenThrow(new InvalidRefreshTokenException("Refresh token is required"));
+
+            // When / Then
+            mockMvc.perform(post("/api/auth/refresh")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("X-Client-Type", "Desktop"))
+                    .andExpect(status().isUnauthorized());
         }
     }
 
