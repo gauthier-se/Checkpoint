@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form'
 import { useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, Link2, Link2Off } from 'lucide-react'
+import { Link2, Link2Off } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,9 @@ import { apiFetch } from '@/services/api'
 const linkSchema = z.object({
   steamId: z
     .string()
-    .regex(/^\d{17}$/, 'SteamID64 must be exactly 17 digits'),
+    .trim()
+    .min(1, 'Please enter a SteamID, profile URL, or vanity name')
+    .max(256, 'Input is too long'),
 })
 
 export function SteamAccountCard() {
@@ -120,7 +122,7 @@ export function SteamAccountCard() {
 
         <div className="border-t pt-4">
           <p className="text-muted-foreground mb-3 text-sm">
-            Or enter your SteamID64 manually:
+            Or enter your Steam info manually:
           </p>
           <form
             onSubmit={(e) => {
@@ -134,12 +136,13 @@ export function SteamAccountCard() {
               name="steamId"
               children={(field) => (
                 <Field>
-                  <FieldLabel htmlFor="steamId">SteamID64</FieldLabel>
+                  <FieldLabel htmlFor="steamId">
+                    SteamID, profile URL, or vanity name
+                  </FieldLabel>
                   <Input
                     id="steamId"
                     type="text"
-                    inputMode="numeric"
-                    placeholder="76561198000000000"
+                    placeholder="alice or https://steamcommunity.com/id/alice"
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -158,19 +161,17 @@ export function SteamAccountCard() {
                 </Field>
               )}
             />
-            <p className="text-muted-foreground text-xs">
-              Find your SteamID64 at{' '}
-              <a
-                href="https://steamid.io/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground inline-flex items-center gap-1 underline"
-              >
-                steamid.io
-                <ExternalLink className="size-3" />
-              </a>
-              .
-            </p>
+            <div className="text-muted-foreground space-y-1 text-xs">
+              <p>Accepted formats:</p>
+              <ul className="list-disc space-y-0.5 pl-5">
+                <li>17-digit SteamID64 (e.g. 76561198000000000)</li>
+                <li>
+                  Profile URL (steamcommunity.com/profiles/... or
+                  steamcommunity.com/id/...)
+                </li>
+                <li>Vanity name (the part after /id/ in your profile URL)</li>
+              </ul>
+            </div>
             <manualLinkForm.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
               children={([canSubmit, isSubmitting]) => (
@@ -179,7 +180,7 @@ export function SteamAccountCard() {
                   variant="outline"
                   disabled={!canSubmit || isSubmitting}
                 >
-                  {isSubmitting ? 'Linking...' : 'Link by SteamID'}
+                  {isSubmitting ? 'Linking...' : 'Link Steam account'}
                 </Button>
               )}
             />

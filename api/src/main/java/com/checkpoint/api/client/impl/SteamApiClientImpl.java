@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import com.checkpoint.api.client.SteamApiClient;
 import com.checkpoint.api.dto.steam.SteamPlayerSummariesResponseDto;
 import com.checkpoint.api.dto.steam.SteamPlayerSummaryDto;
+import com.checkpoint.api.dto.steam.SteamResolveVanityResponseDto;
 import com.checkpoint.api.exceptions.SteamApiException;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -85,6 +86,43 @@ public class SteamApiClientImpl implements SteamApiClient {
         } catch (Exception e) {
             log.error("Error calling Steam GetPlayerSummaries for {}: {}", steamId, e.getMessage());
             throw new SteamApiException("Failed to fetch player summary from Steam", e);
+        }
+    }
+
+    @Override
+    public Optional<String> resolveVanityUrl(String vanity) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new SteamApiException("Steam API key is not configured");
+        }
+
+        RateLimiter.waitForPermission(rateLimiter);
+
+        log.debug("Resolving Steam vanity URL for {}", vanity);
+
+        try {
+            SteamResolveVanityResponseDto response = steamClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/ISteamUser/ResolveVanityURL/v0001/")
+                            .queryParam("key", apiKey)
+                            .queryParam("vanityurl", vanity)
+                            .build())
+                    .retrieve()
+                    .body(SteamResolveVanityResponseDto.class);
+
+            if (response == null || response.response() == null) {
+                return Optional.empty();
+            }
+            SteamResolveVanityResponseDto.SteamResolveVanityResponse inner = response.response();
+            if (inner.success() == null || inner.success() != 1) {
+                return Optional.empty();
+            }
+            if (inner.steamId() == null || inner.steamId().isBlank()) {
+                return Optional.empty();
+            }
+            return Optional.of(inner.steamId());
+        } catch (Exception e) {
+            log.error("Error calling Steam ResolveVanityURL for {}: {}", vanity, e.getMessage());
+            throw new SteamApiException("Failed to resolve Steam vanity URL", e);
         }
     }
 }
