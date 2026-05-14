@@ -78,11 +78,24 @@ class SteamControllerTest {
         }
 
         @Test
-        @DisplayName("returns 400 when steamId is malformed (validation)")
+        @DisplayName("returns 400 when steamId is blank (validation)")
         @WithMockUser(username = EMAIL)
-        void link_malformedId() throws Exception {
+        void link_blankId() throws Exception {
             String body = objectMapper.writeValueAsString(
-                    java.util.Map.of("steamId", "notanumber"));
+                    java.util.Map.of("steamId", "   "));
+
+            mockMvc.perform(post("/api/me/steam/link")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("returns 400 when steamId exceeds the size limit (validation)")
+        @WithMockUser(username = EMAIL)
+        void link_tooLongId() throws Exception {
+            String body = objectMapper.writeValueAsString(
+                    java.util.Map.of("steamId", "a".repeat(257)));
 
             mockMvc.perform(post("/api/me/steam/link")
                             .contentType(MediaType.APPLICATION_JSON)

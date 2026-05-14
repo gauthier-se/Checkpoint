@@ -2,6 +2,8 @@ package com.checkpoint.api.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,13 @@ public class SteamServiceImpl implements SteamService {
 
     private static final Logger log = LoggerFactory.getLogger(SteamServiceImpl.class);
 
+    private static final Pattern STEAM_ID_64_PATTERN = Pattern.compile("\\d{17}");
+    private static final Pattern PROFILE_URL_PATTERN = Pattern.compile(
+            "^(?:https?://)?(?:www\\.)?steamcommunity\\.com/profiles/(\\d{17})/?$");
+    private static final Pattern VANITY_URL_PATTERN = Pattern.compile(
+            "^(?:https?://)?(?:www\\.)?steamcommunity\\.com/id/([A-Za-z0-9_-]{2,32})/?$");
+    private static final Pattern VANITY_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{2,32}$");
+
     private final UserRepository userRepository;
     private final SteamApiClient steamApiClient;
 
@@ -41,9 +50,11 @@ public class SteamServiceImpl implements SteamService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
-        SteamPlayerSummaryDto summary = steamApiClient.fetchPlayerSummary(steamId)
+        String resolvedSteamId = normalizeSteamId(steamId);
+
+        SteamPlayerSummaryDto summary = steamApiClient.fetchPlayerSummary(resolvedSteamId)
                 .orElseThrow(() -> new InvalidSteamIdException(
-                        "Steam does not recognize SteamID: " + steamId));
+                        "Steam does not recognize SteamID: " + resolvedSteamId));
 
         return persistLink(user, summary);
     }
@@ -110,6 +121,46 @@ public class SteamServiceImpl implements SteamService {
             log.warn("Failed to enrich Steam account for {}: {}", steamId, e.getMessage());
             return Optional.of(new SteamAccountDto(steamId, null, null, null));
         }
+    }
+
+    /**
+     * Normalizes a user-supplied Steam identifier to a 17-digit SteamID64.
+     *
+     * <p>Accepts a bare SteamID64, a {@code steamcommunity.com/profiles/<id>} URL,
+     * a {@code steamcommunity.com/id/<vanity>} URL, or a bare vanity name. Vanity
+     * inputs are resolved via Steam's {@code ResolveVanityURL} endpoint. The
+     * 17-digit check runs first so a numeric input is never sent to vanity
+     * resolution.</p>
+     */
+    private String normalizeSteamId(String raw) {
+        String input = raw == null ? "" : raw.trim();
+
+        if (STEAM_ID_64_PATTERN.matcher(input).matches()) {
+            return input;
+        }
+
+        Matcher profileMatch = PROFILE_URL_PATTERN.matcher(input);
+        if (profileMatch.matches()) {
+            return profileMatch.group(1);
+        }
+
+        Matcher vanityUrlMatch = VANITY_URL_PATTERN.matcher(input);
+        if (vanityUrlMatch.matches()) {
+            return resolveVanity(vanityUrlMatch.group(1));
+        }
+
+        if (VANITY_NAME_PATTERN.matcher(input).matches()) {
+            return resolveVanity(input);
+        }
+
+        throw new InvalidSteamIdException(
+                "Could not recognize Steam input. Provide a SteamID64, a profile URL, or a vanity name.");
+    }
+
+    private String resolveVanity(String vanity) {
+        return steamApiClient.resolveVanityUrl(vanity)
+                .orElseThrow(() -> new InvalidSteamIdException(
+                        "Steam does not recognize vanity name: " + vanity));
     }
 
     private SteamAccountDto persistLink(User user, SteamPlayerSummaryDto summary) {

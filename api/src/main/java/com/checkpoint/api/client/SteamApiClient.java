@@ -20,4 +20,16 @@ public interface SteamApiClient {
      * @return the player summary, or empty if the SteamID is not recognized
      */
     Optional<SteamPlayerSummaryDto> fetchPlayerSummary(String steamId);
+
+    /**
+     * Resolves a Steam vanity name (the slug after {@code /id/} on a profile URL)
+     * to its 17-digit SteamID64.
+     *
+     * <p>Returns {@link Optional#empty()} when Steam reports no match
+     * ({@code success == 42}).</p>
+     *
+     * @param vanity the vanity name (e.g. {@code "alice"})
+     * @return the resolved SteamID64, or empty if the vanity is not recognized
+     */
+    Optional<String> resolveVanityUrl(String vanity);
 }

@@ -107,6 +107,83 @@ class SteamServiceImplTest {
     }
 
     @Test
+    @DisplayName("linkSteamAccount extracts SteamID64 from a steamcommunity.com/profiles/... URL")
+    void linkSteamAccount_acceptsProfileUrl() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(steamApiClient.fetchPlayerSummary(STEAM_ID)).thenReturn(Optional.of(summary()));
+
+        SteamAccountDto dto = steamService.linkSteamAccount(
+                EMAIL, "https://steamcommunity.com/profiles/" + STEAM_ID + "/");
+
+        assertThat(dto.steamId()).isEqualTo(STEAM_ID);
+        verify(steamApiClient, never()).resolveVanityUrl(any());
+    }
+
+    @Test
+    @DisplayName("linkSteamAccount resolves a steamcommunity.com/id/<vanity> URL via ResolveVanityURL")
+    void linkSteamAccount_acceptsVanityUrl() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(steamApiClient.resolveVanityUrl("alice")).thenReturn(Optional.of(STEAM_ID));
+        when(steamApiClient.fetchPlayerSummary(STEAM_ID)).thenReturn(Optional.of(summary()));
+
+        SteamAccountDto dto = steamService.linkSteamAccount(
+                EMAIL, "https://steamcommunity.com/id/alice/");
+
+        assertThat(dto.steamId()).isEqualTo(STEAM_ID);
+        verify(steamApiClient).resolveVanityUrl("alice");
+    }
+
+    @Test
+    @DisplayName("linkSteamAccount resolves a bare vanity name via ResolveVanityURL")
+    void linkSteamAccount_acceptsBareVanityName() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(steamApiClient.resolveVanityUrl("alice")).thenReturn(Optional.of(STEAM_ID));
+        when(steamApiClient.fetchPlayerSummary(STEAM_ID)).thenReturn(Optional.of(summary()));
+
+        SteamAccountDto dto = steamService.linkSteamAccount(EMAIL, "alice");
+
+        assertThat(dto.steamId()).isEqualTo(STEAM_ID);
+        verify(steamApiClient).resolveVanityUrl("alice");
+    }
+
+    @Test
+    @DisplayName("linkSteamAccount throws InvalidSteamIdException when Steam reports no vanity match")
+    void linkSteamAccount_unknownVanity() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(steamApiClient.resolveVanityUrl("ghost")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> steamService.linkSteamAccount(EMAIL, "ghost"))
+                .isInstanceOf(InvalidSteamIdException.class)
+                .hasMessageContaining("ghost");
+
+        verify(steamApiClient, never()).fetchPlayerSummary(any());
+    }
+
+    @Test
+    @DisplayName("linkSteamAccount rejects garbage input without calling Steam")
+    void linkSteamAccount_garbageInput() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> steamService.linkSteamAccount(EMAIL, "not@a@valid#thing!"))
+                .isInstanceOf(InvalidSteamIdException.class);
+
+        verify(steamApiClient, never()).resolveVanityUrl(any());
+        verify(steamApiClient, never()).fetchPlayerSummary(any());
+    }
+
+    @Test
+    @DisplayName("linkSteamAccount treats a 17-digit numeric input as a SteamID64, not a vanity")
+    void linkSteamAccount_numericInputIsTreatedAsSteamId() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(steamApiClient.fetchPlayerSummary(STEAM_ID)).thenReturn(Optional.of(summary()));
+
+        steamService.linkSteamAccount(EMAIL, STEAM_ID);
+
+        verify(steamApiClient).fetchPlayerSummary(STEAM_ID);
+        verify(steamApiClient, never()).resolveVanityUrl(any());
+    }
+
+    @Test
     @DisplayName("linkVerifiedSteamAccount stores steamId and stamps syncedAt even if Steam profile fetch fails")
     void linkVerifiedSteamAccount_steamFetchFails() {
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
