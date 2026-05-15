@@ -1,6 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
-import type { ComponentProps, ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import type { ComponentProps, ReactNode } from 'react'
+
+// Imported after the mock so the component picks up the mocked Link.
+import { GamesPagination } from '@/components/games/pagination'
 
 vi.mock('@tanstack/react-router', () => ({
   // Replace TanStack Router's <Link> with a plain <a> so the component can
@@ -30,9 +33,6 @@ vi.mock('@tanstack/react-router', () => ({
     </a>
   ),
 }))
-
-// Imported after the mock so the component picks up the mocked Link.
-import { GamesPagination } from '@/components/games/pagination'
 
 describe('GamesPagination', () => {
   it('renders one page button per page when totalPages <= 7', () => {
@@ -93,7 +93,9 @@ describe('GamesPagination', () => {
     expect(prevLink.dataset.disabled).toBe('true')
     expect(nextLink.dataset.disabled).toBe('true')
     // Sanity: the surrounding link wrappers contain the expected button text.
-    expect(within(prevLink).getByRole('button', { name: /previous/i })).toBe(prev)
+    expect(within(prevLink).getByRole('button', { name: /previous/i })).toBe(
+      prev,
+    )
     expect(within(nextLink).getByRole('button', { name: /next/i })).toBe(next)
   })
 })

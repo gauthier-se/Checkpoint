@@ -19,7 +19,7 @@ describe('apiFetch', () => {
     await apiFetch('/api/me')
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [, init] = fetchMock.mock.calls[0]!
+    const [, init] = fetchMock.mock.calls[0]
     expect(init?.credentials).toBe('include')
   })
 
@@ -30,7 +30,7 @@ describe('apiFetch', () => {
       body: JSON.stringify({ pseudo: 'alice' }),
     })
 
-    const [url, init] = fetchMock.mock.calls[0]!
+    const [url, init] = fetchMock.mock.calls[0]
     expect(url).toBe('/api/auth/register')
     expect(init?.method).toBe('POST')
     expect(init?.headers).toEqual({ 'Content-Type': 'application/json' })

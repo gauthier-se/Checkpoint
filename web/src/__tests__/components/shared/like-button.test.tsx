@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { LikeButton } from '@/components/shared/like-button'
 
-function renderButton(overrides: Partial<Parameters<typeof LikeButton>[0]> = {}) {
+function renderButton(
+  overrides: Partial<Parameters<typeof LikeButton>[0]> = {},
+) {
   const props = {
     liked: false,
     likesCount: 0,
