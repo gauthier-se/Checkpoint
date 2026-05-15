@@ -41,11 +41,7 @@ const config = defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['text', 'html'],
         include: ['src/**/*.{ts,tsx}'],
-        exclude: [
-          'src/routeTree.gen.ts',
-          'src/**/*.d.ts',
-          'src/__tests__/**',
-        ],
+        exclude: ['src/routeTree.gen.ts', 'src/**/*.d.ts', 'src/__tests__/**'],
         // Ratchet baseline: thresholds sit just below the measured floor so
         // regressions trip CI while there's room to grow them upward as the
         // suite expands. Initial measurement: lines 4.81, statements 4.81,

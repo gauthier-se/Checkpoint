@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import type { ComponentProps, ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ComponentProps, ReactNode } from 'react'
+
+// Import the component after the mocks so it picks them up.
+import { RegisterForm } from '@/components/auth/register-form'
 
 const navigateMock = vi.fn()
 const apiFetchMock = vi.fn()
@@ -14,7 +17,11 @@ vi.mock('@tanstack/react-router', () => ({
     to,
     hash,
     ...rest
-  }: { children: ReactNode; to?: string; hash?: string } & ComponentProps<'a'>) => (
+  }: {
+    children: ReactNode
+    to?: string
+    hash?: string
+  } & ComponentProps<'a'>) => (
     <a href={typeof to === 'string' ? to : '#'} {...rest}>
       {children}
     </a>
@@ -31,9 +38,6 @@ vi.mock('sonner', () => ({
     success: (...args: Array<unknown>) => toastSuccessMock(...args),
   },
 }))
-
-// Import the component after the mocks so it picks them up.
-import { RegisterForm } from '@/components/auth/register-form'
 
 describe('RegisterForm', () => {
   beforeEach(() => {
