@@ -123,7 +123,7 @@ function TagGamesPage() {
                 params={{ gameId: entry.videoGameId }}
                 className="group space-y-2"
               >
-                <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted">
                   {entry.coverUrl ? (
                     <img
                       src={entry.coverUrl}
@@ -135,6 +135,17 @@ function TagGamesPage() {
                       <Gamepad2 className="size-8 text-muted-foreground" />
                     </div>
                   )}
+                  <div className="pointer-events-none absolute inset-0 bg-black/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="text-sm font-semibold line-clamp-3">
+                      {entry.title}
+                    </span>
+                    {entry.releaseDate && (
+                      <span className="text-xs text-white/80">
+                        {new Date(entry.releaseDate).getFullYear()}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm font-medium leading-tight line-clamp-2 group-hover:underline">
                   {entry.title}

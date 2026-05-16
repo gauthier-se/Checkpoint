@@ -277,7 +277,7 @@ class TagServiceImplTest {
             UserGamePlay playLog = createTestPlayLog();
             Page<UserGamePlay> playLogPage = new PageImpl<>(List.of(playLog), pageable, 1);
             GamePlayLogResponseDto responseDto = new GamePlayLogResponseDto(
-                    playLog.getId(), UUID.randomUUID(), "Zelda", null,
+                    playLog.getId(), UUID.randomUUID(), "Zelda", null, null,
                     UUID.randomUUID(), "Switch", PlayStatus.COMPLETED,
                     false, 120, null, null, "owned",
                     null, null, false, null, 5, List.of()
@@ -311,7 +311,7 @@ class TagServiceImplTest {
             UserGamePlay playLog = createTestPlayLog();
             Page<UserGamePlay> playLogPage = new PageImpl<>(List.of(playLog), pageable, 1);
             GamePlayLogResponseDto responseDto = new GamePlayLogResponseDto(
-                    playLog.getId(), UUID.randomUUID(), "Zelda", null,
+                    playLog.getId(), UUID.randomUUID(), "Zelda", null, null,
                     UUID.randomUUID(), "Switch", PlayStatus.COMPLETED,
                     false, 120, null, null, "owned",
                     null, null, false, null, 5, List.of()

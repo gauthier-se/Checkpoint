@@ -78,13 +78,20 @@ export function FeedItem({ item }: FeedItemProps) {
           </Link>
           <span className="text-muted-foreground">{getActivityText(item)}</span>
           {item.game && (
-            <Link
-              to="/games/$gameId"
-              params={{ gameId: item.game.id }}
-              className="truncate font-medium hover:underline"
-            >
-              {item.game.title}
-            </Link>
+            <span className="flex min-w-0 items-baseline gap-1">
+              <Link
+                to="/games/$gameId"
+                params={{ gameId: item.game.id }}
+                className="truncate font-medium hover:underline"
+              >
+                {item.game.title}
+              </Link>
+              {item.game.releaseDate && (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  ({new Date(item.game.releaseDate).getFullYear()})
+                </span>
+              )}
+            </span>
           )}
           {item.type === 'LIST' && item.listTitle && (
             <span className="truncate font-medium">{item.listTitle}</span>

@@ -81,7 +81,7 @@ class GamePlayLogControllerTest {
             );
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
-                    playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
+                    playId, videoGameId, "The Witcher 3", "cover.jpg", null, platformId, "PC",
                     PlayStatus.ARE_PLAYING, false, 120, LocalDate.now(), null, "owned",
                     LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()
             );
@@ -134,7 +134,7 @@ class GamePlayLogControllerTest {
             );
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
-                    playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
+                    playId, videoGameId, "The Witcher 3", "cover.jpg", null, platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
                     LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()
             );
@@ -221,7 +221,7 @@ class GamePlayLogControllerTest {
             UUID playId = UUID.randomUUID();
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
-                    playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
+                    playId, videoGameId, "The Witcher 3", "cover.jpg", null, platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
                     LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()
             );
@@ -254,7 +254,7 @@ class GamePlayLogControllerTest {
             UUID playId = UUID.randomUUID();
 
             GamePlayLogResponseDto response = new GamePlayLogResponseDto(
-                    playId, videoGameId, "The Witcher 3", "cover.jpg", platformId, "PC",
+                    playId, videoGameId, "The Witcher 3", "cover.jpg", null, platformId, "PC",
                     PlayStatus.COMPLETED, false, 2000, LocalDate.now(), LocalDate.now(), "owned",
                     LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()
             );

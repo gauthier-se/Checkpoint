@@ -109,7 +109,7 @@ class FeedServiceImplTest {
         FeedItemDto expectedItem = new FeedItemDto(
                 feedItemId, FeedItemType.RATING, LocalDateTime.now(),
                 new FeedUserDto(friendUser.getId(), "frienduser", "avatar.jpg"),
-                new FeedGameDto(game.getId(), "Elden Ring", "cover.jpg"),
+                new FeedGameDto(game.getId(), "Elden Ring", "cover.jpg", null),
                 null, 5, null, null, null, null
         );
         when(feedMapper.toFeedItemDto(any(Object[].class), any(Map.class), any(Map.class)))

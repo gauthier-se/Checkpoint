@@ -4,6 +4,7 @@ interface CollectionGameCardProps {
   videoGameId: string
   title: string
   coverUrl: string | null
+  releaseDate?: string | null
   children?: React.ReactNode
 }
 
@@ -11,6 +12,7 @@ export function CollectionGameCard({
   videoGameId,
   title,
   coverUrl,
+  releaseDate,
   children,
 }: CollectionGameCardProps) {
   return (
@@ -20,7 +22,7 @@ export function CollectionGameCard({
         params={{ gameId: videoGameId }}
         className="block"
       >
-        <div className="aspect-[3/4] overflow-hidden rounded-md bg-muted">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted">
           {coverUrl ? (
             <img
               src={coverUrl}
@@ -32,6 +34,15 @@ export function CollectionGameCard({
               <span className="text-xs text-muted-foreground">No Cover</span>
             </div>
           )}
+          <div className="pointer-events-none absolute inset-0 bg-black/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <span className="text-sm font-semibold">{title}</span>
+            {releaseDate && (
+              <span className="text-xs text-white/80">
+                {new Date(releaseDate).getFullYear()}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
       <h3 className="text-sm font-semibold leading-tight line-clamp-2">

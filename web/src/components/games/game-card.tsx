@@ -14,8 +14,13 @@ export function GameCard({ game }: GameCardProps) {
     >
       <img className="rounded-sm w-full" src={game.coverUrl} alt={game.title} />
       <div className="pointer-events-none absolute inset-0 rounded-sm bg-black/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-2 text-center text-sm font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        {game.title}
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 px-2 text-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <span className="text-sm font-semibold">{game.title}</span>
+        {game.releaseDate && (
+          <span className="text-xs text-white/80">
+            {new Date(game.releaseDate).getFullYear()}
+          </span>
+        )}
       </div>
     </Link>
   )

@@ -139,6 +139,7 @@ export function WishlistTab({ page }: WishlistTabProps) {
             videoGameId={game.videoGameId}
             title={game.title}
             coverUrl={game.coverUrl}
+            releaseDate={game.releaseDate}
           >
             <div className="flex flex-wrap items-center gap-1.5">
               {game.releaseDate && (
