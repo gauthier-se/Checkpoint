@@ -35,6 +35,7 @@ import {
   myTagsQueryOptions,
   updateTag,
 } from '@/queries/tags'
+import { isApiError } from '@/services/api'
 
 const tagNameSchema = z.object({
   name: z
@@ -59,15 +60,18 @@ function TagManagementPage() {
   const [deletingTag, setDeletingTag] = useState<TagType | null>(null)
 
   const createMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (name: string) => createTag({ name }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tags', 'me'] })
       toast.success('Tag created')
     },
-    onError: () => toast.error('Failed to create tag'),
+    onError: (err) =>
+      toast.error(isApiError(err) ? err.message : 'Failed to create tag'),
   })
 
   const renameMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: ({ tagId, name }: { tagId: string; name: string }) =>
       updateTag(tagId, { name }),
     onSuccess: () => {
@@ -75,17 +79,20 @@ function TagManagementPage() {
       setEditingTag(null)
       toast.success('Tag renamed')
     },
-    onError: () => toast.error('Failed to rename tag'),
+    onError: (err) =>
+      toast.error(isApiError(err) ? err.message : 'Failed to rename tag'),
   })
 
   const deleteMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (tagId: string) => deleteTag(tagId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tags', 'me'] })
       setDeletingTag(null)
       toast.success('Tag deleted')
     },
-    onError: () => toast.error('Failed to delete tag'),
+    onError: (err) =>
+      toast.error(isApiError(err) ? err.message : 'Failed to delete tag'),
   })
 
   const createForm = useForm({

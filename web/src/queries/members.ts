@@ -7,7 +7,6 @@ export function popularMembersQueryOptions(size: number = 10) {
     queryKey: ['members', 'popular', size],
     queryFn: async (): Promise<Array<MemberCard>> => {
       const res = await apiFetch(`/api/members/popular?size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch popular members')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -19,7 +18,6 @@ export function topReviewersMembersQueryOptions(size: number = 10) {
     queryKey: ['members', 'top-reviewers', size],
     queryFn: async (): Promise<Array<MemberCard>> => {
       const res = await apiFetch(`/api/members/top-reviewers?size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch top reviewers')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -31,7 +29,6 @@ export function suggestedMembersQueryOptions(size: number = 10) {
     queryKey: ['members', 'suggested', size],
     queryFn: async (): Promise<Array<MemberCard>> => {
       const res = await apiFetch(`/api/members/suggested?size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch suggested members')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -47,7 +44,6 @@ export function searchMembersQueryOptions(query: string) {
       qs.set('size', '5')
       qs.set('search', query)
       const res = await apiFetch(`/api/members?${qs.toString()}`)
-      if (!res.ok) throw new Error('Failed to search members')
       return res.json()
     },
     staleTime: 30 * 1000,
@@ -68,7 +64,6 @@ export function browseMembersQueryOptions(
       qs.set('size', String(size))
       if (search) qs.set('search', search)
       const res = await apiFetch(`/api/members?${qs.toString()}`)
-      if (!res.ok) throw new Error('Failed to fetch members')
       return res.json()
     },
     staleTime: 60 * 1000,

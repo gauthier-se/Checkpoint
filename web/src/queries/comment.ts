@@ -15,9 +15,6 @@ export const reviewCommentsQueryOptions = (
       const res = await apiFetch(
         `/api/reviews/${reviewId}/comments?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch review comments')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -35,9 +32,6 @@ export const listCommentsQueryOptions = (
       const res = await apiFetch(
         `/api/lists/${listId}/comments?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch list comments')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -55,9 +49,6 @@ export const commentRepliesQueryOptions = (
       const res = await apiFetch(
         `/api/comments/${commentId}/replies?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch replies')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -73,9 +64,6 @@ export const postReviewComment = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to post comment')
-  }
   return res.json()
 }
 
@@ -88,9 +76,6 @@ export const postListComment = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to post comment')
-  }
   return res.json()
 }
 
@@ -103,9 +88,6 @@ export const postReply = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to post reply')
-  }
   return res.json()
 }
 
@@ -118,19 +100,13 @@ export const updateComment = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to update comment')
-  }
   return res.json()
 }
 
 export const deleteComment = async (commentId: string): Promise<void> => {
-  const res = await apiFetch(`/api/comments/${commentId}`, {
+  await apiFetch(`/api/comments/${commentId}`, {
     method: 'DELETE',
   })
-  if (!res.ok) {
-    throw new Error('Failed to delete comment')
-  }
 }
 
 export const toggleCommentLike = async (
@@ -139,8 +115,5 @@ export const toggleCommentLike = async (
   const res = await apiFetch(`/api/comments/${commentId}/like`, {
     method: 'POST',
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle comment like')
-  }
   return res.json()
 }

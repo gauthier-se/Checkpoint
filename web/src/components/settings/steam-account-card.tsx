@@ -14,7 +14,7 @@ import {
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { authQueryOptions, useAuth } from '@/hooks/use-auth'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 const linkSchema = z.object({
   steamId: z
@@ -39,14 +39,16 @@ export function SteamAccountCard() {
     defaultValues: { steamId: '' },
     validators: { onSubmit: linkSchema },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/me/steam/link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Could not link this Steam account.')
+      try {
+        await apiFetch('/api/me/steam/link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err) ? err.message : 'Could not link this Steam account.',
+        )
         return
       }
       toast.success('Steam account linked.')
@@ -57,9 +59,12 @@ export function SteamAccountCard() {
   })
 
   const handleUnlink = async () => {
-    const res = await apiFetch('/api/me/steam/unlink', { method: 'DELETE' })
-    if (!res.ok) {
-      toast.error('Could not unlink Steam account.')
+    try {
+      await apiFetch('/api/me/steam/unlink', { method: 'DELETE' })
+    } catch (err) {
+      toast.error(
+        isApiError(err) ? err.message : 'Could not unlink Steam account.',
+      )
       return
     }
     toast.success('Steam account unlinked.')
@@ -73,12 +78,9 @@ export function SteamAccountCard() {
   }
 
   const syncMutation = useMutation<SteamSyncSummary>({
+    meta: { suppressGlobalError: true },
     mutationFn: async () => {
       const res = await apiFetch('/api/me/steam/sync', { method: 'POST' })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        throw new Error(data?.message ?? 'Could not sync Steam library.')
-      }
       return (await res.json()) as SteamSyncSummary
     },
     onSuccess: async (summary) => {
@@ -89,7 +91,9 @@ export function SteamAccountCard() {
       await queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
     },
     onError: (err) => {
-      toast.error(err.message)
+      toast.error(
+        isApiError(err) ? err.message : 'Could not sync Steam library.',
+      )
     },
   })
 

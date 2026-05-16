@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 interface LoginFormProps extends React.ComponentProps<'div'> {
   redirectTo?: string
@@ -68,19 +68,19 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
       onChange: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Invalid email or password')
+      let data: { twoFactorRequired?: boolean } | null
+      try {
+        const res = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+        data = await res.json().catch(() => null)
+      } catch (err) {
+        toast.error(isApiError(err) ? err.message : 'Invalid email or password')
         return
       }
 
-      const data = await res.json().catch(() => null)
       if (data?.twoFactorRequired) {
         setTwoFactorRequired(true)
         return
@@ -95,15 +95,16 @@ export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
     defaultValues: { code: '' },
     validators: { onSubmit: totpSchema },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/2fa/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Invalid code. Please try again.')
+      try {
+        await apiFetch('/api/auth/2fa/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err) ? err.message : 'Invalid code. Please try again.',
+        )
         return
       }
 

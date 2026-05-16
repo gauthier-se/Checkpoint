@@ -36,9 +36,6 @@ export const userProfileQueryOptions = (username: string) => {
     queryKey: ['users', username, 'profile'],
     queryFn: async (): Promise<UserProfile> => {
       const res = await apiFetch(`/api/users/${username}`)
-      if (!res.ok) {
-        throw new Error('Failed to fetch user profile')
-      }
       return res.json()
     },
     staleTime: 0,
@@ -56,9 +53,6 @@ export const userReviewsQueryOptions = (
       const res = await apiFetch(
         `/api/users/${username}/reviews?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch user reviews')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -76,9 +70,6 @@ export const userWishlistQueryOptions = (
       const res = await apiFetch(
         `/api/users/${username}/wishlist?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch user wishlist')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -96,9 +87,6 @@ export const userFollowingQueryOptions = (
       const res = await apiFetch(
         `/api/users/${userId}/following?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch following list')
-      }
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -106,12 +94,9 @@ export const userFollowingQueryOptions = (
 }
 
 export const toggleFollowMutation = async (userId: string): Promise<void> => {
-  const res = await apiFetch(`/api/users/${userId}/follow`, {
+  await apiFetch(`/api/users/${userId}/follow`, {
     method: 'POST',
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle follow')
-  }
 }
 
 export interface UpdateProfileRequest {
@@ -135,10 +120,6 @@ export async function updateProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!res.ok) {
-    const error = await res.json().catch(() => null)
-    throw new Error(error?.message || 'Failed to update profile')
-  }
   return res.json()
 }
 
@@ -149,35 +130,22 @@ export async function uploadPicture(file: File): Promise<{ picture: string }> {
     method: 'POST',
     body: formData,
   })
-  if (!res.ok) {
-    const error = await res.json().catch(() => null)
-    throw new Error(error?.message || 'Failed to upload picture')
-  }
   return res.json()
 }
 
 export async function deletePicture(): Promise<void> {
-  const res = await apiFetch('/api/me/picture', {
+  await apiFetch('/api/me/picture', {
     method: 'DELETE',
   })
-  if (!res.ok) {
-    throw new Error('Failed to delete picture')
-  }
 }
 
 export async function deleteAccount(): Promise<void> {
-  const res = await apiFetch('/api/me', {
+  await apiFetch('/api/me', {
     method: 'DELETE',
   })
-  if (!res.ok) {
-    throw new Error('Failed to delete account')
-  }
 }
 
 export async function exportData(): Promise<Blob> {
   const res = await apiFetch('/api/me/export')
-  if (!res.ok) {
-    throw new Error('Failed to export data')
-  }
   return res.blob()
 }

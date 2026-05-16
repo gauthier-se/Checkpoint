@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { TagSelector } from '@/components/games/tag-selector'
 import { logPlay } from '@/queries/games'
 import { submitPlayLogReview } from '@/queries/review'
+import { isApiError } from '@/services/api'
 
 interface PlayLogFormProps {
   game: GameDetail
@@ -93,7 +94,9 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
         onSuccess?.()
         form.reset()
       } catch (err) {
-        toast.error('Failed to log play session.')
+        toast.error(
+          isApiError(err) ? err.message : 'Failed to log play session.',
+        )
       }
     },
   })

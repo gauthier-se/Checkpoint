@@ -38,6 +38,7 @@ export function DeleteAccountCard({ username }: DeleteAccountCardProps) {
   const [confirmation, setConfirmation] = useState('')
 
   const deleteAccountMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: deleteAccount,
     onSuccess: async () => {
       queryClient.clear()

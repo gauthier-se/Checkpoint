@@ -38,7 +38,7 @@ describe('apiFetch', () => {
     expect(init?.credentials).toBe('include')
   })
 
-  it('returns the Response unchanged so callers can inspect status/json themselves', async () => {
+  it('returns the Response unchanged on success so callers can inspect status/json themselves', async () => {
     const response = new Response('{"ok":true}', { status: 201 })
     fetchMock.mockResolvedValueOnce(response)
 

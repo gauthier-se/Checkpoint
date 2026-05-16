@@ -36,7 +36,6 @@ export function libraryQuery(page: number) {
       const res = await apiFetch(
         `/api/me/library?page=${apiPage}&size=${PAGE_SIZE}`,
       )
-      if (!res.ok) throw new Error('Failed to load library')
       return res.json()
     },
   })
@@ -88,12 +87,11 @@ export function LibraryTab({ page }: LibraryTabProps) {
       status: GameStatus
       notes: string | null
     }) => {
-      const res = await apiFetch(`/api/me/library/${gameId}`, {
+      await apiFetch(`/api/me/library/${gameId}`, {
         method: 'PUT',
         body: JSON.stringify({ videoGameId: gameId, status, notes }),
         headers: { 'Content-Type': 'application/json' },
       })
-      if (!res.ok) throw new Error('Failed to update status')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
@@ -102,10 +100,9 @@ export function LibraryTab({ page }: LibraryTabProps) {
 
   const removeGameMutation = useMutation({
     mutationFn: async (gameId: string) => {
-      const res = await apiFetch(`/api/me/library/${gameId}`, {
+      await apiFetch(`/api/me/library/${gameId}`, {
         method: 'DELETE',
       })
-      if (!res.ok) throw new Error('Failed to remove game')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })

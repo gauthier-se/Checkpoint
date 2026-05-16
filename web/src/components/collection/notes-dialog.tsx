@@ -42,7 +42,7 @@ export function NotesDialog({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const trimmed = draft.trim()
-      const res = await apiFetch(`/api/me/library/${videoGameId}`, {
+      await apiFetch(`/api/me/library/${videoGameId}`, {
         method: 'PUT',
         body: JSON.stringify({
           videoGameId,
@@ -51,7 +51,6 @@ export function NotesDialog({
         }),
         headers: { 'Content-Type': 'application/json' },
       })
-      if (!res.ok) throw new Error('Failed to save notes')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })

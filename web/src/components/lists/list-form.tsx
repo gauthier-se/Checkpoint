@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import type { Game } from '@/types/game'
 import type { GameListDetail, GameListEntry } from '@/types/list'
+import { isApiError } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -112,11 +113,13 @@ export function ListForm({ mode, initialData }: ListFormProps) {
             params: { listId: initialData.id },
           })
         }
-      } catch {
+      } catch (err) {
         toast.error(
-          mode === 'create'
-            ? 'Failed to create list.'
-            : 'Failed to update list.',
+          isApiError(err)
+            ? err.message
+            : mode === 'create'
+              ? 'Failed to create list.'
+              : 'Failed to update list.',
         )
       }
     },
@@ -131,8 +134,8 @@ export function ListForm({ mode, initialData }: ListFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ['lists', initialData.id],
         })
-      } catch {
-        toast.error('Failed to add game.')
+      } catch (err) {
+        toast.error(isApiError(err) ? err.message : 'Failed to add game.')
       } finally {
         setGameActionLoading(null)
       }
@@ -162,8 +165,8 @@ export function ListForm({ mode, initialData }: ListFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ['lists', initialData.id],
         })
-      } catch {
-        toast.error('Failed to remove game.')
+      } catch (err) {
+        toast.error(isApiError(err) ? err.message : 'Failed to remove game.')
       } finally {
         setGameActionLoading(null)
       }
@@ -195,8 +198,8 @@ export function ListForm({ mode, initialData }: ListFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ['lists', initialData.id],
         })
-      } catch {
-        toast.error('Failed to reorder games.')
+      } catch (err) {
+        toast.error(isApiError(err) ? err.message : 'Failed to reorder games.')
         setEntries(entries)
       }
     }
@@ -210,8 +213,8 @@ export function ListForm({ mode, initialData }: ListFormProps) {
       await queryClient.invalidateQueries({ queryKey: ['lists'] })
       toast.success('List deleted successfully!')
       await navigate({ to: '/lists', search: { page: 1 } })
-    } catch {
-      toast.error('Failed to delete list.')
+    } catch (err) {
+      toast.error(isApiError(err) ? err.message : 'Failed to delete list.')
       setIsDeleting(false)
     }
   }

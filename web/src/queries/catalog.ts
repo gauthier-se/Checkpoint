@@ -9,7 +9,6 @@ export function searchGamesQueryOptions(query: string) {
       const res = await apiFetch(
         `/api/games/search?q=${encodeURIComponent(query)}`,
       )
-      if (!res.ok) throw new Error('Failed to search games')
       return res.json()
     },
     staleTime: 30 * 1000,
@@ -22,7 +21,6 @@ export function gameDetailQueryOptions(gameId: string) {
     queryKey: ['games', gameId, 'detail'],
     queryFn: async (): Promise<GameDetail> => {
       const res = await apiFetch(`/api/games/${gameId}`)
-      if (!res.ok) throw new Error('Failed to fetch game details')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -34,7 +32,6 @@ export function genresQueryOptions() {
     queryKey: ['genres'],
     queryFn: async (): Promise<Array<Genre>> => {
       const res = await apiFetch('/api/genres')
-      if (!res.ok) throw new Error('Failed to fetch genres')
       return res.json()
     },
     staleTime: 5 * 60 * 1000,
@@ -46,7 +43,6 @@ export function trendingGamesQueryOptions() {
     queryKey: ['games', 'trending'],
     queryFn: async (): Promise<Array<Game>> => {
       const res = await apiFetch('/api/games/trending?size=7')
-      if (!res.ok) throw new Error('Failed to fetch trending games')
       return res.json()
     },
     staleTime: 5 * 60 * 1000,
@@ -58,7 +54,6 @@ export function platformsQueryOptions() {
     queryKey: ['platforms'],
     queryFn: async (): Promise<Array<Platform>> => {
       const res = await apiFetch('/api/platforms')
-      if (!res.ok) throw new Error('Failed to fetch platforms')
       return res.json()
     },
     staleTime: 5 * 60 * 1000,

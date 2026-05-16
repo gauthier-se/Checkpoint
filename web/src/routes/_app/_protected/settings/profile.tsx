@@ -11,10 +11,15 @@ export const Route = createFileRoute('/_app/_protected/settings/profile')({
     const user = await context.queryClient.ensureQueryData({
       queryKey: ['auth', 'me'],
       queryFn: async () => {
-        const { apiFetch } = await import('@/services/api')
-        const res = await apiFetch('/api/auth/me')
-        if (!res.ok) return null
-        return res.json()
+        const { apiFetch, isApiError } = await import('@/services/api')
+        try {
+          const res = await apiFetch('/api/auth/me')
+          return res.json()
+        } catch (e) {
+          if (isApiError(e) && (e.status === 401 || e.status === 403))
+            return null
+          throw e
+        }
       },
     })
 

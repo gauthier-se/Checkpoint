@@ -40,7 +40,6 @@ export function backlogQuery(page: number, sort: BacklogSort = 'addedAt') {
       const res = await apiFetch(
         `/api/me/backlog?page=${apiPage}&size=${PAGE_SIZE}&sort=${SORT_PARAM[sort]}`,
       )
-      if (!res.ok) throw new Error('Failed to load backlog')
       return res.json()
     },
   })
@@ -57,10 +56,9 @@ export function BacklogTab({ page }: BacklogTabProps) {
 
   const removeMutation = useMutation({
     mutationFn: async (videoGameId: string) => {
-      const res = await apiFetch(`/api/me/backlog/${videoGameId}`, {
+      await apiFetch(`/api/me/backlog/${videoGameId}`, {
         method: 'DELETE',
       })
-      if (!res.ok) throw new Error('Failed to remove from backlog')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['backlog', 'me'] })
@@ -70,12 +68,11 @@ export function BacklogTab({ page }: BacklogTabProps) {
   const moveToLibraryMutation = useMutation({
     mutationFn: async (videoGameId: string) => {
       // Add to library with PLAYING status
-      const res = await apiFetch('/api/me/library', {
+      await apiFetch('/api/me/library', {
         method: 'POST',
         body: JSON.stringify({ videoGameId, status: 'PLAYING' }),
         headers: { 'Content-Type': 'application/json' },
       })
-      if (!res.ok) throw new Error('Failed to add to library')
       // Remove from backlog
       await apiFetch(`/api/me/backlog/${videoGameId}`, { method: 'DELETE' })
     },

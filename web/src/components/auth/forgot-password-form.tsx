@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 export function ForgotPasswordForm({
   className,
@@ -39,15 +39,18 @@ export function ForgotPasswordForm({
       onChange: forgotPasswordSchema,
     },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Something went wrong. Please try again.')
+      try {
+        await apiFetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err)
+            ? err.message
+            : 'Something went wrong. Please try again.',
+        )
         return
       }
 

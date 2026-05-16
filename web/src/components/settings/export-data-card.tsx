@@ -13,6 +13,7 @@ import { exportData } from '@/queries/profile'
 
 export function ExportDataCard() {
   const exportMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: exportData,
     onSuccess: (blob) => {
       const url = URL.createObjectURL(blob)

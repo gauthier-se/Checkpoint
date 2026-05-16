@@ -45,6 +45,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   }
 
   const postMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (content: string) =>
       targetType === 'review'
         ? postReviewComment(targetId, content)

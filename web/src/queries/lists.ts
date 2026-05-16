@@ -13,7 +13,6 @@ export async function createList(data: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error('Failed to create list')
   return res.json()
 }
 
@@ -26,15 +25,13 @@ export async function updateList(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error('Failed to update list')
   return res.json()
 }
 
 export async function deleteList(listId: string): Promise<void> {
-  const res = await apiFetch(`/api/me/lists/${listId}`, {
+  await apiFetch(`/api/me/lists/${listId}`, {
     method: 'DELETE',
   })
-  if (!res.ok) throw new Error('Failed to delete list')
 }
 
 export async function addGameToList(
@@ -46,7 +43,6 @@ export async function addGameToList(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ videoGameId }),
   })
-  if (!res.ok) throw new Error('Failed to add game to list')
   return res.json()
 }
 
@@ -54,10 +50,9 @@ export async function removeGameFromList(
   listId: string,
   videoGameId: string,
 ): Promise<void> {
-  const res = await apiFetch(`/api/me/lists/${listId}/games/${videoGameId}`, {
+  await apiFetch(`/api/me/lists/${listId}/games/${videoGameId}`, {
     method: 'DELETE',
   })
-  if (!res.ok) throw new Error('Failed to remove game from list')
 }
 
 export async function reorderListGames(
@@ -69,7 +64,6 @@ export async function reorderListGames(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ orderedVideoGameIds }),
   })
-  if (!res.ok) throw new Error('Failed to reorder games')
   return res.json()
 }
 
@@ -78,7 +72,6 @@ export function recentListsQueryOptions(page: number = 0, size: number = 20) {
     queryKey: ['lists', 'recent', page, size],
     queryFn: async (): Promise<GameListsResponse> => {
       const res = await apiFetch(`/api/lists?page=${page}&size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch recent lists')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -90,7 +83,6 @@ export function popularListsQueryOptions(page: number = 0, size: number = 5) {
     queryKey: ['lists', 'popular', page, size],
     queryFn: async (): Promise<GameListsResponse> => {
       const res = await apiFetch(`/api/lists/popular?page=${page}&size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch popular lists')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -102,7 +94,6 @@ export function listDetailQueryOptions(listId: string) {
     queryKey: ['lists', listId, 'detail'],
     queryFn: async (): Promise<GameListDetail> => {
       const res = await apiFetch(`/api/lists/${listId}`)
-      if (!res.ok) throw new Error('Failed to fetch list details')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -120,7 +111,6 @@ export function userListsQueryOptions(
       const res = await apiFetch(
         `/api/users/${username}/lists?page=${page}&size=${size}`,
       )
-      if (!res.ok) throw new Error('Failed to fetch user lists')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -132,7 +122,6 @@ export function myListsQueryOptions(page: number = 0, size: number = 20) {
     queryKey: ['lists', 'mine', page, size],
     queryFn: async (): Promise<GameListsResponse> => {
       const res = await apiFetch(`/api/me/lists?page=${page}&size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch my lists')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -143,8 +132,5 @@ export const toggleListLike = async (listId: string): Promise<LikeResponse> => {
   const res = await apiFetch(`/api/lists/${listId}/like`, {
     method: 'POST',
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle list like')
-  }
   return res.json()
 }

@@ -8,7 +8,6 @@ export function feedQueryOptions(page: number = 0, size: number = 5) {
     queryKey: ['feed', page, size],
     queryFn: async (): Promise<FeedResponse> => {
       const res = await apiFetch(`/api/me/feed?page=${page}&size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch feed')
       return res.json()
     },
     staleTime: 60 * 1000,
@@ -20,7 +19,6 @@ export function friendsTrendingGamesQueryOptions(size: number = 7) {
     queryKey: ['games', 'friends-trending', size],
     queryFn: async (): Promise<Array<Game>> => {
       const res = await apiFetch(`/api/me/friends/trending-games?size=${size}`)
-      if (!res.ok) throw new Error('Failed to fetch friends trending games')
       return res.json()
     },
     staleTime: 5 * 60 * 1000,
