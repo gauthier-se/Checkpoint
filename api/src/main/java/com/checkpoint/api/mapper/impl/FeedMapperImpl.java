@@ -42,7 +42,7 @@ public class FeedMapperImpl implements FeedMapper {
         if (videoGameId != null) {
             VideoGame game = gameCache.get(videoGameId);
             if (game != null) {
-                feedGame = new FeedGameDto(game.getId(), game.getTitle(), game.getCoverUrl());
+                feedGame = new FeedGameDto(game.getId(), game.getTitle(), game.getCoverUrl(), game.getReleaseDate());
             }
         }
 

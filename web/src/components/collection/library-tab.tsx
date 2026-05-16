@@ -178,6 +178,7 @@ export function LibraryTab({ page }: LibraryTabProps) {
                 videoGameId={game.videoGameId}
                 title={game.title}
                 coverUrl={game.coverUrl}
+                releaseDate={game.releaseDate}
               >
                 <Badge
                   className={`${STATUS_COLORS[game.status]} mt-1 text-[11px]`}

@@ -162,13 +162,20 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
             {/* Info */}
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-start justify-between gap-2">
-                <Link
-                  to="/games/$gameId"
-                  params={{ gameId: entry.videoGameId }}
-                  className="font-semibold leading-tight hover:underline line-clamp-1"
-                >
-                  {entry.title}
-                </Link>
+                <span className="flex min-w-0 items-baseline gap-1.5">
+                  <Link
+                    to="/games/$gameId"
+                    params={{ gameId: entry.videoGameId }}
+                    className="font-semibold leading-tight hover:underline line-clamp-1"
+                  >
+                    {entry.title}
+                  </Link>
+                  {entry.releaseDate && (
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      ({new Date(entry.releaseDate).getFullYear()})
+                    </span>
+                  )}
+                </span>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <Badge
                     className={`${PLAY_STATUS_COLORS[entry.status]} text-[11px]`}

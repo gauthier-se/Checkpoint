@@ -213,7 +213,7 @@ class TagControllerTest {
             // Given
             UUID tagId = UUID.randomUUID();
             GamePlayLogResponseDto playLog = new GamePlayLogResponseDto(
-                    UUID.randomUUID(), UUID.randomUUID(), "Zelda", null,
+                    UUID.randomUUID(), UUID.randomUUID(), "Zelda", null, null,
                     UUID.randomUUID(), "Switch", PlayStatus.COMPLETED,
                     false, 120, null, null, "owned",
                     null, null, false, null, 5, List.of()
@@ -261,7 +261,7 @@ class TagControllerTest {
         void getPublicPlayLogsByTag_shouldReturnPaginatedPlayLogs() throws Exception {
             // Given
             GamePlayLogResponseDto playLog = new GamePlayLogResponseDto(
-                    UUID.randomUUID(), UUID.randomUUID(), "Elden Ring", null,
+                    UUID.randomUUID(), UUID.randomUUID(), "Elden Ring", null, null,
                     UUID.randomUUID(), "PS5", PlayStatus.COMPLETED,
                     false, 200, null, null, "owned",
                     null, null, false, null, 5, List.of()

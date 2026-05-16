@@ -111,7 +111,7 @@ class GamePlayLogServiceImplTest {
         testPlayLog.setCreatedAt(LocalDateTime.now());
 
         testResponseDto = new GamePlayLogResponseDto(
-                testPlayLog.getId(), testGame.getId(), testGame.getTitle(), null,
+                testPlayLog.getId(), testGame.getId(), testGame.getTitle(), null, null,
                 testPlatform.getId(), testPlatform.getName(), PlayStatus.COMPLETED,
                 false, 2000, LocalDate.now(), LocalDate.now(), "owned",
                 LocalDateTime.now(), LocalDateTime.now(), null, null, null, List.of()

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param videoGameId   the video game ID
  * @param title         the video game title
  * @param coverUrl      the video game cover image URL
+ * @param releaseDate   the video game release date
  * @param platformId    the platform ID
  * @param platformName  the platform name
  * @param status        the play status
@@ -37,6 +38,7 @@ public record GamePlayLogResponseDto(
         UUID videoGameId,
         String title,
         String coverUrl,
+        LocalDate releaseDate,
         UUID platformId,
         String platformName,
         PlayStatus status,

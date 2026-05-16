@@ -53,6 +53,7 @@ public class GamePlayLogMapperImpl implements GamePlayLogMapper {
                 playLog.getVideoGame() != null ? playLog.getVideoGame().getId() : null,
                 playLog.getVideoGame() != null ? playLog.getVideoGame().getTitle() : null,
                 playLog.getVideoGame() != null ? playLog.getVideoGame().getCoverUrl() : null,
+                playLog.getVideoGame() != null ? playLog.getVideoGame().getReleaseDate() : null,
                 playLog.getPlatform() != null ? playLog.getPlatform().getId() : null,
                 playLog.getPlatform() != null ? playLog.getPlatform().getName() : null,
                 playLog.getStatus(),

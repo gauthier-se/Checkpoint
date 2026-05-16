@@ -60,7 +60,7 @@ class FeedControllerTest {
     void getFeed_shouldReturnPaginatedFeed() throws Exception {
         // Given
         FeedUserDto feedUser = new FeedUserDto(UUID.randomUUID(), "gamer42", "avatar.jpg");
-        FeedGameDto feedGame = new FeedGameDto(UUID.randomUUID(), "Elden Ring", "cover.jpg");
+        FeedGameDto feedGame = new FeedGameDto(UUID.randomUUID(), "Elden Ring", "cover.jpg", null);
         FeedItemDto item = new FeedItemDto(
                 UUID.randomUUID(), FeedItemType.RATING, LocalDateTime.now(),
                 feedUser, feedGame, null, 5, null, null, null, null

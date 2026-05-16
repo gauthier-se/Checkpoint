@@ -12,6 +12,7 @@ export interface FeedGame {
   id: string
   title: string
   coverUrl: string
+  releaseDate: string | null
 }
 
 export interface FeedItem {

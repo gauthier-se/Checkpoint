@@ -49,6 +49,7 @@ export interface PlayLogResponse {
   videoGameId: string
   title: string
   coverUrl: string | null
+  releaseDate: string | null
   platformId: string | null
   platformName: string | null
   status: PlayStatus
