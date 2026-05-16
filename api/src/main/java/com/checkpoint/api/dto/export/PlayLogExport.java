@@ -7,6 +7,11 @@ import java.util.UUID;
 
 import com.checkpoint.api.enums.PlayStatus;
 
+/**
+ * Exported play log row.
+ *
+ * @param score rating score 1-10 (half-star steps; display = score / 2), or null
+ */
 public record PlayLogExport(
         UUID id,
         UUID gameId,

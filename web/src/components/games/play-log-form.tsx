@@ -43,7 +43,7 @@ const playLogSchema = z.object({
   endDate: z.string().optional(),
   ownership: z.string().optional(),
   isReplay: z.boolean().optional(),
-  score: z.number().min(1).max(5).optional(),
+  score: z.number().min(1).max(10).optional(),
   reviewContent: z.string().optional(),
   haveSpoilers: z.boolean().optional(),
 })
@@ -260,34 +260,60 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
         <div className="space-y-4">
           <form.Field
             name="score"
-            children={(field) => (
-              <div className="flex flex-col gap-2">
-                <Label>Score</Label>
-                <div
-                  className="flex gap-1"
-                  onMouseLeave={() =>
-                    field.handleChange(field.state.value ?? 0)
-                  }
-                >
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className="p-1 -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm transition-transform active:scale-90"
-                      onClick={() => field.handleChange(star)}
-                    >
-                      <Star
-                        className={`h-7 w-7 transition-colors ${
-                          field.state.value && star <= field.state.value
-                            ? 'fill-yellow-400 text-yellow-500 hover:fill-yellow-300'
-                            : 'text-muted-foreground/30 hover:text-muted-foreground/50'
-                        }`}
-                      />
-                    </button>
-                  ))}
+            children={(field) => {
+              const value = field.state.value ?? 0
+              return (
+                <div className="flex flex-col gap-2">
+                  <Label>
+                    Score
+                    {value > 0 && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {(value / 2).toFixed(1)} / 5
+                      </span>
+                    )}
+                  </Label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const leftScore = star * 2 - 1
+                      const rightScore = star * 2
+                      const isFullFilled = value >= rightScore
+                      const isHalfFilled = value === leftScore
+                      return (
+                        <div key={star} className="relative h-7 w-7">
+                          <Star
+                            aria-hidden
+                            className="absolute inset-0 h-7 w-7 text-muted-foreground/30"
+                          />
+                          {(isFullFilled || isHalfFilled) && (
+                            <Star
+                              aria-hidden
+                              className="absolute inset-0 h-7 w-7 fill-yellow-400 text-yellow-500"
+                              style={
+                                isHalfFilled
+                                  ? { clipPath: 'inset(0 50% 0 0)' }
+                                  : undefined
+                              }
+                            />
+                          )}
+                          <button
+                            type="button"
+                            aria-label={`Set score to ${(leftScore / 2).toFixed(1)}`}
+                            className="absolute inset-y-0 left-0 w-1/2 cursor-pointer focus-visible:outline-none"
+                            onClick={() => field.handleChange(leftScore)}
+                          />
+                          <button
+                            type="button"
+                            aria-label={`Set score to ${(rightScore / 2).toFixed(1)}`}
+                            className="absolute inset-y-0 right-0 w-1/2 cursor-pointer focus-visible:outline-none"
+                            onClick={() => field.handleChange(rightScore)}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            }}
           />
 
           <form.Field

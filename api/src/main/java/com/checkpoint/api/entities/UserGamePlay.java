@@ -60,8 +60,8 @@ public class UserGamePlay {
 
     @Column(name = "score")
     @Min(1)
-    @Max(5)
-    private Integer score;
+    @Max(10)
+    private Integer score; // 1-10 (half-star steps; display = score / 2)
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

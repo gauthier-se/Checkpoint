@@ -74,25 +74,25 @@ class RateServiceImplTest {
         @Test
         @DisplayName("Should create a new rating if none exists")
         void rateGame_shouldCreateNewRating() {
-            // Given
+            // Given — score 8 = 4.0★; raw average 8.0 / 2 = 4.0 in display range
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
             when(videoGameRepository.findById(gameId)).thenReturn(Optional.of(testGame));
             when(rateRepository.findByUserEmailAndVideoGameId(testUser.getEmail(), gameId)).thenReturn(Optional.empty());
 
-            Rate savedRate = new Rate(testUser, testGame, 4);
+            Rate savedRate = new Rate(testUser, testGame, 8);
             savedRate.setId(UUID.randomUUID());
             when(rateRepository.save(any(Rate.class))).thenReturn(savedRate);
-            when(rateRepository.calculateAverageRating(gameId)).thenReturn(4.0);
+            when(rateRepository.calculateAverageRating(gameId)).thenReturn(8.0);
 
-            RateResponseDto responseDto = new RateResponseDto(savedRate.getId(), 4, gameId, null, null);
+            RateResponseDto responseDto = new RateResponseDto(savedRate.getId(), 8, gameId, null, null);
             when(rateMapper.toDto(savedRate)).thenReturn(responseDto);
 
             // When
-            RateResponseDto result = rateService.rateGame(testUser.getEmail(), gameId, 4);
+            RateResponseDto result = rateService.rateGame(testUser.getEmail(), gameId, 8);
 
             // Then
             assertThat(result).isNotNull();
-            assertThat(result.score()).isEqualTo(4);
+            assertThat(result.score()).isEqualTo(8);
             assertThat(result.videoGameId()).isEqualTo(gameId);
             verify(rateRepository).save(any(Rate.class));
             verify(videoGameRepository).save(testGame);
@@ -100,10 +100,33 @@ class RateServiceImplTest {
         }
 
         @Test
+        @DisplayName("Should store half-star averageRating with 0.1 precision (raw avg / 2)")
+        void rateGame_shouldStoreHalfStarAverage() {
+            // Given — score 7 = 3.5★; raw average 7.0 / 2 = 3.5
+            when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+            when(videoGameRepository.findById(gameId)).thenReturn(Optional.of(testGame));
+            when(rateRepository.findByUserEmailAndVideoGameId(testUser.getEmail(), gameId)).thenReturn(Optional.empty());
+
+            Rate savedRate = new Rate(testUser, testGame, 7);
+            savedRate.setId(UUID.randomUUID());
+            when(rateRepository.save(any(Rate.class))).thenReturn(savedRate);
+            when(rateRepository.calculateAverageRating(gameId)).thenReturn(7.0);
+
+            RateResponseDto responseDto = new RateResponseDto(savedRate.getId(), 7, gameId, null, null);
+            when(rateMapper.toDto(savedRate)).thenReturn(responseDto);
+
+            // When
+            rateService.rateGame(testUser.getEmail(), gameId, 7);
+
+            // Then
+            assertThat(testGame.getAverageRating()).isEqualTo(3.5);
+        }
+
+        @Test
         @DisplayName("Should update an existing rating")
         void rateGame_shouldUpdateExistingRating() {
-            // Given
-            Rate existingRate = new Rate(testUser, testGame, 3);
+            // Given — bumping from 6 (3★) to 10 (5★)
+            Rate existingRate = new Rate(testUser, testGame, 6);
             existingRate.setId(UUID.randomUUID());
 
             when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
@@ -111,18 +134,18 @@ class RateServiceImplTest {
             when(rateRepository.findByUserEmailAndVideoGameId(testUser.getEmail(), gameId)).thenReturn(Optional.of(existingRate));
 
             when(rateRepository.save(existingRate)).thenReturn(existingRate);
-            when(rateRepository.calculateAverageRating(gameId)).thenReturn(5.0);
+            when(rateRepository.calculateAverageRating(gameId)).thenReturn(10.0);
 
-            RateResponseDto responseDto = new RateResponseDto(existingRate.getId(), 5, gameId, null, null);
+            RateResponseDto responseDto = new RateResponseDto(existingRate.getId(), 10, gameId, null, null);
             when(rateMapper.toDto(existingRate)).thenReturn(responseDto);
 
             // When
-            RateResponseDto result = rateService.rateGame(testUser.getEmail(), gameId, 5);
+            RateResponseDto result = rateService.rateGame(testUser.getEmail(), gameId, 10);
 
             // Then
             assertThat(result).isNotNull();
-            assertThat(result.score()).isEqualTo(5);
-            assertThat(existingRate.getScore()).isEqualTo(5);
+            assertThat(result.score()).isEqualTo(10);
+            assertThat(existingRate.getScore()).isEqualTo(10);
             verify(rateRepository).save(existingRate);
         }
 

@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param updatedAt     last update timestamp
  * @param hasReview     whether this play log has a review attached
  * @param reviewPreview first 100 characters of the review content, or null
- * @param score         rating score (1-5) given during this play session, or null
+ * @param score         rating score 1-10 (half-star steps; display = score / 2) given during this play session, or null
  * @param tags          list of tags associated with this play log
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

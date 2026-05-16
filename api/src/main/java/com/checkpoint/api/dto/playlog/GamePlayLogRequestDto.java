@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotNull;
  * @param timePlayed  time played in minutes
  * @param ownership   ownership status (e.g. "owned", "borrowed")
  * @param isReplay    whether it's a replay (default false if null)
- * @param score       optional rating score (1-5) for this play session
+ * @param score       optional rating score 1-10 (half-star steps; display = score / 2)
  * @param tagIds      optional list of tag IDs to associate with this play log
  */
 public record GamePlayLogRequestDto(
@@ -36,7 +36,7 @@ public record GamePlayLogRequestDto(
         String ownership,
         Boolean isReplay,
         @Min(value = 1, message = "Score must be at least 1")
-        @Max(value = 5, message = "Score must be at most 5")
+        @Max(value = 10, message = "Score must be at most 10")
         Integer score,
         List<UUID> tagIds
 ) {}

@@ -187,7 +187,7 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
                       className="gap-1 text-[11px] bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20"
                     >
                       <Star className="size-2.5 fill-current" />
-                      {entry.score}
+                      {(entry.score / 2).toFixed(1)}
                     </Badge>
                   )}
                 </div>

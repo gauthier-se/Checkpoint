@@ -22,6 +22,9 @@ interface StarRatingProps {
   currentRating: number | null
 }
 
+// Scores are stored as 1-10 (half-star steps). Display value = score / 2.
+const STAR_SLOTS = [1, 2, 3, 4, 5] as const
+
 export function StarRating({ game, currentRating }: StarRatingProps) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -52,8 +55,6 @@ export function StarRating({ game, currentRating }: StarRatingProps) {
       gameInteractionStatusQueryOptions(game.id),
     )
     void queryClient.invalidateQueries({ queryKey: ['games', game.id] })
-    // The game detail page reads from the route loader, not a useQuery — so
-    // invalidate the router to refetch averageRating and ratingCount.
     void router.invalidate()
   }
 
@@ -70,7 +71,7 @@ export function StarRating({ game, currentRating }: StarRatingProps) {
     onError: (_err, _variables, context) => {
       rollbackInteractionStatus(context?.previous)
     },
-    onSuccess: (res) => toast.success(`Rated ${res.score}/5`),
+    onSuccess: (res) => toast.success(`Rated ${(res.score / 2).toFixed(1)}/5`),
     onSettled: invalidateAfterRatingChange,
   })
 
@@ -92,8 +93,7 @@ export function StarRating({ game, currentRating }: StarRatingProps) {
   })
 
   const handleStarClick = (score: number) => {
-    const ratingAtClickTime = currentRating
-    if (score === ratingAtClickTime) {
+    if (score === currentRating) {
       removeRatingMutation.mutate()
     } else {
       rateMutation.mutate(score)
@@ -109,24 +109,49 @@ export function StarRating({ game, currentRating }: StarRatingProps) {
       className={`flex gap-0.5 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
       onMouseLeave={() => setHoveredScore(null)}
     >
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={disabled}
-          className="p-1 -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm transition-transform active:scale-90"
-          onMouseEnter={() => setHoveredScore(star)}
-          onClick={() => handleStarClick(star)}
-        >
-          <Star
-            className={`h-6 w-6 transition-colors ${
-              star <= displayScore
-                ? 'fill-yellow-400 text-yellow-500 hover:fill-yellow-300'
-                : 'text-muted-foreground/30 hover:text-muted-foreground/50'
-            }`}
-          />
-        </button>
-      ))}
+      {STAR_SLOTS.map((star) => {
+        const leftScore = star * 2 - 1
+        const rightScore = star * 2
+        const isFullFilled = displayScore >= rightScore
+        const isHalfFilled = displayScore === leftScore
+
+        return (
+          <div key={star} className="relative h-6 w-6">
+            <Star
+              aria-hidden
+              className="absolute inset-0 h-6 w-6 text-muted-foreground/30"
+            />
+            {(isFullFilled || isHalfFilled) && (
+              <Star
+                aria-hidden
+                className="absolute inset-0 h-6 w-6 fill-yellow-400 text-yellow-500"
+                style={
+                  isHalfFilled
+                    ? { clipPath: 'inset(0 50% 0 0)' }
+                    : undefined
+                }
+              />
+            )}
+
+            <button
+              type="button"
+              disabled={disabled}
+              aria-label={`Rate ${(leftScore / 2).toFixed(1)} stars`}
+              className="absolute inset-y-0 left-0 w-1/2 cursor-pointer focus-visible:outline-none"
+              onMouseEnter={() => setHoveredScore(leftScore)}
+              onClick={() => handleStarClick(leftScore)}
+            />
+            <button
+              type="button"
+              disabled={disabled}
+              aria-label={`Rate ${(rightScore / 2).toFixed(1)} stars`}
+              className="absolute inset-y-0 right-0 w-1/2 cursor-pointer focus-visible:outline-none"
+              onMouseEnter={() => setHoveredScore(rightScore)}
+              onClick={() => handleStarClick(rightScore)}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 

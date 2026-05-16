@@ -33,7 +33,7 @@ function getActivityText(item: FeedItemType) {
     case 'PLAY':
       return playStatusLabels[item.playStatus ?? ''] ?? 'played'
     case 'RATING':
-      return `rated ${item.score}/5`
+      return `rated ${item.score != null ? (item.score / 2).toFixed(1) : '?'}/5`
     case 'REVIEW':
       return 'reviewed'
     case 'LIST':
