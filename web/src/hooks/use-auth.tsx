@@ -1,7 +1,7 @@
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
 import type { User } from '@/types/user'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 import { fetchCurrentUserServerFn } from '@/services/auth-server'
 
 export const authQueryOptions = queryOptions({
@@ -10,9 +10,14 @@ export const authQueryOptions = queryOptions({
     if (typeof window === 'undefined') {
       return fetchCurrentUserServerFn()
     }
-    const res = await apiFetch('/api/auth/me')
-    if (!res.ok) return null
-    return res.json()
+    try {
+      const res = await apiFetch('/api/auth/me')
+      return res.json()
+    } catch (e) {
+      // Not authenticated — surface as null rather than as an error.
+      if (isApiError(e) && (e.status === 401 || e.status === 403)) return null
+      throw e
+    }
   },
   staleTime: 5 * 60_000,
   retry: false,

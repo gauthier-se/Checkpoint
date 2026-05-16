@@ -7,16 +7,13 @@ import type {
   RateResponseDto,
 } from '@/types/interaction'
 import type { UserGameRequest } from '@/types/library'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 export function gameInteractionStatusQueryOptions(gameId: string) {
   return queryOptions({
     queryKey: ['games', gameId, 'interaction-status'],
     queryFn: async () => {
       const res = await apiFetch(`/api/me/games/${gameId}/status`)
-      if (!res.ok) {
-        throw new Error('Failed to fetch interaction status')
-      }
       return res.json() as Promise<GameInteractionStatusDto>
     },
   })
@@ -26,14 +23,14 @@ export function userRatingQueryOptions(gameId: string) {
   return queryOptions({
     queryKey: ['games', gameId, 'rate'],
     queryFn: async () => {
-      const res = await apiFetch(`/api/me/games/${gameId}/rate`)
-      if (res.status === 404) {
-        return null
+      try {
+        const res = await apiFetch(`/api/me/games/${gameId}/rate`)
+        return (await res.json()) as RateResponseDto
+      } catch (e) {
+        // 404 means the user hasn't rated this game yet — not an error.
+        if (isApiError(e) && e.status === 404) return null
+        throw e
       }
-      if (!res.ok) {
-        throw new Error('Failed to fetch user rating')
-      }
-      return res.json() as Promise<RateResponseDto>
     },
   })
 }
@@ -46,19 +43,13 @@ export async function rateGame(gameId: string, score: number) {
     },
     body: JSON.stringify({ score }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to rate game')
-  }
   return res.json() as Promise<RateResponseDto>
 }
 
 export async function removeRating(gameId: string) {
-  const res = await apiFetch(`/api/me/games/${gameId}/rate`, {
+  await apiFetch(`/api/me/games/${gameId}/rate`, {
     method: 'DELETE',
   })
-  if (!res.ok && res.status !== 204) {
-    throw new Error('Failed to remove rating')
-  }
 }
 
 export async function toggleWishlist(
@@ -67,22 +58,16 @@ export async function toggleWishlist(
   priority: Priority | null = null,
 ) {
   if (currentStatus) {
-    const res = await apiFetch(`/api/me/wishlist/${gameId}`, {
+    await apiFetch(`/api/me/wishlist/${gameId}`, {
       method: 'DELETE',
     })
-    if (!res.ok && res.status !== 204) {
-      throw new Error('Failed to toggle wishlist')
-    }
     return
   }
-  const res = await apiFetch(`/api/me/wishlist/${gameId}`, {
+  await apiFetch(`/api/me/wishlist/${gameId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ priority }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle wishlist')
-  }
 }
 
 export async function toggleBacklog(
@@ -91,50 +76,38 @@ export async function toggleBacklog(
   priority: Priority | null = null,
 ) {
   if (currentStatus) {
-    const res = await apiFetch(`/api/me/backlog/${gameId}`, {
+    await apiFetch(`/api/me/backlog/${gameId}`, {
       method: 'DELETE',
     })
-    if (!res.ok && res.status !== 204) {
-      throw new Error('Failed to toggle backlog')
-    }
     return
   }
-  const res = await apiFetch(`/api/me/backlog/${gameId}`, {
+  await apiFetch(`/api/me/backlog/${gameId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ priority }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle backlog')
-  }
 }
 
 export async function updateWishlistPriority(
   gameId: string,
   priority: Priority | null,
 ) {
-  const res = await apiFetch(`/api/me/wishlist/${gameId}/priority`, {
+  await apiFetch(`/api/me/wishlist/${gameId}/priority`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ priority }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to update wishlist priority')
-  }
 }
 
 export async function updateBacklogPriority(
   gameId: string,
   priority: Priority | null,
 ) {
-  const res = await apiFetch(`/api/me/backlog/${gameId}/priority`, {
+  await apiFetch(`/api/me/backlog/${gameId}/priority`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ priority }),
   })
-  if (!res.ok) {
-    throw new Error('Failed to update backlog priority')
-  }
 }
 
 export async function updateLibraryStatus(
@@ -142,35 +115,33 @@ export async function updateLibraryStatus(
   request: UserGameRequest | null,
 ) {
   if (!request) {
-    const res = await apiFetch(`/api/me/library/${gameId}`, {
+    await apiFetch(`/api/me/library/${gameId}`, {
       method: 'DELETE',
     })
-    if (!res.ok && res.status !== 204) {
-      throw new Error('Failed to remove from library')
-    }
-  } else {
-    let res = await apiFetch(`/api/me/library/${gameId}`, {
+    return
+  }
+
+  try {
+    await apiFetch(`/api/me/library/${gameId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
     })
-
-    // If it doesn't exist, POST to create it
-    if (res.status === 404) {
-      res = await apiFetch('/api/me/library', {
+  } catch (e) {
+    // If the library entry doesn't exist yet, fall back to POST to create it.
+    if (isApiError(e) && e.status === 404) {
+      await apiFetch('/api/me/library', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
       })
+      return
     }
-
-    if (!res.ok) {
-      throw new Error('Failed to update library')
-    }
+    throw e
   }
 }
 
@@ -182,8 +153,5 @@ export async function logPlay(request: GamePlayLogRequestDto) {
     },
     body: JSON.stringify(request),
   })
-  if (!res.ok) {
-    throw new Error('Failed to log play')
-  }
   return res.json() as Promise<GamePlayLogResponseDto>
 }

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Play, Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
+import { ErrorPage } from '@/components/errors/error-page'
 import { GameQuickActions } from '@/components/games/quick-actions'
 import { ReviewList } from '@/components/reviews/review-list'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { gameReviewsQueryOptions } from '@/queries/review'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 export const Route = createFileRoute('/_app/games/$gameId')({
   component: RouteComponent,
@@ -25,10 +26,23 @@ export const Route = createFileRoute('/_app/games/$gameId')({
     )
 
     const res = await apiFetch(`/api/games/${gameId}`)
-    if (!res.ok) {
-      throw new Error('Game not found')
-    }
     return res.json() as Promise<GameDetail>
+  },
+  errorComponent: ({ error, reset }) => {
+    if (isApiError(error) && error.status === 404) {
+      return (
+        <ErrorPage
+          title="Game not found"
+          message="We couldn't find this game. It may have been removed."
+        />
+      )
+    }
+    return (
+      <ErrorPage
+        message={isApiError(error) ? error.message : undefined}
+        onRetry={reset}
+      />
+    )
   },
 })
 

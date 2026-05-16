@@ -40,7 +40,6 @@ export function wishlistQuery(page: number, sort: WishlistSort = 'addedAt') {
       const res = await apiFetch(
         `/api/me/wishlist?page=${apiPage}&size=${PAGE_SIZE}&sort=${SORT_PARAM[sort]}`,
       )
-      if (!res.ok) throw new Error('Failed to load wishlist')
       return res.json()
     },
   })
@@ -57,10 +56,9 @@ export function WishlistTab({ page }: WishlistTabProps) {
 
   const removeMutation = useMutation({
     mutationFn: async (videoGameId: string) => {
-      const res = await apiFetch(`/api/me/wishlist/${videoGameId}`, {
+      await apiFetch(`/api/me/wishlist/${videoGameId}`, {
         method: 'DELETE',
       })
-      if (!res.ok) throw new Error('Failed to remove from wishlist')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['wishlist', 'me'] })

@@ -13,6 +13,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { reportReview } from '@/queries/review'
+import { isApiError } from '@/services/api'
 
 interface ReportReviewDialogProps {
   reviewId: string
@@ -44,11 +45,7 @@ export function ReportReviewDialog({
         onOpenChange(false)
         form.reset()
       } catch (err) {
-        if (err instanceof Error) {
-          toast.error(err.message)
-        } else {
-          toast.error('Failed to report review')
-        }
+        toast.error(isApiError(err) ? err.message : 'Failed to report review')
       }
     },
   })

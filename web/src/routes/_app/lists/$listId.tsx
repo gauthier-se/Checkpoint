@@ -33,6 +33,7 @@ function RouteComponent() {
   } = useQuery(listDetailQueryOptions(listId))
 
   const likeMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: () => toggleListLike(listId),
     onMutate: async () => {
       const queryKey = listDetailQueryOptions(listId).queryKey

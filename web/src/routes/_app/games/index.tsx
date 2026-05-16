@@ -60,7 +60,6 @@ function searchGamesQuery(q: string) {
     queryKey: ['games', 'search', q],
     queryFn: async (): Promise<Array<Game>> => {
       const res = await apiFetch(`/api/games/search?q=${encodeURIComponent(q)}`)
-      if (!res.ok) throw new Error('Failed to search games')
       return res.json()
     },
   })

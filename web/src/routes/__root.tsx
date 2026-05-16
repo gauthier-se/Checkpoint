@@ -13,6 +13,9 @@ import appCss from '../styles.css?inline'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ErrorBoundary } from '@/components/errors/error-boundary'
+import { ErrorPage } from '@/components/errors/error-page'
+import { isApiError } from '@/services/api'
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -41,6 +44,18 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
   shellComponent: RootDocument,
   component: RootComponent,
+  errorComponent: ({ error, reset }) => (
+    <ErrorPage
+      message={isApiError(error) ? error.message : undefined}
+      onRetry={reset}
+    />
+  ),
+  notFoundComponent: () => (
+    <ErrorPage
+      title="Page not found"
+      message="The page you are looking for does not exist."
+    />
+  ),
 })
 
 function RootComponent() {
@@ -68,7 +83,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             disableTransitionOnChange
           >
             <TooltipProvider>
-              {children}
+              <ErrorBoundary>{children}</ErrorBoundary>
               <Toaster richColors closeButton position="top-right" />
               <TanStackDevtools
                 config={{

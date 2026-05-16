@@ -10,9 +10,6 @@ export const notificationPreferencesQueryOptions = () => {
     queryKey: ['notification-preferences'],
     queryFn: async (): Promise<NotificationPreferences> => {
       const res = await apiFetch('/api/me/notification-preferences')
-      if (!res.ok) {
-        throw new Error('Failed to fetch notification preferences')
-      }
       return res.json()
     },
     staleTime: 0,
@@ -27,11 +24,5 @@ export async function updateNotificationPreferences(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!res.ok) {
-    const error = await res.json().catch(() => null)
-    throw new Error(
-      error?.message || 'Failed to update notification preferences',
-    )
-  }
   return res.json()
 }

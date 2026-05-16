@@ -15,7 +15,7 @@ import {
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { authQueryOptions, useAuth } from '@/hooks/use-auth'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 type SetupState = 'idle' | 'pending-qr' | 'pending-verify'
 
@@ -39,14 +39,16 @@ export function TwoFactorSettings() {
     defaultValues: { code: '' },
     validators: { onSubmit: verifySchema },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/2fa/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Invalid code. Please try again.')
+      try {
+        await apiFetch('/api/auth/2fa/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err) ? err.message : 'Invalid code. Please try again.',
+        )
         return
       }
       toast.success('Two-factor authentication enabled.')
@@ -62,14 +64,14 @@ export function TwoFactorSettings() {
     defaultValues: { password: '', code: '' },
     validators: { onSubmit: disableSchema },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/2fa/disable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Failed to disable 2FA.')
+      try {
+        await apiFetch('/api/auth/2fa/disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(value),
+        })
+      } catch (err) {
+        toast.error(isApiError(err) ? err.message : 'Failed to disable 2FA.')
         return
       }
       toast.success('Two-factor authentication disabled.')
@@ -80,12 +82,14 @@ export function TwoFactorSettings() {
   })
 
   const handleSetupStart = async () => {
-    const res = await apiFetch('/api/auth/2fa/setup', { method: 'POST' })
-    if (!res.ok) {
-      toast.error('Failed to start 2FA setup.')
+    let data: { qrCodeDataUrl: string; provisioningUri: string }
+    try {
+      const res = await apiFetch('/api/auth/2fa/setup', { method: 'POST' })
+      data = await res.json()
+    } catch (err) {
+      toast.error(isApiError(err) ? err.message : 'Failed to start 2FA setup.')
       return
     }
-    const data = await res.json()
     setQrCodeDataUrl(data.qrCodeDataUrl)
     setProvisioningUri(data.provisioningUri)
     setSetupState('pending-qr')

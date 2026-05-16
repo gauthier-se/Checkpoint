@@ -68,6 +68,7 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   const wishlistMutation = useMutation({
     mutationFn: (priority: Priority | null) =>
       toggleWishlist(game.id, status?.inWishlist ?? false, priority),
+    meta: { suppressGlobalError: true },
     onMutate: async () => {
       await queryClient.cancelQueries(
         gameInteractionStatusQueryOptions(game.id),
@@ -109,6 +110,7 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   })
 
   const wishlistPriorityMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (priority: Priority | null) =>
       updateWishlistPriority(game.id, priority),
     onMutate: async (priority) => {
@@ -141,6 +143,7 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   })
 
   const backlogMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (priority: Priority | null) =>
       toggleBacklog(game.id, status?.inBacklog ?? false, priority),
     onMutate: async () => {
@@ -183,6 +186,7 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   })
 
   const backlogPriorityMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (priority: Priority | null) =>
       updateBacklogPriority(game.id, priority),
     onMutate: async (priority) => {
@@ -215,6 +219,7 @@ export function GameQuickActions({ game }: GameQuickActionsProps) {
   })
 
   const libraryMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (newStatus: GameStatus | null) =>
       updateLibraryStatus(
         game.id,

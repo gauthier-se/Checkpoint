@@ -33,7 +33,6 @@ export function playLogQuery(page: number) {
       const res = await apiFetch(
         `/api/me/plays?page=${apiPage}&size=${PAGE_SIZE}&sort=updatedAt,desc`,
       )
-      if (!res.ok) throw new Error('Failed to load play log')
       return res.json()
     },
   })
@@ -82,10 +81,9 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (playId: string) => {
-      const res = await apiFetch(`/api/me/plays/${playId}`, {
+      await apiFetch(`/api/me/plays/${playId}`, {
         method: 'DELETE',
       })
-      if (!res.ok) throw new Error('Failed to delete play log')
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['plays', 'me'] })

@@ -13,12 +13,9 @@ export const gameReviewsQueryOptions = (
       const res = await apiFetch(
         `/api/games/${gameId}/reviews?page=${page}&size=${size}`,
       )
-      if (!res.ok) {
-        throw new Error('Failed to fetch reviews')
-      }
       return res.json()
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
   })
 }
 
@@ -38,9 +35,6 @@ export const submitPlayLogReview = async (
     },
     body: JSON.stringify(payload),
   })
-  if (!res.ok) {
-    throw new Error('Failed to submit review')
-  }
   return res.json()
 }
 
@@ -54,6 +48,9 @@ export const reportReview = async (
   reviewId: string,
   payload: { content: string },
 ): Promise<ReportResponse> => {
+  // The server returns 409 with a tailored message
+  // ("You have already reported this review") via ErrorResponse, which
+  // apiFetch surfaces as an ApiError. No need to special-case the status here.
   const res = await apiFetch(`/api/reviews/${reviewId}/report`, {
     method: 'POST',
     headers: {
@@ -61,12 +58,6 @@ export const reportReview = async (
     },
     body: JSON.stringify(payload),
   })
-  if (res.status === 409) {
-    throw new Error('You have already reported this review')
-  }
-  if (!res.ok) {
-    throw new Error('Failed to report review')
-  }
   return res.json()
 }
 
@@ -76,8 +67,5 @@ export const toggleReviewLike = async (
   const res = await apiFetch(`/api/reviews/${reviewId}/like`, {
     method: 'POST',
   })
-  if (!res.ok) {
-    throw new Error('Failed to toggle review like')
-  }
   return res.json()
 }

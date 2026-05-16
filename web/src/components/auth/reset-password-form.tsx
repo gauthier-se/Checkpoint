@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 interface ResetPasswordFormProps extends React.ComponentProps<'div'> {
   token: string
@@ -52,15 +52,18 @@ export function ResetPasswordForm({
       onChange: resetPasswordSchema,
     },
     onSubmit: async ({ value }) => {
-      const res = await apiFetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPassword: value.newPassword }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Password reset failed. Please try again.')
+      try {
+        await apiFetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword: value.newPassword }),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err)
+            ? err.message
+            : 'Password reset failed. Please try again.',
+        )
         return
       }
 

@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { apiFetch } from '@/services/api'
+import { apiFetch, isApiError } from '@/services/api'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
 
@@ -65,15 +65,18 @@ export function RegisterForm({
     },
     onSubmit: async ({ value }) => {
       const { acceptTerms: _acceptTerms, ...payload } = value
-      const res = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        toast.error(data?.message ?? 'Registration failed. Please try again.')
+      try {
+        await apiFetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } catch (err) {
+        toast.error(
+          isApiError(err)
+            ? err.message
+            : 'Registration failed. Please try again.',
+        )
         return
       }
 

@@ -78,6 +78,7 @@ export function CommentItem({
   }
 
   const likeMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: () => toggleCommentLike(comment.id),
     onMutate: async () => {
       const queryKey =
@@ -112,6 +113,7 @@ export function CommentItem({
   })
 
   const updateMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: ({
       commentId,
       content,
@@ -136,6 +138,7 @@ export function CommentItem({
   })
 
   const deleteMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (commentId: string) => deleteComment(commentId),
     onSuccess: () => {
       invalidateComments()
@@ -151,6 +154,7 @@ export function CommentItem({
   })
 
   const replyMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (content: string) => postReply(comment.id, content),
     onSuccess: () => {
       setReplyContent('')

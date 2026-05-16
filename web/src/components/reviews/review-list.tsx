@@ -64,6 +64,7 @@ export function ReviewList({ gameId }: ReviewListProps) {
   )
 
   const likeMutation = useMutation({
+    meta: { suppressGlobalError: true },
     mutationFn: (reviewId: string) => toggleReviewLike(reviewId),
     onMutate: async (reviewId) => {
       const queryKey = gameReviewsQueryOptions(gameId, page, size).queryKey
