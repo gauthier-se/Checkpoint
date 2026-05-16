@@ -20,7 +20,7 @@ auth:bearer {
 
 body:json {
   {
-    "score": 5
+    "score": 9
   }
 }
 
@@ -42,14 +42,14 @@ docs {
 
   | Field | Type | Required | Description |
   |-------|------|----------|-------------|
-  | score | Integer | Yes | Rating score from 1 to 5 |
+  | score | Integer | Yes | Rating score from 1 to 10 (half-star steps; 1 = 0.5★, 10 = 5★) |
 
   ## Response (200 OK)
 
   ```json
   {
     "id": "uuid",
-    "score": 5,
+    "score": 9,
     "videoGameId": "uuid",
     "createdAt": "2025-06-01T10:00:00",
     "updatedAt": "2025-06-01T10:00:00"
@@ -58,7 +58,7 @@ docs {
 
   ## Error Responses
 
-  - **400 Bad Request**: Missing or invalid score (must be between 1 and 5)
+  - **400 Bad Request**: Missing or invalid score (must be between 1 and 10)
   - **401 Unauthorized**: Not authenticated
   - **404 Not Found**: Video game does not exist
 }

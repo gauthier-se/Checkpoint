@@ -306,7 +306,7 @@ public class DatabaseSeeder implements ApplicationRunner {
                     || status == PlayStatus.PLAYED
                     || status == PlayStatus.RETIRED;
             if (isFinishedRun || random.chance(0.3)) {
-                play.setScore(random.intBetween(1, 5));
+                play.setScore(random.intBetween(1, 10));
             }
 
             play.setTimePlayed(random.intBetween(60, 7200));
@@ -352,7 +352,7 @@ public class DatabaseSeeder implements ApplicationRunner {
             if (!random.chance(0.80)) {
                 continue;
             }
-            entityManager.persist(new Rate(user, play.getVideoGame(), random.intBetween(1, 5)));
+            entityManager.persist(new Rate(user, play.getVideoGame(), random.intBetween(1, 10)));
             c.rates++;
         }
     }

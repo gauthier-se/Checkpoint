@@ -31,7 +31,7 @@ public class Rate {
     private UUID id;
 
     @Column(nullable = false)
-    private Integer score; // e.g., 1-5
+    private Integer score; // 1-10 (half-star steps; display = score / 2)
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

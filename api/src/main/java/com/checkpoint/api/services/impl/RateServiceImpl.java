@@ -100,12 +100,16 @@ public class RateServiceImpl implements RateService {
     /**
      * Recalculates and persists the average rating for a video game.
      *
+     * <p>Raw scores are stored as 1-10 (half-star steps). The average is divided
+     * by 2 here so {@code averageRating} stays in the 0-5 display range with
+     * 0.1 precision — no conversion needed on the frontend.</p>
+     *
      * @param videoGame the video game entity to update
      */
     private void updateGameAverageRating(VideoGame videoGame) {
         rateRepository.flush();
         Double avg = rateRepository.calculateAverageRating(videoGame.getId());
-        double averageRating = (avg != null) ? avg : 0.0;
+        double averageRating = (avg != null) ? avg / 2.0 : 0.0;
 
         averageRating = Math.round(averageRating * 10.0) / 10.0;
 

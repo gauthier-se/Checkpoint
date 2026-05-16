@@ -101,13 +101,37 @@ class RateControllerTest {
     @DisplayName("PUT /api/me/games/{videoGameId}/rate should return 400 when score is out of range")
     void rateGame_shouldReturn400WhenScoreOutOfRange() throws Exception {
         // Given
-        RateRequestDto request = new RateRequestDto(6);
+        RateRequestDto request = new RateRequestDto(11);
 
         // When & Then
         mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser")
+    @DisplayName("PUT /api/me/games/{videoGameId}/rate should accept half-star scores (1-10)")
+    void rateGame_shouldAcceptHalfStarScore() throws Exception {
+        // Given — score 7 represents 3.5★
+        RateRequestDto request = new RateRequestDto(7);
+        RateResponseDto halfStarResponse = new RateResponseDto(
+                UUID.randomUUID(),
+                7,
+                videoGameId,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+        when(rateService.rateGame(eq("testuser"), eq(videoGameId), eq(7)))
+                .thenReturn(halfStarResponse);
+
+        // When & Then
+        mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(7));
     }
 
     @Test

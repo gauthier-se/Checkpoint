@@ -14,7 +14,7 @@ public interface RateService {
      *
      * @param userEmail the authenticated user's email
      * @param videoGameId the video game ID
-     * @param score the rating score (1-5)
+     * @param score the rating score 1-10 (half-star steps; display = score / 2)
      * @return the created or updated rating
      */
     RateResponseDto rateGame(String userEmail, UUID videoGameId, Integer score);
