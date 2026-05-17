@@ -2,6 +2,8 @@ package com.checkpoint.api.services.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,9 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.events.UserLeveledUpEvent;
 import com.checkpoint.api.repositories.UserRepository;
 
 /**
@@ -30,6 +34,9 @@ class GamificationServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private GamificationServiceImpl gamificationService;
 
     private User testUser;
@@ -37,7 +44,7 @@ class GamificationServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        gamificationService = new GamificationServiceImpl(userRepository);
+        gamificationService = new GamificationServiceImpl(userRepository, eventPublisher);
 
         userId = UUID.randomUUID();
         testUser = new User();
@@ -149,6 +156,38 @@ class GamificationServiceImplTest {
             // When / Then
             assertThatThrownBy(() -> gamificationService.addXp(userId, 50))
                     .isInstanceOf(UsernameNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("Should publish UserLeveledUpEvent with the new level when leveling up")
+        void addXp_shouldPublishLevelUpEvent() {
+            // Given
+            testUser.setXpPoint(950);
+            when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+            // When
+            gamificationService.addXp(userId, 50);
+
+            // Then
+            ArgumentCaptor<UserLeveledUpEvent> eventCaptor =
+                    ArgumentCaptor.forClass(UserLeveledUpEvent.class);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().getUserId()).isEqualTo(userId);
+            assertThat(eventCaptor.getValue().getNewLevel()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("Should not publish UserLeveledUpEvent when no level-up occurs")
+        void addXp_shouldNotPublishWhenNoLevelUp() {
+            // Given
+            testUser.setXpPoint(100);
+            when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+
+            // When
+            gamificationService.addXp(userId, 50);
+
+            // Then
+            verify(eventPublisher, never()).publishEvent(any());
         }
     }
 }
