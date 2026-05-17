@@ -24,6 +24,9 @@ public class Badge {
     private UUID id;
 
     @Column(nullable = false, unique = true)
+    private String code;
+
+    @Column(nullable = false, unique = true)
     private String name;
 
     private String picture;
@@ -54,11 +57,13 @@ public class Badge {
 
     public Badge() {}
 
-    public Badge(String name) {
+    public Badge(String code, String name) {
+        this.code = code;
         this.name = name;
     }
 
-    public Badge(String name, String description, String picture) {
+    public Badge(String code, String name, String description, String picture) {
+        this.code = code;
         this.name = name;
         this.description = description;
         this.picture = picture;
@@ -70,6 +75,14 @@ public class Badge {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {

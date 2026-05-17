@@ -97,6 +97,7 @@ class ProfileIntegrationTest {
 
         // Add a badge to testUser
         Badge badge = new Badge();
+        badge.setCode("FIRST_REVIEW");
         badge.setName("First Review");
         badge.setDescription("Write your first review");
         badge = badgeRepository.save(badge);

@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.checkpoint.api.entities.UserGame;
+import com.checkpoint.api.enums.GameStatus;
 
 /**
  * Repository for {@link UserGame} entities.
@@ -56,4 +57,10 @@ public interface UserGameRepository extends JpaRepository<UserGame, UUID> {
      * Deletes a user-game association by user ID and video game ID.
      */
     void deleteByUserIdAndVideoGameId(UUID userId, UUID videoGameId);
+
+    /**
+     * Counts the number of games in a user's library that are in the given status.
+     * Used by the badge system to evaluate completion thresholds.
+     */
+    long countByUserIdAndStatus(UUID userId, GameStatus status);
 }
