@@ -37,7 +37,71 @@ public enum BadgeCode {
             "Awarded for reaching level 10."),
     LEVEL_25(
             "Legendary",
-            "Awarded for reaching level 25.");
+            "Awarded for reaching level 25."),
+
+    // Completion & milestones
+    BACKLOG_HUNDRED(
+            "Backlog Vanquished",
+            "Awarded for finishing 100 games."),
+    CENTURION(
+            "Centurion",
+            "Awarded for logging 100 plays."),
+    LIBRARY_50(
+            "Library Builder",
+            "Awarded for reaching 50 games in your library."),
+    LIBRARY_200(
+            "Bigger on the Inside",
+            "Awarded for reaching 200 games in your library."),
+
+    // Genre / platform mastery
+    RPG_DISCIPLE(
+            "Stay Awhile and Listen",
+            "Awarded for finishing 10 RPGs."),
+    SHOOTER_TRIGGER_HAPPY(
+            "Trigger Happy",
+            "Awarded for finishing 10 shooters."),
+    PLATFORMER_HERO(
+            "The Princess Is in Another Castle",
+            "Awarded for finishing 10 platformers."),
+    INDIE_GEM_HUNTER(
+            "Hidden Gem Hunter",
+            "Awarded for finishing 20 indie games."),
+    MULTIPLATFORM_NOMAD(
+            "Did You Win Yet?",
+            "Awarded for logging games from 5 or more different platforms."),
+
+    // Reviews
+    FIVE_STAR_STREAK(
+            "It's Super Effective!",
+            "Awarded for writing three consecutive 5-star reviews."),
+    BRUTAL_CRITIC(
+            "Press F to Pay Respects",
+            "Awarded for writing ten 1-star reviews."),
+    WORDSMITH(
+            "Wall of Text",
+            "Awarded for writing a review of 1000 or more characters."),
+    BELOVED_REVIEWER(
+            "Critic Beloved",
+            "Awarded for receiving 50 likes on your reviews."),
+
+    // Social
+    NETWORKER(
+            "Would You Kindly?",
+            "Awarded for following 10 users."),
+    CHARISMATIC(
+            "Yo Niko, Let's Go Bowling",
+            "Awarded for being followed by 10 users."),
+    PRAISE_THE_SUN(
+            "Praise the Sun",
+            "Awarded for giving 100 likes."),
+
+    // Longevity
+    VETERAN_30(
+            "I Used to Be an Adventurer Like You",
+            "Awarded for staying active 30 days since registration."),
+    LIFER(
+            "The Cake Is a Lie",
+            "Awarded for staying active 365 days since registration.");
 
     private final String defaultName;
     private final String defaultDescription;

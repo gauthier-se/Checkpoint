@@ -1,5 +1,6 @@
 package com.checkpoint.api.repositories;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.checkpoint.api.entities.Review;
 
@@ -95,5 +97,41 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
             + "GROUP BY r.videoGame.id, r.videoGame.title "
             + "ORDER BY rc DESC")
     Page<Object[]> findTopReviewedGames(Pageable pageable);
+
+    /**
+     * Returns the user's three most recent reviews, ordered by creation time (descending).
+     * Used by the badge system to detect a streak of three consecutive 5-star reviews.
+     *
+     * @param userId the user's ID
+     * @return up to three most recent reviews
+     */
+    List<Review> findTop3ByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    /**
+     * Counts the user's reviews that are tied to a play log with a harsh score
+     * ({@code userGamePlay.score <= 2}, i.e. 0.5 or 1 star on the 5-star display).
+     * Used by the badge system to evaluate the {@code BRUTAL_CRITIC} threshold.
+     *
+     * @param userId the user's ID
+     * @return the number of "1-star" reviews
+     */
+    @Query("""
+            SELECT COUNT(r) FROM Review r
+            WHERE r.user.id = :userId AND r.userGamePlay.score <= 2
+            """)
+    long countOneStarReviewsByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Checks whether the user has at least one review with content of length 1000+.
+     * Used by the badge system to evaluate the {@code WORDSMITH} threshold.
+     *
+     * @param userId the user's ID
+     * @return true if any review qualifies
+     */
+    @Query("""
+            SELECT COUNT(r) > 0 FROM Review r
+            WHERE r.user.id = :userId AND LENGTH(r.content) >= 1000
+            """)
+    boolean existsLongReviewByUserId(@Param("userId") UUID userId);
 
 }

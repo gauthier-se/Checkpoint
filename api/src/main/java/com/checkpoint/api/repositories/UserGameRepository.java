@@ -63,4 +63,24 @@ public interface UserGameRepository extends JpaRepository<UserGame, UUID> {
      * Used by the badge system to evaluate completion thresholds.
      */
     long countByUserIdAndStatus(UUID userId, GameStatus status);
+
+    /**
+     * Counts the total number of games in a user's library, regardless of status.
+     * Used by the badge system to evaluate library-size thresholds.
+     */
+    long countByUserId(UUID userId);
+
+    /**
+     * Counts the number of COMPLETED library entries whose video game has at least
+     * one genre matching the given name (case-insensitive). Used by the badge system
+     * to evaluate genre-completion thresholds (e.g. "finish 10 RPGs").
+     */
+    @Query("""
+            SELECT COUNT(ug) FROM UserGame ug JOIN ug.videoGame.genres g
+            WHERE ug.user.id = :userId
+              AND ug.status = com.checkpoint.api.enums.GameStatus.COMPLETED
+              AND LOWER(g.name) = LOWER(:genreName)
+            """)
+    long countCompletedByUserIdAndGenreName(@Param("userId") UUID userId,
+                                            @Param("genreName") String genreName);
 }
