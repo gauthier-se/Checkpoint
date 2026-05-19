@@ -4,10 +4,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
-import type {
-  GamePlayLogRequestDto,
-  PlayStatus,
-} from '@/types/interaction'
+import type { GamePlayLogRequestDto, PlayStatus } from '@/types/interaction'
 import type { PlayLogDetail } from '@/types/play-log'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -80,14 +77,14 @@ export function PlayLogForm(props: PlayLogFormProps) {
   const form = useForm({
     defaultValues: {
       platformId: initial?.platformId ?? '',
-      status: (initial?.status ?? 'COMPLETED') as PlayStatus,
+      status: initial?.status ?? 'COMPLETED',
       timePlayed: (initial?.timePlayed ?? 0) as number | undefined,
       startDate: initial?.startDate ?? '',
       endDate: initial?.endDate ?? '',
       ownership: initial?.ownership ?? '',
       isReplay: initial?.isReplay ?? false,
-      tagIds: (initial?.tags.map((t) => t.id) ?? []) as Array<string>,
-      score: (initial?.score ?? undefined) as number | undefined,
+      tagIds: initial?.tags.map((t) => t.id) ?? [],
+      score: initial?.score ?? undefined,
       reviewContent: initial?.review?.content ?? '',
       haveSpoilers: initial?.review?.haveSpoilers ?? false,
     },
@@ -110,7 +107,7 @@ export function PlayLogForm(props: PlayLogFormProps) {
       }
 
       try {
-        const reviewText = value.reviewContent?.trim() ?? ''
+        const reviewText = value.reviewContent.trim()
         const haveSpoilers = value.haveSpoilers === true
 
         if (isEdit && initial) {
