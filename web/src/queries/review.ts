@@ -38,6 +38,24 @@ export const submitPlayLogReview = async (
   return res.json()
 }
 
+export const updatePlayLogReview = async (
+  playId: string,
+  payload: SubmitPlayLogReviewPayload,
+): Promise<Review> => {
+  const res = await apiFetch(`/api/me/plays/${playId}/review`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return res.json()
+}
+
+export const deletePlayLogReview = async (playId: string): Promise<void> => {
+  await apiFetch(`/api/me/plays/${playId}/review`, { method: 'DELETE' })
+}
+
 export interface ReportResponse {
   id: string
   content: string

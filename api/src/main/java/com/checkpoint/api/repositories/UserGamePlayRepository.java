@@ -47,6 +47,24 @@ public interface UserGamePlayRepository extends JpaRepository<UserGamePlay, UUID
     long countByUserIdAndVideoGameId(UUID userId, UUID videoGameId);
 
     /**
+     * Returns a play log with its video game, platform, author, tags and review
+     * eagerly fetched. Used by the public play-log detail endpoint to avoid N+1.
+     *
+     * @param id the play log ID
+     * @return the play log if it exists
+     */
+    @Query("""
+            SELECT p FROM UserGamePlay p
+            JOIN FETCH p.videoGame
+            JOIN FETCH p.platform
+            JOIN FETCH p.user
+            LEFT JOIN FETCH p.review
+            LEFT JOIN FETCH p.tags
+            WHERE p.id = :id
+            """)
+    Optional<UserGamePlay> findByIdWithRelations(@Param("id") UUID id);
+
+    /**
      * Finds the most recent play log with a non-null score for a specific user and game.
      * Used to recalculate the global rating after a scored log is updated or deleted.
      *

@@ -9,6 +9,7 @@ import {
   BookOpen,
   Calendar,
   Clock,
+  ExternalLink,
   Gamepad2,
   MessageSquare,
   RefreshCw,
@@ -246,17 +247,25 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
               )}
             </div>
 
-            {/* Delete action */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 shrink-0 gap-1 text-xs text-destructive opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(entry.id)}
-            >
-              <Trash2 className="size-3" />
-              Delete
-            </Button>
+            {/* Hover actions */}
+            <div className="flex shrink-0 flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button asChild variant="ghost" size="sm" className="h-7 gap-1 text-xs">
+                <Link to="/plays/$id" params={{ id: entry.id }}>
+                  <ExternalLink className="size-3" />
+                  View
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(entry.id)}
+              >
+                <Trash2 className="size-3" />
+                Delete
+              </Button>
+            </div>
           </div>
         ))}
       </div>

@@ -26,6 +26,7 @@ import { Route as AppMembersIndexRouteImport } from './routes/_app/members/index
 import { Route as AppListsIndexRouteImport } from './routes/_app/lists/index'
 import { Route as AppGamesIndexRouteImport } from './routes/_app/games/index'
 import { Route as AppProfileUsernameRouteImport } from './routes/_app/profile/$username'
+import { Route as AppPlaysIdRouteImport } from './routes/_app/plays.$id'
 import { Route as AppNewsNewsIdRouteImport } from './routes/_app/news/$newsId'
 import { Route as AppListsListIdRouteImport } from './routes/_app/lists/$listId'
 import { Route as AppGamesGameIdRouteImport } from './routes/_app/games/$gameId'
@@ -124,6 +125,11 @@ const AppGamesIndexRoute = AppGamesIndexRouteImport.update({
 const AppProfileUsernameRoute = AppProfileUsernameRouteImport.update({
   id: '/profile/$username',
   path: '/profile/$username',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlaysIdRoute = AppPlaysIdRouteImport.update({
+  id: '/plays/$id',
+  path: '/plays/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const AppNewsNewsIdRoute = AppNewsNewsIdRouteImport.update({
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
   '/news/$newsId': typeof AppNewsNewsIdRoute
+  '/plays/$id': typeof AppPlaysIdRoute
   '/profile/$username': typeof AppProfileUsernameRoute
   '/games': typeof AppGamesIndexRoute
   '/lists': typeof AppListsIndexRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByTo {
   '/games/$gameId': typeof AppGamesGameIdRoute
   '/lists/$listId': typeof AppListsListIdRoute
   '/news/$newsId': typeof AppNewsNewsIdRoute
+  '/plays/$id': typeof AppPlaysIdRoute
   '/profile/$username': typeof AppProfileUsernameRoute
   '/games': typeof AppGamesIndexRoute
   '/lists': typeof AppListsIndexRoute
@@ -309,6 +317,7 @@ export interface FileRoutesById {
   '/_app/games/$gameId': typeof AppGamesGameIdRoute
   '/_app/lists/$listId': typeof AppListsListIdRoute
   '/_app/news/$newsId': typeof AppNewsNewsIdRoute
+  '/_app/plays/$id': typeof AppPlaysIdRoute
   '/_app/profile/$username': typeof AppProfileUsernameRoute
   '/_app/games/': typeof AppGamesIndexRoute
   '/_app/lists/': typeof AppListsIndexRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/games/$gameId'
     | '/lists/$listId'
     | '/news/$newsId'
+    | '/plays/$id'
     | '/profile/$username'
     | '/games'
     | '/lists'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/games/$gameId'
     | '/lists/$listId'
     | '/news/$newsId'
+    | '/plays/$id'
     | '/profile/$username'
     | '/games'
     | '/lists'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/_app/games/$gameId'
     | '/_app/lists/$listId'
     | '/_app/news/$newsId'
+    | '/_app/plays/$id'
     | '/_app/profile/$username'
     | '/_app/games/'
     | '/_app/lists/'
@@ -554,6 +566,13 @@ declare module '@tanstack/react-router' {
       path: '/profile/$username'
       fullPath: '/profile/$username'
       preLoaderRoute: typeof AppProfileUsernameRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plays/$id': {
+      id: '/_app/plays/$id'
+      path: '/plays/$id'
+      fullPath: '/plays/$id'
+      preLoaderRoute: typeof AppPlaysIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/news/$newsId': {
@@ -738,6 +757,7 @@ interface AppRouteChildren {
   AppGamesGameIdRoute: typeof AppGamesGameIdRoute
   AppListsListIdRoute: typeof AppListsListIdRoute
   AppNewsNewsIdRoute: typeof AppNewsNewsIdRoute
+  AppPlaysIdRoute: typeof AppPlaysIdRoute
   AppProfileUsernameRoute: typeof AppProfileUsernameRoute
   AppGamesIndexRoute: typeof AppGamesIndexRoute
   AppListsIndexRoute: typeof AppListsIndexRoute
@@ -756,6 +776,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGamesGameIdRoute: AppGamesGameIdRoute,
   AppListsListIdRoute: AppListsListIdRoute,
   AppNewsNewsIdRoute: AppNewsNewsIdRoute,
+  AppPlaysIdRoute: AppPlaysIdRoute,
   AppProfileUsernameRoute: AppProfileUsernameRoute,
   AppGamesIndexRoute: AppGamesIndexRoute,
   AppListsIndexRoute: AppListsIndexRoute,

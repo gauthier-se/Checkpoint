@@ -45,6 +45,11 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
     Optional<Like> findByUserIdAndReviewId(UUID userId, UUID reviewId);
 
     /**
+     * Checks if a user has liked a specific video game (top-level like).
+     */
+    boolean existsByUserIdAndVideoGameId(UUID userId, UUID videoGameId);
+
+    /**
      * Counts the number of likes for a comment.
      */
     long countByCommentId(UUID commentId);

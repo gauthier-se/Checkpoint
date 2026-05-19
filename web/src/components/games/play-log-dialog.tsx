@@ -1,5 +1,6 @@
 import { PlayLogForm } from './play-log-form'
 import type { GameDetail } from '@/types/game'
+import type { PlayLogDetail } from '@/types/play-log'
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ interface PlayLogDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  initialPlayLog?: PlayLogDetail
 }
 
 export function PlayLogDialog({
@@ -20,24 +22,43 @@ export function PlayLogDialog({
   open,
   onOpenChange,
   onSuccess,
+  initialPlayLog,
 }: PlayLogDialogProps) {
+  const isEdit = !!initialPlayLog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Log Play Session</DialogTitle>
+          <DialogTitle>
+            {isEdit ? 'Edit Play Session' : 'Log Play Session'}
+          </DialogTitle>
           <DialogDescription>
-            Record your playtime, dates, and thoughts for {game.title}.
+            {isEdit
+              ? `Update your play session for ${game.title}.`
+              : `Record your playtime, dates, and thoughts for ${game.title}.`}
           </DialogDescription>
         </DialogHeader>
-        <PlayLogForm
-          game={game}
-          onCancel={() => onOpenChange(false)}
-          onSuccess={() => {
-            onSuccess?.()
-            onOpenChange(false)
-          }}
-        />
+        {isEdit ? (
+          <PlayLogForm
+            mode="edit"
+            game={game}
+            initialPlayLog={initialPlayLog}
+            onCancel={() => onOpenChange(false)}
+            onSuccess={() => {
+              onSuccess?.()
+              onOpenChange(false)
+            }}
+          />
+        ) : (
+          <PlayLogForm
+            game={game}
+            onCancel={() => onOpenChange(false)}
+            onSuccess={() => {
+              onSuccess?.()
+              onOpenChange(false)
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -1,0 +1,26 @@
+meta {
+  name: Get Play Log Detail
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/plays/:playId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  playId: 00000000-0000-0000-0000-000000000000
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Public read of a single play log. Authentication is optional; when provided,
+  the response includes viewer-specific flags (`isOwner`, `isLikedByViewer`).
+  Returns 404 if the play log does not exist, 403 if the author's profile is
+  private and the viewer is not the author.
+}
