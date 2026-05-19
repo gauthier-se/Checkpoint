@@ -115,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/oauth2/**").permitAll()
                         .requestMatchers("/api/login/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/plays/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/genres").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/platforms").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/**").permitAll()

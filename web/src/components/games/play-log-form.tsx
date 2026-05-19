@@ -4,7 +4,11 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
-import type { PlayStatus } from '@/types/interaction'
+import type {
+  GamePlayLogRequestDto,
+  PlayStatus,
+} from '@/types/interaction'
+import type { PlayLogDetail } from '@/types/play-log'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,14 +23,31 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { TagSelector } from '@/components/games/tag-selector'
 import { logPlay } from '@/queries/games'
-import { submitPlayLogReview } from '@/queries/review'
+import { updatePlayLog } from '@/queries/plays'
+import {
+  deletePlayLogReview,
+  submitPlayLogReview,
+  updatePlayLogReview,
+} from '@/queries/review'
 import { isApiError } from '@/services/api'
 
-interface PlayLogFormProps {
+interface CreateProps {
+  mode?: 'create'
   game: GameDetail
+  initialPlayLog?: never
   onSuccess?: () => void
   onCancel?: () => void
 }
+
+interface EditProps {
+  mode: 'edit'
+  game: GameDetail
+  initialPlayLog: PlayLogDetail
+  onSuccess?: () => void
+  onCancel?: () => void
+}
+
+type PlayLogFormProps = CreateProps | EditProps
 
 const playLogSchema = z.object({
   platformId: z.string().min(1, 'Platform is required'),
@@ -50,63 +71,104 @@ const playLogSchema = z.object({
   haveSpoilers: z.boolean().optional(),
 })
 
-export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
+export function PlayLogForm(props: PlayLogFormProps) {
+  const { game, onSuccess, onCancel } = props
+  const isEdit = props.mode === 'edit'
+  const initial = isEdit ? props.initialPlayLog : undefined
   const queryClient = useQueryClient()
+
   const form = useForm({
     defaultValues: {
-      platformId: '',
-      status: 'COMPLETED' as PlayStatus,
-      timePlayed: 0 as number | undefined,
-      startDate: '',
-      endDate: '',
-      ownership: '',
-      isReplay: false,
-      tagIds: [] as Array<string>,
-      score: undefined as number | undefined,
-      reviewContent: '',
-      haveSpoilers: false,
+      platformId: initial?.platformId ?? '',
+      status: (initial?.status ?? 'COMPLETED') as PlayStatus,
+      timePlayed: (initial?.timePlayed ?? 0) as number | undefined,
+      startDate: initial?.startDate ?? '',
+      endDate: initial?.endDate ?? '',
+      ownership: initial?.ownership ?? '',
+      isReplay: initial?.isReplay ?? false,
+      tagIds: (initial?.tags.map((t) => t.id) ?? []) as Array<string>,
+      score: (initial?.score ?? undefined) as number | undefined,
+      reviewContent: initial?.review?.content ?? '',
+      haveSpoilers: initial?.review?.haveSpoilers ?? false,
     },
     validators: {
       // @ts-expect-error Form library schema types are slightly off
       onChange: playLogSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const playLogRes = await logPlay({
-          videoGameId: game.id,
-          platformId: value.platformId,
-          status: value.status,
-          timePlayed: value.timePlayed || undefined,
-          startDate: value.startDate || undefined,
-          endDate: value.endDate || undefined,
-          ownership: value.ownership || undefined,
-          isReplay: value.isReplay,
-          score: value.score ? value.score : undefined,
-          tagIds: value.tagIds.length > 0 ? value.tagIds : undefined,
-        })
+      const payload: GamePlayLogRequestDto = {
+        videoGameId: game.id,
+        platformId: value.platformId,
+        status: value.status,
+        timePlayed: value.timePlayed || undefined,
+        startDate: value.startDate || undefined,
+        endDate: value.endDate || undefined,
+        ownership: value.ownership || undefined,
+        isReplay: value.isReplay,
+        score: value.score ? value.score : undefined,
+        tagIds: value.tagIds.length > 0 ? value.tagIds : undefined,
+      }
 
-        if (value.reviewContent && value.reviewContent.trim().length > 0) {
-          await submitPlayLogReview(playLogRes.id, {
-            content: value.reviewContent,
-            haveSpoilers: value.haveSpoilers === true,
+      try {
+        const reviewText = value.reviewContent?.trim() ?? ''
+        const haveSpoilers = value.haveSpoilers === true
+
+        if (isEdit && initial) {
+          await updatePlayLog(initial.id, payload)
+
+          if (reviewText.length > 0) {
+            if (initial.review) {
+              await updatePlayLogReview(initial.id, {
+                content: reviewText,
+                haveSpoilers,
+              })
+            } else {
+              await submitPlayLogReview(initial.id, {
+                content: reviewText,
+                haveSpoilers,
+              })
+            }
+          } else if (initial.review) {
+            await deletePlayLogReview(initial.id)
+          }
+
+          void queryClient.invalidateQueries({
+            queryKey: ['plays', initial.id],
           })
+          void queryClient.invalidateQueries({
+            queryKey: ['users', initial.username, 'profile'],
+          })
+          toast.success('Play session updated.')
+        } else {
+          const created = await logPlay(payload)
+          if (reviewText.length > 0) {
+            await submitPlayLogReview(created.id, {
+              content: reviewText,
+              haveSpoilers,
+            })
+          }
+
+          // Logging a play moves the game out of wishlist/backlog and into the library,
+          // so refresh the user's collection lists and per-game interaction status.
+          void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
+          void queryClient.invalidateQueries({ queryKey: ['wishlist', 'me'] })
+          void queryClient.invalidateQueries({ queryKey: ['backlog', 'me'] })
+          void queryClient.invalidateQueries({
+            queryKey: ['games', game.id, 'interaction-status'],
+          })
+
+          toast.success('Play session logged successfully!')
+          form.reset()
         }
 
-        // Logging a play moves the game out of wishlist/backlog and into the library,
-        // so refresh the user's collection lists and per-game interaction status.
-        void queryClient.invalidateQueries({ queryKey: ['library', 'me'] })
-        void queryClient.invalidateQueries({ queryKey: ['wishlist', 'me'] })
-        void queryClient.invalidateQueries({ queryKey: ['backlog', 'me'] })
-        void queryClient.invalidateQueries({
-          queryKey: ['games', game.id, 'interaction-status'],
-        })
-
-        toast.success('Play session logged successfully!')
         onSuccess?.()
-        form.reset()
       } catch (err) {
         toast.error(
-          isApiError(err) ? err.message : 'Failed to log play session.',
+          isApiError(err)
+            ? err.message
+            : isEdit
+              ? 'Failed to update play session.'
+              : 'Failed to log play session.',
         )
       }
     },
@@ -375,7 +437,11 @@ export function PlayLogForm({ game, onSuccess, onCancel }: PlayLogFormProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Log'}
+              {isSubmitting
+                ? 'Saving...'
+                : isEdit
+                  ? 'Save Changes'
+                  : 'Save Log'}
             </Button>
           </div>
         )}
