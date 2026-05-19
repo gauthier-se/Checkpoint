@@ -83,4 +83,17 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
      * Finds a like by user and comment.
      */
     Optional<Like> findByUserIdAndCommentId(UUID userId, UUID commentId);
+
+    /**
+     * Counts every like (across reviews, lists, comments, games) given by the user.
+     * Used by the badge system to evaluate the {@code PRAISE_THE_SUN} threshold.
+     */
+    long countByUserId(UUID userId);
+
+    /**
+     * Counts the total number of likes received across all of the user's reviews.
+     * Used by the badge system to evaluate the {@code BELOVED_REVIEWER} threshold.
+     */
+    @Query("SELECT COUNT(l) FROM Like l WHERE l.review.user.id = :userId")
+    long countLikesReceivedOnReviewsByUserId(@Param("userId") UUID userId);
 }

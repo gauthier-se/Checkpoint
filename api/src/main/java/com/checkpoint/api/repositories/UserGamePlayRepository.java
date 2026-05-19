@@ -97,4 +97,18 @@ public interface UserGamePlayRepository extends JpaRepository<UserGamePlay, UUID
             """)
     Optional<UserGamePlay> findMostRecentScoredPlay(@Param("userId") UUID userId,
                                                      @Param("videoGameId") UUID videoGameId);
+
+    /**
+     * Counts the total number of play logs for a user. Used by the badge system
+     * to evaluate the play-count threshold (e.g. {@code CENTURION}).
+     */
+    long countByUserId(UUID userId);
+
+    /**
+     * Counts the number of distinct platforms across all of the user's play logs.
+     * Used by the badge system to evaluate platform-diversity badges
+     * (e.g. {@code MULTIPLATFORM_NOMAD}).
+     */
+    @Query("SELECT COUNT(DISTINCT p.platform.id) FROM UserGamePlay p WHERE p.user.id = :userId")
+    long countDistinctPlatformsByUserId(@Param("userId") UUID userId);
 }

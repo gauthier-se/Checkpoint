@@ -8,7 +8,12 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.checkpoint.api.events.GameFinishedEvent;
+import com.checkpoint.api.events.PlayLogCreatedEvent;
 import com.checkpoint.api.events.ReviewCreatedEvent;
+import com.checkpoint.api.events.ReviewLikedEvent;
+import com.checkpoint.api.events.UserActivityEvent;
+import com.checkpoint.api.events.UserFollowedEvent;
+import com.checkpoint.api.events.UserGainedFollowerEvent;
 import com.checkpoint.api.events.UserLeveledUpEvent;
 import com.checkpoint.api.services.BadgeAwardingService;
 
@@ -34,23 +39,27 @@ public class BadgeListener {
     }
 
     /**
-     * Handles a {@link ReviewCreatedEvent} by evaluating review-count badges.
+     * Handles a {@link ReviewCreatedEvent} by evaluating review-count and
+     * review-quality badges.
      */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onReviewCreated(ReviewCreatedEvent event) {
         log.info("Handling ReviewCreatedEvent for badge evaluation, user {}", event.getUserId());
         badgeAwardingService.checkReviewBadges(event.getUserId());
+        badgeAwardingService.checkReviewQualityBadges(event.getUserId());
     }
 
     /**
-     * Handles a {@link GameFinishedEvent} by evaluating completion-count badges.
+     * Handles a {@link GameFinishedEvent} by evaluating completion-count and
+     * genre-completion badges.
      */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onGameFinished(GameFinishedEvent event) {
         log.info("Handling GameFinishedEvent for badge evaluation, user {}", event.getUserId());
         badgeAwardingService.checkGameFinishedBadges(event.getUserId());
+        badgeAwardingService.checkGenreBadges(event.getUserId());
     }
 
     /**
@@ -62,5 +71,65 @@ public class BadgeListener {
         log.info("Handling UserLeveledUpEvent for badge evaluation, user {} now at level {}",
                 event.getUserId(), event.getNewLevel());
         badgeAwardingService.checkLevelBadges(event.getUserId(), event.getNewLevel());
+    }
+
+    /**
+     * Handles a {@link PlayLogCreatedEvent} by evaluating play-count, library-size
+     * and platform-diversity badges.
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPlayLogCreated(PlayLogCreatedEvent event) {
+        log.info("Handling PlayLogCreatedEvent for badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkPlayLogBadges(event.getUserId());
+        badgeAwardingService.checkLibrarySizeBadges(event.getUserId());
+    }
+
+    /**
+     * Handles a {@link ReviewLikedEvent} by evaluating social badges for both the
+     * liker (e.g. {@code PRAISE_THE_SUN}) and the review author (e.g.
+     * {@code BELOVED_REVIEWER}).
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onReviewLiked(ReviewLikedEvent event) {
+        log.info("Handling ReviewLikedEvent for badge evaluation, liker {}, author {}",
+                event.getLikerId(), event.getReviewAuthorId());
+        badgeAwardingService.checkSocialBadges(event.getLikerId());
+        badgeAwardingService.checkSocialBadges(event.getReviewAuthorId());
+    }
+
+    /**
+     * Handles a {@link UserFollowedEvent} by evaluating social badges for the
+     * follower (e.g. {@code NETWORKER}).
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onUserFollowed(UserFollowedEvent event) {
+        log.info("Handling UserFollowedEvent for badge evaluation, follower {}", event.getFollowerId());
+        badgeAwardingService.checkSocialBadges(event.getFollowerId());
+    }
+
+    /**
+     * Handles a {@link UserGainedFollowerEvent} by evaluating social badges for
+     * the followed user (e.g. {@code CHARISMATIC}).
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onUserGainedFollower(UserGainedFollowerEvent event) {
+        log.info("Handling UserGainedFollowerEvent for badge evaluation, user {}", event.getFollowedUserId());
+        badgeAwardingService.checkSocialBadges(event.getFollowedUserId());
+    }
+
+    /**
+     * Handles a {@link UserActivityEvent} by evaluating longevity badges
+     * ({@code VETERAN_30}, {@code LIFER}) — checked on every meaningful activity
+     * so an active user crosses the threshold organically.
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onUserActivity(UserActivityEvent event) {
+        log.debug("Handling UserActivityEvent for longevity badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkLongevityBadges(event.getUserId());
     }
 }
