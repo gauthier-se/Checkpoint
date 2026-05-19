@@ -19,10 +19,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import type { PlayStatus } from '@/types/interaction'
 import type { ReviewSummary } from '@/types/play-log'
-import {
-  deletePlayLog,
-  playLogDetailQueryOptions,
-} from '@/queries/plays'
+import { deletePlayLog, playLogDetailQueryOptions } from '@/queries/plays'
 import { gameDetailQueryOptions } from '@/queries/catalog'
 import { CommentSection } from '@/components/comments/comment-section'
 import { PlayLogDialog } from '@/components/games/play-log-dialog'

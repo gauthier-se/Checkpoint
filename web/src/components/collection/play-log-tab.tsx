@@ -249,7 +249,12 @@ export function PlayLogTab({ page }: PlayLogTabProps) {
 
             {/* Hover actions */}
             <div className="flex shrink-0 flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button asChild variant="ghost" size="sm" className="h-7 gap-1 text-xs">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+              >
                 <Link to="/plays/$id" params={{ id: entry.id }}>
                   <ExternalLink className="size-3" />
                   View
