@@ -46,16 +46,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
   errorComponent: ({ error, reset }) => (
     <ErrorPage
+      status={isApiError(error) ? error.status : undefined}
       message={isApiError(error) ? error.message : undefined}
       onRetry={reset}
     />
   ),
-  notFoundComponent: () => (
-    <ErrorPage
-      title="Page not found"
-      message="The page you are looking for does not exist."
-    />
-  ),
+  notFoundComponent: () => <ErrorPage status={404} />,
 })
 
 function RootComponent() {
