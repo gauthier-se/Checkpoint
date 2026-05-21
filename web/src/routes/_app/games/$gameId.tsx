@@ -32,6 +32,7 @@ export const Route = createFileRoute('/_app/games/$gameId')({
     if (isApiError(error) && error.status === 404) {
       return (
         <ErrorPage
+          status={404}
           title="Game not found"
           message="We couldn't find this game. It may have been removed."
         />
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/_app/games/$gameId')({
     }
     return (
       <ErrorPage
+        status={isApiError(error) ? error.status : undefined}
         message={isApiError(error) ? error.message : undefined}
         onRetry={reset}
       />

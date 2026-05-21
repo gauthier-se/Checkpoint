@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return <ErrorPage onRetry={this.handleReset} />
+      return <ErrorPage status={500} onRetry={this.handleReset} />
     }
     return this.props.children
   }
