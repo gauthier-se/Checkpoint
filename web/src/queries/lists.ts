@@ -1,5 +1,9 @@
 import { queryOptions } from '@tanstack/react-query'
-import type { GameListDetail, GameListsResponse } from '@/types/list'
+import type {
+  GameListDetail,
+  GameListsResponse,
+  GameListsSearchParams,
+} from '@/types/list'
 import type { LikeResponse } from '@/types/review'
 import { apiFetch } from '@/services/api'
 
@@ -72,6 +76,47 @@ export function recentListsQueryOptions(page: number = 0, size: number = 20) {
     queryKey: ['lists', 'recent', page, size],
     queryFn: async (): Promise<GameListsResponse> => {
       const res = await apiFetch(`/api/lists?page=${page}&size=${size}`)
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
+/**
+ * Builds the /api/lists URL from a typed criteria object, omitting empty params.
+ * The {@code page} field is 1-based in the UI and converted to 0-based for the API.
+ */
+export function buildListsUrl(criteria: GameListsSearchParams, size: number) {
+  const params = new URLSearchParams()
+  const uiPage = Number.isFinite(criteria.page) ? Math.floor(criteria.page) : 1
+  params.set('page', String(Math.max(0, uiPage - 1)))
+  params.set('size', String(size))
+
+  const append = (key: string, value: string | undefined) => {
+    if (value !== undefined && value !== '') {
+      params.set(key, value)
+    }
+  }
+
+  append('q', criteria.q)
+  append('sort', criteria.sort)
+  append('visibility', criteria.visibility)
+  append('author', criteria.author)
+  if (criteria.minGames !== undefined && criteria.minGames > 0) {
+    params.set('minGames', String(criteria.minGames))
+  }
+
+  return `/api/lists?${params.toString()}`
+}
+
+export function searchListsQueryOptions(
+  criteria: GameListsSearchParams,
+  size: number = 20,
+) {
+  return queryOptions({
+    queryKey: ['lists', 'search', criteria, size],
+    queryFn: async (): Promise<GameListsResponse> => {
+      const res = await apiFetch(buildListsUrl(criteria, size))
       return res.json()
     },
     staleTime: 60 * 1000,

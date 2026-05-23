@@ -3,6 +3,8 @@ package com.checkpoint.api.services.impl;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -10,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
 
 import com.checkpoint.api.dto.list.AddGameToListRequestDto;
 import com.checkpoint.api.dto.list.CreateGameListRequestDto;
@@ -54,6 +58,7 @@ public class GameListServiceImpl implements GameListService {
     private final CommentRepository commentRepository;
     private final GameListMapper gameListMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     public GameListServiceImpl(GameListRepository gameListRepository,
                                GameListEntryRepository gameListEntryRepository,
@@ -62,7 +67,8 @@ public class GameListServiceImpl implements GameListService {
                                LikeRepository likeRepository,
                                CommentRepository commentRepository,
                                GameListMapper gameListMapper,
-                               ApplicationEventPublisher eventPublisher) {
+                               ApplicationEventPublisher eventPublisher,
+                               EntityManager entityManager) {
         this.gameListRepository = gameListRepository;
         this.gameListEntryRepository = gameListEntryRepository;
         this.userRepository = userRepository;
@@ -71,6 +77,19 @@ public class GameListServiceImpl implements GameListService {
         this.commentRepository = commentRepository;
         this.gameListMapper = gameListMapper;
         this.eventPublisher = eventPublisher;
+        this.entityManager = entityManager;
+    }
+
+    /**
+     * Refreshes the Hibernate Search index for the given list. The {@code videoGamesCount}
+     * and {@code likesCount} fields are {@code @Formula} values with
+     * {@code reindexOnUpdate = NO}, so they must be re-indexed manually when entries or
+     * likes change. {@code refresh()} forces the formulas to recompute before indexing.
+     */
+    private void refreshSearchIndex(GameList gameList) {
+        entityManager.refresh(gameList);
+        SearchSession session = Search.session(entityManager);
+        session.indexingPlan().addOrUpdate(gameList);
     }
 
     @Override
@@ -174,6 +193,7 @@ public class GameListServiceImpl implements GameListService {
         long commentsCount = commentRepository.countByGameListId(listId);
 
         eventPublisher.publishEvent(new UserActivityEvent(user.getId()));
+        refreshSearchIndex(gameList);
 
         log.info("Game '{}' added to list '{}' at position {}", videoGame.getTitle(), gameList.getTitle(), entry.getPosition());
         return gameListMapper.toDetailDto(gameList, entries, likesCount, commentsCount, true, false);
@@ -201,6 +221,7 @@ public class GameListServiceImpl implements GameListService {
         gameListEntryRepository.saveAll(remaining);
 
         eventPublisher.publishEvent(new UserActivityEvent(user.getId()));
+        refreshSearchIndex(gameList);
 
         log.info("Game {} removed from list {}", videoGameId, listId);
     }
@@ -232,16 +253,6 @@ public class GameListServiceImpl implements GameListService {
 
         log.info("Games reordered in list '{}'", gameList.getTitle());
         return gameListMapper.toDetailDto(gameList, entries, likesCount, commentsCount, true, false);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<GameListCardDto> getRecentPublicLists(Pageable pageable) {
-        log.debug("Fetching recent public lists - page: {}, size: {}",
-                pageable.getPageNumber(), pageable.getPageSize());
-
-        return gameListRepository.findAllPublic(pageable)
-                .map(this::toCardDtoWithLikes);
     }
 
     @Override

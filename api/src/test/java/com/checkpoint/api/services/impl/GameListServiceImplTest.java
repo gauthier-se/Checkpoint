@@ -22,7 +22,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -53,6 +55,8 @@ import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
 
+import jakarta.persistence.EntityManager;
+
 @ExtendWith(MockitoExtension.class)
 class GameListServiceImplTest {
 
@@ -80,6 +84,9 @@ class GameListServiceImplTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private EntityManager entityManager;
+
     private GameListServiceImpl service;
 
     private User testUser;
@@ -94,7 +101,7 @@ class GameListServiceImplTest {
                 gameListRepository, gameListEntryRepository,
                 userRepository, videoGameRepository,
                 likeRepository, commentRepository, gameListMapper,
-                eventPublisher);
+                eventPublisher, entityManager);
 
         testUser = new User("testuser", "user@example.com", "password");
         testUser.setId(UUID.randomUUID());
@@ -265,12 +272,18 @@ class GameListServiceImplTest {
             when(gameListMapper.toDetailDto(any(GameList.class), anyList(), anyLong(), anyLong(), anyBoolean(), anyBoolean()))
                     .thenReturn(testDetailDto);
 
-            // When
-            GameListDetailDto result = service.addGameToList("user@example.com", testList.getId(), request);
+            // When / Then
+            try (MockedStatic<org.hibernate.search.mapper.orm.Search> searchStatic =
+                         Mockito.mockStatic(org.hibernate.search.mapper.orm.Search.class)) {
+                searchStatic.when(() -> org.hibernate.search.mapper.orm.Search.session(entityManager))
+                        .thenReturn(Mockito.mock(org.hibernate.search.mapper.orm.session.SearchSession.class,
+                                Mockito.RETURNS_DEEP_STUBS));
 
-            // Then
-            assertThat(result).isEqualTo(testDetailDto);
-            verify(gameListEntryRepository).save(any(GameListEntry.class));
+                GameListDetailDto result = service.addGameToList("user@example.com", testList.getId(), request);
+
+                assertThat(result).isEqualTo(testDetailDto);
+                verify(gameListEntryRepository).save(any(GameListEntry.class));
+            }
         }
 
         @Test
@@ -306,11 +319,17 @@ class GameListServiceImplTest {
                     .thenReturn(true);
             when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
 
-            // When
-            service.removeGameFromList("user@example.com", testList.getId(), testGame.getId());
+            // When / Then
+            try (MockedStatic<org.hibernate.search.mapper.orm.Search> searchStatic =
+                         Mockito.mockStatic(org.hibernate.search.mapper.orm.Search.class)) {
+                searchStatic.when(() -> org.hibernate.search.mapper.orm.Search.session(entityManager))
+                        .thenReturn(Mockito.mock(org.hibernate.search.mapper.orm.session.SearchSession.class,
+                                Mockito.RETURNS_DEEP_STUBS));
 
-            // Then
-            verify(gameListEntryRepository).deleteByGameListIdAndVideoGameId(testList.getId(), testGame.getId());
+                service.removeGameFromList("user@example.com", testList.getId(), testGame.getId());
+
+                verify(gameListEntryRepository).deleteByGameListIdAndVideoGameId(testList.getId(), testGame.getId());
+            }
         }
 
         @Test
@@ -447,31 +466,4 @@ class GameListServiceImplTest {
         }
     }
 
-    @Nested
-    @DisplayName("getRecentPublicLists")
-    class GetRecentPublicLists {
-
-        @Test
-        @DisplayName("should return paginated public lists")
-        void getRecentPublicLists_shouldReturnPaginatedLists() {
-            // Given
-            Pageable pageable = PageRequest.of(0, 20);
-            Page<GameList> page = new PageImpl<>(List.of(testList), pageable, 1);
-            GameListCardDto cardDto = new GameListCardDto(
-                    testList.getId(), testList.getTitle(), null, false,
-                    0, 0L, 0L, testUser.getPseudo(), null, List.of(), testList.getCreatedAt());
-
-            when(gameListRepository.findAllPublic(pageable)).thenReturn(page);
-            when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
-            when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId())).thenReturn(List.of());
-            when(gameListMapper.toCardDto(testList, 0L, 0L, List.of())).thenReturn(cardDto);
-
-            // When
-            Page<GameListCardDto> result = service.getRecentPublicLists(pageable);
-
-            // Then
-            assertThat(result.getContent()).hasSize(1);
-            assertThat(result.getContent().get(0)).isEqualTo(cardDto);
-        }
-    }
 }

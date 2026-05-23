@@ -44,3 +44,16 @@ export interface GameListsResponse {
   content: Array<GameListCard>
   metadata: PaginationMetadata
 }
+
+export type GameListSortOption = 'recent' | 'popular' | 'most-games'
+
+export type GameListVisibility = 'public' | 'mine'
+
+export type GameListsSearchParams = {
+  page: number
+  q?: string
+  sort?: GameListSortOption
+  visibility?: GameListVisibility
+  author?: string
+  minGames?: number
+}

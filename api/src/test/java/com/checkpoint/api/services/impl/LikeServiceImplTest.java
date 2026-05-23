@@ -16,9 +16,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+
+import jakarta.persistence.EntityManager;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
 import com.checkpoint.api.entities.Comment;
@@ -62,6 +66,9 @@ class LikeServiceImplTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private EntityManager entityManager;
+
     private LikeServiceImpl likeService;
 
     private User user;
@@ -75,7 +82,7 @@ class LikeServiceImplTest {
     void setUp() {
         likeService = new LikeServiceImpl(
                 likeRepository, reviewRepository, gameListRepository,
-                commentRepository, userRepository, eventPublisher);
+                commentRepository, userRepository, eventPublisher, entityManager);
 
         user = new User();
         user.setId(UUID.randomUUID());
@@ -202,22 +209,28 @@ class LikeServiceImplTest {
             when(likeRepository.countByGameListId(gameList.getId()))
                     .thenReturn(7L);
 
-            // When
-            LikeResponseDto result = likeService.toggleListLike("user@example.com", gameList.getId());
+            // When / Then
+            try (MockedStatic<org.hibernate.search.mapper.orm.Search> searchStatic =
+                         Mockito.mockStatic(org.hibernate.search.mapper.orm.Search.class)) {
+                searchStatic.when(() -> org.hibernate.search.mapper.orm.Search.session(entityManager))
+                        .thenReturn(Mockito.mock(org.hibernate.search.mapper.orm.session.SearchSession.class,
+                                Mockito.RETURNS_DEEP_STUBS));
 
-            // Then
-            assertThat(result.liked()).isTrue();
-            assertThat(result.likesCount()).isEqualTo(8);
-            verify(likeRepository).save(any(Like.class));
+                LikeResponseDto result = likeService.toggleListLike("user@example.com", gameList.getId());
 
-            ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
-            verify(eventPublisher).publishEvent(eventCaptor.capture());
-            NotificationEvent event = eventCaptor.getValue();
-            assertThat(event.getRecipientId()).isEqualTo(listOwner.getId());
-            assertThat(event.getSenderId()).isEqualTo(user.getId());
-            assertThat(event.getType()).isEqualTo(NotificationType.LIKE_LIST);
-            assertThat(event.getReferenceId()).isEqualTo(gameList.getId());
-            assertThat(event.getMessage()).contains("My Top Games");
+                assertThat(result.liked()).isTrue();
+                assertThat(result.likesCount()).isEqualTo(8);
+                verify(likeRepository).save(any(Like.class));
+
+                ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+                verify(eventPublisher).publishEvent(eventCaptor.capture());
+                NotificationEvent event = eventCaptor.getValue();
+                assertThat(event.getRecipientId()).isEqualTo(listOwner.getId());
+                assertThat(event.getSenderId()).isEqualTo(user.getId());
+                assertThat(event.getType()).isEqualTo(NotificationType.LIKE_LIST);
+                assertThat(event.getReferenceId()).isEqualTo(gameList.getId());
+                assertThat(event.getMessage()).contains("My Top Games");
+            }
         }
 
         @Test
@@ -235,14 +248,20 @@ class LikeServiceImplTest {
             when(likeRepository.countByGameListId(gameList.getId()))
                     .thenReturn(8L);
 
-            // When
-            LikeResponseDto result = likeService.toggleListLike("user@example.com", gameList.getId());
+            // When / Then
+            try (MockedStatic<org.hibernate.search.mapper.orm.Search> searchStatic =
+                         Mockito.mockStatic(org.hibernate.search.mapper.orm.Search.class)) {
+                searchStatic.when(() -> org.hibernate.search.mapper.orm.Search.session(entityManager))
+                        .thenReturn(Mockito.mock(org.hibernate.search.mapper.orm.session.SearchSession.class,
+                                Mockito.RETURNS_DEEP_STUBS));
 
-            // Then
-            assertThat(result.liked()).isFalse();
-            assertThat(result.likesCount()).isEqualTo(7);
-            verify(likeRepository).delete(existingLike);
-            verify(eventPublisher, never()).publishEvent(any(NotificationEvent.class));
+                LikeResponseDto result = likeService.toggleListLike("user@example.com", gameList.getId());
+
+                assertThat(result.liked()).isFalse();
+                assertThat(result.likesCount()).isEqualTo(7);
+                verify(likeRepository).delete(existingLike);
+                verify(eventPublisher, never()).publishEvent(any(NotificationEvent.class));
+            }
         }
 
         @Test

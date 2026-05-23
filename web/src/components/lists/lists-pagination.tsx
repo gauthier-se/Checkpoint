@@ -22,7 +22,7 @@ export function ListsPagination({
   return (
     <div className="flex items-center justify-between mt-6 mb-10">
       <Link
-        to="/lists"
+        to="/lists/browse"
         search={{ ...search, page: page - 1 }}
         disabled={!hasPrevious}
       >
@@ -38,14 +38,14 @@ export function ListsPagination({
               ...
             </Button>
           ) : (
-            <Link key={p} to="/lists" search={{ ...search, page: p }}>
+            <Link key={p} to="/lists/browse" search={{ ...search, page: p }}>
               <Button variant={p === page ? 'default' : 'outline'}>{p}</Button>
             </Link>
           ),
         )}
       </ButtonGroup>
       <Link
-        to="/lists"
+        to="/lists/browse"
         search={{ ...search, page: page + 1 }}
         disabled={!hasNext}
       >

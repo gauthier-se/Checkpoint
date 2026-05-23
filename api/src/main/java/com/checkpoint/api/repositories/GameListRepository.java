@@ -38,16 +38,6 @@ public interface GameListRepository extends JpaRepository<GameList, UUID> {
     Page<GameList> findPublicByUserPseudo(@Param("pseudo") String pseudo, Pageable pageable);
 
     /**
-     * Finds all public lists, ordered by creation date descending.
-     */
-    @Query("""
-            SELECT gl FROM GameList gl
-            JOIN FETCH gl.user
-            WHERE gl.isPrivate = false
-            """)
-    Page<GameList> findAllPublic(Pageable pageable);
-
-    /**
      * Finds public lists ordered by like count (most popular first).
      */
     @Query("""
