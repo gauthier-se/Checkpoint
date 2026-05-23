@@ -2,6 +2,7 @@ package com.checkpoint.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -11,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +23,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,10 +34,12 @@ import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.CompanyDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.GenreDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto.PlatformDto;
+import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.GameCatalogService;
+import com.checkpoint.api.services.GameListService;
 import com.checkpoint.api.services.GameSearchService;
 import com.checkpoint.api.services.GameTrendingService;
 
@@ -55,6 +61,9 @@ class GameControllerTest {
 
     @MockitoBean
     private GameTrendingService gameTrendingService;
+
+    @MockitoBean
+    private GameListService gameListService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -477,5 +486,84 @@ class GameControllerTest {
                 .andExpect(status().isOk());
 
         verify(gameCatalogService).getMostWishlistedGames(20);
+    }
+
+    @Test
+    @DisplayName("GET /api/games/{gameId}/lists should return paginated lists containing the game")
+    void getListsContainingGame_shouldReturnPaginatedLists() throws Exception {
+        UUID gameId = UUID.randomUUID();
+        GameListCardDto card = new GameListCardDto(
+                UUID.randomUUID(), "Best Indies", null, false,
+                12, 42L, 0L, "curator", null, List.of("cover1.jpg"),
+                LocalDateTime.now());
+        Page<GameListCardDto> page = new PageImpl<>(List.of(card), PageRequest.of(0, 6), 1);
+
+        when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Best Indies"))
+                .andExpect(jsonPath("$.content[0].likesCount").value(42))
+                .andExpect(jsonPath("$.metadata.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/{gameId}/lists should pass null viewerEmail when anonymous")
+    void getListsContainingGame_shouldPassNullViewerEmailWhenAnonymous() throws Exception {
+        UUID gameId = UUID.randomUUID();
+        when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
+
+        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+                .andExpect(status().isOk());
+
+        verify(gameListService).findListsContainingGame(eq(gameId), isNull(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/{gameId}/lists should pass viewer email when authenticated")
+    @WithMockUser(username = "user@example.com")
+    void getListsContainingGame_shouldPassViewerEmailWhenAuthenticated() throws Exception {
+        UUID gameId = UUID.randomUUID();
+        when(gameListService.findListsContainingGame(eq(gameId), eq("user@example.com"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
+
+        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+                .andExpect(status().isOk());
+
+        verify(gameListService).findListsContainingGame(eq(gameId), eq("user@example.com"), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/{gameId}/lists should clamp size to maximum 50")
+    void getListsContainingGame_shouldClampSizeToMaximum() throws Exception {
+        UUID gameId = UUID.randomUUID();
+        when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
+
+        mockMvc.perform(get("/api/games/{gameId}/lists", gameId).param("size", "999"))
+                .andExpect(status().isOk());
+
+        verify(gameListService).findListsContainingGame(
+                eq(gameId),
+                isNull(),
+                argThat((Pageable p) -> p.getPageSize() == 50));
+    }
+
+    @Test
+    @DisplayName("GET /api/games/{gameId}/lists should default to size=6")
+    void getListsContainingGame_shouldDefaultToSize6() throws Exception {
+        UUID gameId = UUID.randomUUID();
+        when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
+
+        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+                .andExpect(status().isOk());
+
+        verify(gameListService).findListsContainingGame(
+                eq(gameId),
+                isNull(),
+                argThat((Pageable p) -> p.getPageSize() == 6 && p.getPageNumber() == 0));
     }
 }

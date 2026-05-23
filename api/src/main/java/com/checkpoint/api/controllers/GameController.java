@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.catalog.GameCardDto;
 import com.checkpoint.api.dto.catalog.GameDetailDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
+import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.services.GameCatalogService;
+import com.checkpoint.api.services.GameListService;
 import com.checkpoint.api.services.GameSearchService;
 import com.checkpoint.api.services.GameTrendingService;
 
@@ -40,18 +44,23 @@ public class GameController {
     private static final int MAX_TRENDING_SIZE = 20;
     private static final int DEFAULT_DISCOVERY_SIZE = 7;
     private static final int MAX_DISCOVERY_SIZE = 20;
+    private static final int DEFAULT_LISTS_SIZE = 6;
+    private static final int MAX_LISTS_SIZE = 50;
     private static final String DEFAULT_SORT = "releaseDate,desc";
 
     private final GameCatalogService gameCatalogService;
     private final GameSearchService gameSearchService;
     private final GameTrendingService gameTrendingService;
+    private final GameListService gameListService;
 
     public GameController(GameCatalogService gameCatalogService,
                           GameSearchService gameSearchService,
-                          GameTrendingService gameTrendingService) {
+                          GameTrendingService gameTrendingService,
+                          GameListService gameListService) {
         this.gameCatalogService = gameCatalogService;
         this.gameSearchService = gameSearchService;
         this.gameTrendingService = gameTrendingService;
+        this.gameListService = gameListService;
     }
 
     /**
@@ -179,6 +188,37 @@ public class GameController {
 
         GameDetailDto game = gameCatalogService.getGameDetails(id);
         return ResponseEntity.ok(game);
+    }
+
+    /**
+     * Returns the lists in which a given game appears, with visibility filtering.
+     * Anonymous viewers see only public lists. Authenticated viewers additionally
+     * see their own private lists. Ordered by list popularity (likes desc),
+     * with the game's inclusion date (addedAt desc) as a tiebreaker.
+     *
+     * @param gameId      the game ID
+     * @param page        0-based page number
+     * @param size        page size (default 6, max 50)
+     * @param userDetails the authenticated user, or null if anonymous
+     * @return paginated list of game list card DTOs
+     */
+    @GetMapping("/{gameId}/lists")
+    public ResponseEntity<PagedResponseDto<GameListCardDto>> getListsContainingGame(
+            @PathVariable UUID gameId,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_LISTS_SIZE) int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
+        log.info("GET /api/games/{}/lists - page: {}, size: {}, viewer: {}",
+                gameId, page, size, viewerEmail != null ? viewerEmail : "anonymous");
+
+        int validatedSize = Math.min(Math.max(1, size), MAX_LISTS_SIZE);
+        int validatedPage = Math.max(0, page);
+        Pageable pageable = PageRequest.of(validatedPage, validatedSize);
+
+        Page<GameListCardDto> lists = gameListService.findListsContainingGame(gameId, viewerEmail, pageable);
+        return ResponseEntity.ok(PagedResponseDto.from(lists));
     }
 
     /**

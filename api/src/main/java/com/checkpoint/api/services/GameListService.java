@@ -107,4 +107,18 @@ public interface GameListService {
      * @return a page of list card DTOs
      */
     Page<GameListCardDto> getUserPublicLists(String username, Pageable pageable);
+
+    /**
+     * Retrieves the lists in which a given video game appears, with visibility filtering.
+     * Anonymous viewers (null email) see only public lists. Authenticated viewers
+     * additionally see their own private lists.
+     * Results are ordered by list popularity (like count desc) then by recency of
+     * the game's inclusion (addedAt desc) as a tiebreaker.
+     *
+     * @param videoGameId the video game ID
+     * @param viewerEmail the viewer's email, or {@code null} if anonymous
+     * @param pageable    pagination parameters
+     * @return a page of list card DTOs
+     */
+    Page<GameListCardDto> findListsContainingGame(UUID videoGameId, String viewerEmail, Pageable pageable);
 }
