@@ -3,11 +3,15 @@ package com.checkpoint.api.services.impl;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
 
 import com.checkpoint.api.dto.social.LikeResponseDto;
 import com.checkpoint.api.entities.Comment;
@@ -44,6 +48,7 @@ public class LikeServiceImpl implements LikeService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
 
     /**
      * Constructs a new LikeServiceImpl.
@@ -54,19 +59,22 @@ public class LikeServiceImpl implements LikeService {
      * @param commentRepository  the comment repository
      * @param userRepository     the user repository
      * @param eventPublisher     the application event publisher
+     * @param entityManager      the JPA entity manager (used to refresh search index)
      */
     public LikeServiceImpl(LikeRepository likeRepository,
                            ReviewRepository reviewRepository,
                            GameListRepository gameListRepository,
                            CommentRepository commentRepository,
                            UserRepository userRepository,
-                           ApplicationEventPublisher eventPublisher) {
+                           ApplicationEventPublisher eventPublisher,
+                           EntityManager entityManager) {
         this.likeRepository = likeRepository;
         this.reviewRepository = reviewRepository;
         this.gameListRepository = gameListRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -122,12 +130,14 @@ public class LikeServiceImpl implements LikeService {
         if (existingLike.isPresent()) {
             likeRepository.delete(existingLike.get());
             long likesCount = likeRepository.countByGameListId(listId) - 1;
+            refreshListSearchIndex(gameList);
             log.info("User {} unliked list {}", user.getPseudo(), listId);
             return new LikeResponseDto(false, Math.max(0, likesCount));
         } else {
             Like like = Like.forGameList(user, gameList);
             likeRepository.save(like);
             long likesCount = likeRepository.countByGameListId(listId) + 1;
+            refreshListSearchIndex(gameList);
             log.info("User {} liked list {}", user.getPseudo(), listId);
 
             String message = user.getPseudo() + " liked your list \"" + gameList.getTitle() + "\"";
@@ -137,6 +147,18 @@ public class LikeServiceImpl implements LikeService {
 
             return new LikeResponseDto(true, likesCount);
         }
+    }
+
+    /**
+     * Refreshes the Hibernate Search index for the given list after a like toggle.
+     * {@code GameList.likesCount} is a {@code @Formula} field indexed with
+     * {@code reindexOnUpdate = NO}, so it must be re-indexed manually. {@code refresh()}
+     * forces the formula to recompute before indexing.
+     */
+    private void refreshListSearchIndex(GameList gameList) {
+        entityManager.refresh(gameList);
+        SearchSession session = Search.session(entityManager);
+        session.indexingPlan().addOrUpdate(gameList);
     }
 
     /**

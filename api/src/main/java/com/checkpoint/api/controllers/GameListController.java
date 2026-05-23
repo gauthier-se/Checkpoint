@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,12 +20,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.list.GameListCardDto;
 import com.checkpoint.api.dto.list.GameListDetailDto;
+import com.checkpoint.api.dto.list.GameListSearchCriteria;
 import com.checkpoint.api.services.GameListService;
+import com.checkpoint.api.services.ListSearchService;
 
 /**
  * REST controller for public game list browsing.
  * All endpoints are publicly accessible. Optional authentication provides
- * additional context (isOwner, hasLiked) on detail view.
+ * additional context (isOwner, hasLiked) on detail view, and unlocks
+ * {@code visibility=mine} on the search endpoint.
  */
 @RestController
 @RequestMapping("/api/lists")
@@ -38,35 +41,52 @@ public class GameListController {
     private static final int MAX_SIZE = 100;
 
     private final GameListService gameListService;
+    private final ListSearchService listSearchService;
 
-    /**
-     * Constructs a new GameListController.
-     *
-     * @param gameListService the game list service
-     */
-    public GameListController(GameListService gameListService) {
+    public GameListController(GameListService gameListService, ListSearchService listSearchService) {
         this.gameListService = gameListService;
+        this.listSearchService = listSearchService;
     }
 
     /**
-     * Returns a paginated list of recent public game lists.
+     * Returns a paginated list of game lists, with optional fuzzy text search and filters.
      *
-     * @param page the page number (0-based, default 0)
-     * @param size the page size (default 20, max 100)
-     * @return paginated list of game list card DTOs
+     * @param page        0-based page number
+     * @param size        page size (clamped to [1, 100])
+     * @param q           optional fuzzy query against title + description
+     * @param sort        "recent" (default) | "popular" | "most-games" | "relevance"
+     * @param visibility  "public" (default) | "mine" — {@code mine} requires authentication
+     * @param author      optional filter by author pseudo (exact match)
+     * @param minGames    optional inclusive lower bound on the number of games in the list
+     * @param userDetails the authenticated user, or null if anonymous
+     * @return paginated list of game list card DTOs, or 401 if {@code mine} is requested anonymously
      */
     @GetMapping
-    public ResponseEntity<PagedResponseDto<GameListCardDto>> getRecentLists(
+    public ResponseEntity<PagedResponseDto<GameListCardDto>> getLists(
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String visibility,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) Integer minGames,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/lists - page: {}, size: {}", page, size);
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
+        log.info("GET /api/lists - page: {}, size: {}, q: '{}', sort: {}, visibility: {}, author: '{}', minGames: {}, viewer: {}",
+                page, size, q, sort, visibility, author, minGames,
+                viewerEmail != null ? viewerEmail : "anonymous");
+
+        if ("mine".equalsIgnoreCase(visibility) && viewerEmail == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
+        Pageable pageable = PageRequest.of(validatedPage, validatedSize);
 
-        Pageable pageable = PageRequest.of(validatedPage, validatedSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<GameListCardDto> lists = gameListService.getRecentPublicLists(pageable);
+        GameListSearchCriteria criteria = new GameListSearchCriteria(q, sort, visibility, author, minGames);
+        Page<GameListCardDto> lists = listSearchService.search(criteria, pageable, viewerEmail);
 
         return ResponseEntity.ok(PagedResponseDto.from(lists));
     }

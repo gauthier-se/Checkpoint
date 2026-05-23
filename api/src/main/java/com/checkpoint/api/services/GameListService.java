@@ -83,14 +83,6 @@ public interface GameListService {
     GameListDetailDto reorderGames(String userEmail, UUID listId, ReorderGamesRequestDto request);
 
     /**
-     * Retrieves recent public lists.
-     *
-     * @param pageable pagination parameters
-     * @return a page of list card DTOs
-     */
-    Page<GameListCardDto> getRecentPublicLists(Pageable pageable);
-
-    /**
      * Retrieves popular public lists (sorted by like count).
      *
      * @param pageable pagination parameters

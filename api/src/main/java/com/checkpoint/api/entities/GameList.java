@@ -8,6 +8,14 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.Formula;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,6 +33,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
+@Indexed
 @Table(name = "lists")
 public class GameList {
 
@@ -32,26 +41,47 @@ public class GameList {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @FullTextField
+    @KeywordField(name = "titleSort", sortable = Sortable.YES)
     @Column(nullable = false)
     private String title;
 
+    @FullTextField
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @GenericField
     @Column(name = "is_private", nullable = false)
     private Boolean isPrivate = false;
 
+    @GenericField(sortable = Sortable.YES)
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Computed field: count of video games in this list
+    // @Formula values are recomputed on entity load; @IndexingDependency(reindexOnUpdate = NO)
+    // tells Hibernate Search not to auto-reindex on field change (it cannot detect formula
+    // changes anyway). The index is refreshed by the startup mass-indexer and by explicit
+    // addOrUpdate calls from GameListServiceImpl after add/remove/reorder operations.
+    @GenericField(sortable = Sortable.YES)
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.NO)
     @Formula("(SELECT COUNT(*) FROM game_list_entries gle WHERE gle.list_id = id)")
     private Integer videoGamesCount;
 
-    // Relationship: List is created by one user
+    // Refreshed from LikeServiceImpl after every toggle on a list. Same indexing strategy
+    // as videoGamesCount: mass-index on startup, explicit addOrUpdate on change.
+    @GenericField(sortable = Sortable.YES)
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.NO)
+    @Formula("(SELECT COUNT(*) FROM likes l WHERE l.list_id = id)")
+    private Integer likesCount;
+
+    // Relationship: List is created by one user.
+    // includeEmbeddedObjectId exposes the user's @Id as "user.id" (used for visibility=mine),
+    // and includePaths adds "user.pseudo" for the author filter.
+    @IndexedEmbedded(includePaths = {"pseudo"}, includeEmbeddedObjectId = true)
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -169,5 +199,9 @@ public class GameList {
 
     public Integer getVideoGamesCount() {
         return videoGamesCount != null ? videoGamesCount : 0;
+    }
+
+    public Integer getLikesCount() {
+        return likesCount != null ? likesCount : 0;
     }
 }

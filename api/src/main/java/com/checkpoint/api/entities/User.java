@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -33,6 +34,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @KeywordField
     @Column(nullable = false, unique = true)
     private String pseudo;
 
