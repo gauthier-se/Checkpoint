@@ -37,6 +37,7 @@ import { Route as AppProtectedNotificationsRouteImport } from './routes/_app/_pr
 import { Route as AppProtectedSettingsRouteRouteImport } from './routes/_app/_protected/settings/route'
 import { Route as AppProtectedSettingsIndexRouteImport } from './routes/_app/_protected/settings/index'
 import { Route as AppProtectedFeedIndexRouteImport } from './routes/_app/_protected/feed/index'
+import { Route as AppGamesGameIdListsRouteImport } from './routes/_app/games/$gameId_.lists'
 import { Route as AppProtectedSettingsSecurityRouteImport } from './routes/_app/_protected/settings/security'
 import { Route as AppProtectedSettingsProfileRouteImport } from './routes/_app/_protected/settings/profile'
 import { Route as AppProtectedSettingsNotificationsRouteImport } from './routes/_app/_protected/settings/notifications'
@@ -189,6 +190,11 @@ const AppProtectedFeedIndexRoute = AppProtectedFeedIndexRouteImport.update({
   path: '/feed/',
   getParentRoute: () => AppProtectedRoute,
 } as any)
+const AppGamesGameIdListsRoute = AppGamesGameIdListsRouteImport.update({
+  id: '/games/$gameId_/lists',
+  path: '/games/$gameId/lists',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProtectedSettingsSecurityRoute =
   AppProtectedSettingsSecurityRouteImport.update({
     id: '/security',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/settings/security': typeof AppProtectedSettingsSecurityRoute
+  '/games/$gameId/lists': typeof AppGamesGameIdListsRoute
   '/feed': typeof AppProtectedFeedIndexRoute
   '/settings/': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/settings/security': typeof AppProtectedSettingsSecurityRoute
+  '/games/$gameId/lists': typeof AppGamesGameIdListsRoute
   '/feed': typeof AppProtectedFeedIndexRoute
   '/settings': typeof AppProtectedSettingsIndexRoute
   '/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/_app/_protected/settings/notifications': typeof AppProtectedSettingsNotificationsRoute
   '/_app/_protected/settings/profile': typeof AppProtectedSettingsProfileRoute
   '/_app/_protected/settings/security': typeof AppProtectedSettingsSecurityRoute
+  '/_app/games/$gameId_/lists': typeof AppGamesGameIdListsRoute
   '/_app/_protected/feed/': typeof AppProtectedFeedIndexRoute
   '/_app/_protected/settings/': typeof AppProtectedSettingsIndexRoute
   '/_app/_protected/lists/$listId/edit': typeof AppProtectedListsListIdEditRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/security'
+    | '/games/$gameId/lists'
     | '/feed'
     | '/settings/'
     | '/lists/$listId/edit'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/security'
+    | '/games/$gameId/lists'
     | '/feed'
     | '/settings'
     | '/lists/$listId/edit'
@@ -483,6 +494,7 @@ export interface FileRouteTypes {
     | '/_app/_protected/settings/notifications'
     | '/_app/_protected/settings/profile'
     | '/_app/_protected/settings/security'
+    | '/_app/games/$gameId_/lists'
     | '/_app/_protected/feed/'
     | '/_app/_protected/settings/'
     | '/_app/_protected/lists/$listId/edit'
@@ -694,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProtectedFeedIndexRouteImport
       parentRoute: typeof AppProtectedRoute
     }
+    '/_app/games/$gameId_/lists': {
+      id: '/_app/games/$gameId_/lists'
+      path: '/games/$gameId/lists'
+      fullPath: '/games/$gameId/lists'
+      preLoaderRoute: typeof AppGamesGameIdListsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/_protected/settings/security': {
       id: '/_app/_protected/settings/security'
       path: '/security'
@@ -847,6 +866,7 @@ interface AppRouteChildren {
   AppListsIndexRoute: typeof AppListsIndexRoute
   AppMembersIndexRoute: typeof AppMembersIndexRoute
   AppNewsIndexRoute: typeof AppNewsIndexRoute
+  AppGamesGameIdListsRoute: typeof AppGamesGameIdListsRoute
   AppProfileUsernameTagsTagNameRoute: typeof AppProfileUsernameTagsTagNameRoute
 }
 
@@ -868,6 +888,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppListsIndexRoute: AppListsIndexRoute,
   AppMembersIndexRoute: AppMembersIndexRoute,
   AppNewsIndexRoute: AppNewsIndexRoute,
+  AppGamesGameIdListsRoute: AppGamesGameIdListsRoute,
   AppProfileUsernameTagsTagNameRoute: AppProfileUsernameTagsTagNameRoute,
 }
 

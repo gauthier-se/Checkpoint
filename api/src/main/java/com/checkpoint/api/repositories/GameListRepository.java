@@ -53,4 +53,31 @@ public interface GameListRepository extends JpaRepository<GameList, UUID> {
      * gamification system to detect the user's first-ever list.
      */
     long countByUserId(UUID userId);
+
+    /**
+     * Finds lists containing a given video game, visible to the viewer.
+     * Public lists are always returned; private lists only when owned by the viewer.
+     * Ordered by like count (most popular first), then by recency of the game's inclusion as a tiebreaker.
+     *
+     * @param gameId   the video game ID
+     * @param viewerId the viewer's user ID, or {@code null} for anonymous
+     */
+    @Query(value = """
+            SELECT gl FROM GameList gl
+            JOIN FETCH gl.user
+            JOIN gl.entries e
+            WHERE e.videoGame.id = :gameId
+              AND (gl.isPrivate = false OR (:viewerId IS NOT NULL AND gl.user.id = :viewerId))
+            ORDER BY (SELECT COUNT(l) FROM Like l WHERE l.gameList.id = gl.id) DESC, e.addedAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT gl) FROM GameList gl
+            JOIN gl.entries e
+            WHERE e.videoGame.id = :gameId
+              AND (gl.isPrivate = false OR (:viewerId IS NOT NULL AND gl.user.id = :viewerId))
+            """)
+    Page<GameList> findVisibleListsContainingGame(
+            @Param("gameId") UUID gameId,
+            @Param("viewerId") UUID viewerId,
+            Pageable pageable);
 }

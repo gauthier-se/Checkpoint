@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Play, Star } from 'lucide-react'
 import type { GameDetail } from '@/types/game'
 import { ErrorPage } from '@/components/errors/error-page'
+import { GameListsSection } from '@/components/games/game-lists-section'
 import { GameQuickActions } from '@/components/games/quick-actions'
 import { ReviewList } from '@/components/reviews/review-list'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
+import { listsContainingGameQueryOptions } from '@/queries/lists'
 import { gameReviewsQueryOptions } from '@/queries/review'
 import { apiFetch, isApiError } from '@/services/api'
 
@@ -23,6 +25,11 @@ export const Route = createFileRoute('/_app/games/$gameId')({
     // start fetching reviews in background
     void context.queryClient.prefetchQuery(
       gameReviewsQueryOptions(gameId, 0, 10),
+    )
+
+    // prefetch the first page of lists containing this game so SSR renders the section
+    await context.queryClient.prefetchQuery(
+      listsContainingGameQueryOptions(gameId, 0, 6),
     )
 
     const res = await apiFetch(`/api/games/${gameId}`)
@@ -240,6 +247,10 @@ function RouteComponent() {
             </div>
           </>
         )}
+
+        <Suspense fallback={null}>
+          <GameListsSection gameId={game.id} />
+        </Suspense>
 
         {hasTimeToBeat && (
           <>

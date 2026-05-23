@@ -134,6 +134,9 @@ export function ListForm({ mode, initialData }: ListFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ['lists', initialData.id],
         })
+        await queryClient.invalidateQueries({
+          queryKey: ['games', game.id, 'lists'],
+        })
       } catch (err) {
         toast.error(isApiError(err) ? err.message : 'Failed to add game.')
       } finally {
@@ -164,6 +167,9 @@ export function ListForm({ mode, initialData }: ListFormProps) {
         )
         await queryClient.invalidateQueries({
           queryKey: ['lists', initialData.id],
+        })
+        await queryClient.invalidateQueries({
+          queryKey: ['games', videoGameId, 'lists'],
         })
       } catch (err) {
         toast.error(isApiError(err) ? err.message : 'Failed to remove game.')
@@ -211,6 +217,12 @@ export function ListForm({ mode, initialData }: ListFormProps) {
     try {
       await deleteList(initialData.id)
       await queryClient.invalidateQueries({ queryKey: ['lists'] })
+      await queryClient.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) &&
+          q.queryKey[0] === 'games' &&
+          q.queryKey[2] === 'lists',
+      })
       toast.success('List deleted successfully!')
       await navigate({ to: '/lists', search: { page: 1 } })
     } catch (err) {

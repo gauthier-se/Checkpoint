@@ -466,4 +466,99 @@ class GameListServiceImplTest {
         }
     }
 
+    @Nested
+    @DisplayName("findListsContainingGame")
+    class FindListsContainingGame {
+
+        private GameListCardDto cardDto;
+
+        @BeforeEach
+        void setUpCardDto() {
+            cardDto = new GameListCardDto(
+                    testList.getId(), testList.getTitle(), null, false,
+                    1, 5L, 0L, testUser.getPseudo(), null,
+                    List.of("cover.jpg"), testList.getCreatedAt());
+        }
+
+        @Test
+        @DisplayName("should pass null viewerId when caller is anonymous")
+        void shouldPassNullViewerIdForAnonymous() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 6);
+            Page<GameList> page = new PageImpl<>(List.of(testList));
+            when(gameListRepository.findVisibleListsContainingGame(testGame.getId(), null, pageable))
+                    .thenReturn(page);
+            when(likeRepository.countByGameListId(testList.getId())).thenReturn(5L);
+            when(commentRepository.countByGameListId(testList.getId())).thenReturn(0L);
+            when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId()))
+                    .thenReturn(List.of());
+            when(gameListMapper.toCardDto(eq(testList), eq(5L), eq(0L), anyList()))
+                    .thenReturn(cardDto);
+
+            // When
+            Page<GameListCardDto> result = service.findListsContainingGame(testGame.getId(), null, pageable);
+
+            // Then
+            assertThat(result.getContent()).containsExactly(cardDto);
+            verify(gameListRepository).findVisibleListsContainingGame(testGame.getId(), null, pageable);
+            verify(userRepository, never()).findByEmail(any());
+        }
+
+        @Test
+        @DisplayName("should resolve viewer email to viewerId before calling repository")
+        void shouldResolveViewerEmailToViewerId() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 6);
+            Page<GameList> page = new PageImpl<>(List.of(testList));
+            when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(testUser));
+            when(gameListRepository.findVisibleListsContainingGame(testGame.getId(), testUser.getId(), pageable))
+                    .thenReturn(page);
+            when(likeRepository.countByGameListId(testList.getId())).thenReturn(0L);
+            when(commentRepository.countByGameListId(testList.getId())).thenReturn(0L);
+            when(gameListEntryRepository.findByGameListIdOrderByPositionAsc(testList.getId()))
+                    .thenReturn(List.of());
+            when(gameListMapper.toCardDto(eq(testList), anyLong(), anyLong(), anyList()))
+                    .thenReturn(cardDto);
+
+            // When
+            service.findListsContainingGame(testGame.getId(), "user@example.com", pageable);
+
+            // Then
+            verify(gameListRepository).findVisibleListsContainingGame(testGame.getId(), testUser.getId(), pageable);
+        }
+
+        @Test
+        @DisplayName("should pass null viewerId when authenticated email is unknown")
+        void shouldPassNullViewerIdWhenEmailUnknown() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 6);
+            when(userRepository.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+            when(gameListRepository.findVisibleListsContainingGame(testGame.getId(), null, pageable))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            // When
+            Page<GameListCardDto> result = service.findListsContainingGame(testGame.getId(), "ghost@example.com", pageable);
+
+            // Then
+            assertThat(result.getContent()).isEmpty();
+            verify(gameListRepository).findVisibleListsContainingGame(testGame.getId(), null, pageable);
+        }
+
+        @Test
+        @DisplayName("should return empty page when no lists contain the game")
+        void shouldReturnEmptyPageWhenNoMatches() {
+            // Given
+            Pageable pageable = PageRequest.of(0, 6);
+            when(gameListRepository.findVisibleListsContainingGame(testGame.getId(), null, pageable))
+                    .thenReturn(new PageImpl<>(List.of()));
+
+            // When
+            Page<GameListCardDto> result = service.findListsContainingGame(testGame.getId(), null, pageable);
+
+            // Then
+            assertThat(result.getTotalElements()).isZero();
+            assertThat(result.getContent()).isEmpty();
+        }
+    }
+
 }

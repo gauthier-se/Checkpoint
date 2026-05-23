@@ -306,6 +306,24 @@ public class GameListServiceImpl implements GameListService {
                 .map(this::toCardDtoWithLikes);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<GameListCardDto> findListsContainingGame(UUID videoGameId, String viewerEmail, Pageable pageable) {
+        log.debug("Fetching lists containing game {} - viewer: {}, page: {}, size: {}",
+                videoGameId, viewerEmail != null ? viewerEmail : "anonymous",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        UUID viewerId = null;
+        if (viewerEmail != null) {
+            viewerId = userRepository.findByEmail(viewerEmail)
+                    .map(User::getId)
+                    .orElse(null);
+        }
+
+        return gameListRepository.findVisibleListsContainingGame(videoGameId, viewerId, pageable)
+                .map(this::toCardDtoWithLikes);
+    }
+
     // ---- Helper methods ----
 
     private User findUserByEmail(String email) {

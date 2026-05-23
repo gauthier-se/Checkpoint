@@ -173,6 +173,23 @@ export function myListsQueryOptions(page: number = 0, size: number = 20) {
   })
 }
 
+export function listsContainingGameQueryOptions(
+  gameId: string,
+  page: number = 0,
+  size: number = 6,
+) {
+  return queryOptions({
+    queryKey: ['games', gameId, 'lists', page, size],
+    queryFn: async (): Promise<GameListsResponse> => {
+      const res = await apiFetch(
+        `/api/games/${gameId}/lists?page=${page}&size=${size}`,
+      )
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
 export const toggleListLike = async (listId: string): Promise<LikeResponse> => {
   const res = await apiFetch(`/api/lists/${listId}/like`, {
     method: 'POST',

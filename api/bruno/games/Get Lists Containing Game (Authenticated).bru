@@ -1,0 +1,58 @@
+meta {
+  name: Get Lists Containing Game (Authenticated)
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/games/:gameId/lists
+  body: none
+  auth: bearer
+}
+
+params:path {
+  gameId: 9ca266dd-0852-4748-ab5d-f7cf575e9d7a
+}
+
+params:query {
+  ~page: 0
+  ~size: 6
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Get Lists Containing Game (Authenticated)
+
+  Returns a paginated list of game lists in which the given game appears.
+  Authenticated viewers additionally see their own private lists.
+
+  ## Path Parameters
+
+  | Parameter | Description       |
+  |-----------|-------------------|
+  | gameId    | UUID of the game  |
+
+  ## Query Parameters
+
+  | Parameter | Default | Description                            |
+  |-----------|---------|----------------------------------------|
+  | page      | 0       | Page number (0-based)                  |
+  | size      | 6       | Items per page (max 50)                |
+
+  ## Authentication
+
+  Requires a valid JWT token in the `Authorization: Bearer` header.
+
+  ## Ordering
+
+  Results are ordered by list popularity (likes count desc),
+  then by recency of the game's inclusion (`addedAt` desc) as a tiebreaker.
+
+  ## Response (200 OK)
+
+  Same shape as the anonymous endpoint, but private lists owned by the viewer
+  are included.
+}
