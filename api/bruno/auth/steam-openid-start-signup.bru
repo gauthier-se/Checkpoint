@@ -1,0 +1,30 @@
+meta {
+  name: Steam OpenID - Start Signup Flow
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/auth/steam/openid/start?action=signup
+  body: none
+  auth: none
+}
+
+params:query {
+  action: signup
+}
+
+docs {
+  # Steam OpenID — Start (Signup variant)
+
+  Same flow as `steam-openid-start.bru` but initiated from the signup page. After
+  Steam OpenID succeeds, the callback handler will:
+
+  - log the user in if a CheckPoint account is already linked to the verified
+    SteamID, or
+  - mint a short-lived Steam signup token and redirect to
+    `${frontend}/register?steam_token=<jwt>` for prefilled account creation.
+
+  Use this when you want the user to land back on `/register` instead of `/login`.
+  See `steam-signup-prefill.bru` and `register-steam.bru` for the next steps.
+}

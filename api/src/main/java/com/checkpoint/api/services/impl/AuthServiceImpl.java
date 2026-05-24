@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.RegisterWithSteamRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.TwoFactorLoginRequestDto;
@@ -34,6 +35,7 @@ import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.InvalidTotpCodeException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
 import com.checkpoint.api.exceptions.TwoFactorRequiredException;
+import com.checkpoint.api.services.SteamSignupTokenService;
 import com.checkpoint.api.services.TwoFactorService;
 import com.checkpoint.api.repositories.PasswordResetTokenRepository;
 import com.checkpoint.api.repositories.RoleRepository;
@@ -69,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final RefreshTokenService refreshTokenService;
     private final TwoFactorService twoFactorService;
+    private final SteamSignupTokenService steamSignupTokenService;
     private final boolean cookieSecure;
     private final long jwtExpirationMs;
     private final long refreshExpirationMs;
@@ -83,6 +86,7 @@ public class AuthServiceImpl implements AuthService {
                            EmailService emailService,
                            RefreshTokenService refreshTokenService,
                            TwoFactorService twoFactorService,
+                           SteamSignupTokenService steamSignupTokenService,
                            @Value("${app.cookie.secure:true}") boolean cookieSecure,
                            @Value("${jwt.expiration-ms:86400000}") long jwtExpirationMs,
                            @Value("${jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
@@ -96,6 +100,7 @@ public class AuthServiceImpl implements AuthService {
         this.emailService = emailService;
         this.refreshTokenService = refreshTokenService;
         this.twoFactorService = twoFactorService;
+        this.steamSignupTokenService = steamSignupTokenService;
         this.cookieSecure = cookieSecure;
         this.jwtExpirationMs = jwtExpirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
@@ -266,6 +271,44 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(userRole);
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void registerWithSteam(RegisterWithSteamRequestDto request, HttpServletResponse servletResponse) {
+        SteamSignupTokenService.Claims claims = steamSignupTokenService.verify(request.token())
+                .orElseThrow(() -> new InvalidTokenException("Steam signup token is invalid or expired"));
+
+        if (userRepository.existsByEmail(request.email())) {
+            throw new RegistrationConflictException("Email is already in use");
+        }
+        if (userRepository.existsByPseudo(request.pseudo())) {
+            throw new RegistrationConflictException("Pseudo is already in use");
+        }
+        if (userRepository.findBySteamId(claims.steamId()).isPresent()) {
+            throw new RegistrationConflictException("This Steam account is already linked to a CheckPoint user");
+        }
+
+        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
+            Role newRole = new Role("USER");
+            return roleRepository.save(newRole);
+        });
+
+        String hashedPassword = (request.password() == null || request.password().isBlank())
+                ? null
+                : passwordEncoder.encode(request.password());
+
+        User user = new User(request.pseudo(), request.email(), hashedPassword);
+        user.setRole(userRole);
+        user.setSteamId(claims.steamId());
+        user.setSteamDisplayName(claims.steamDisplayName());
+        user.setSteamAvatarUrl(claims.steamAvatarUrl());
+        user.setSteamProfileUrl(claims.steamProfileUrl());
+        user.setSteamSyncedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        establishWebSession(user.getEmail(), servletResponse);
     }
 
     @Override

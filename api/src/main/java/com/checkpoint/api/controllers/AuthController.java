@@ -26,11 +26,16 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import com.checkpoint.api.client.SteamApiClient;
 import com.checkpoint.api.client.SteamOpenIdClient;
+import com.checkpoint.api.dto.steam.SteamPlayerSummaryDto;
 import com.checkpoint.api.entities.User;
+import com.checkpoint.api.exceptions.InvalidTokenException;
+import com.checkpoint.api.exceptions.SteamApiException;
 import com.checkpoint.api.exceptions.SteamOpenIdException;
 import com.checkpoint.api.services.SteamOpenIdStateService;
 import com.checkpoint.api.services.SteamService;
+import com.checkpoint.api.services.SteamSignupTokenService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -40,7 +45,9 @@ import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.LoginResponseDto;
 import com.checkpoint.api.dto.auth.RefreshTokenRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.RegisterWithSteamRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
+import com.checkpoint.api.dto.auth.SteamSignupPrefillDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.TwoFactorDisableRequestDto;
 import com.checkpoint.api.dto.auth.TwoFactorLoginRequestDto;
@@ -73,12 +80,15 @@ public class AuthController {
 
     private static final String STEAM_ACTION_LOGIN = "login";
     private static final String STEAM_ACTION_LINK = "link";
+    private static final String STEAM_ACTION_SIGNUP = "signup";
 
     private final AuthService authService;
     private final TwoFactorService twoFactorService;
     private final SteamOpenIdClient steamOpenIdClient;
     private final SteamService steamService;
     private final SteamOpenIdStateService steamOpenIdStateService;
+    private final SteamSignupTokenService steamSignupTokenService;
+    private final SteamApiClient steamApiClient;
 
     @Value("${steam.openid.return-url:http://localhost:8080/api/auth/steam/openid/callback}")
     private String steamReturnUrl;
@@ -93,12 +103,16 @@ public class AuthController {
                           TwoFactorService twoFactorService,
                           SteamOpenIdClient steamOpenIdClient,
                           SteamService steamService,
-                          SteamOpenIdStateService steamOpenIdStateService) {
+                          SteamOpenIdStateService steamOpenIdStateService,
+                          SteamSignupTokenService steamSignupTokenService,
+                          SteamApiClient steamApiClient) {
         this.authService = authService;
         this.twoFactorService = twoFactorService;
         this.steamOpenIdClient = steamOpenIdClient;
         this.steamService = steamService;
         this.steamOpenIdStateService = steamOpenIdStateService;
+        this.steamSignupTokenService = steamSignupTokenService;
+        this.steamApiClient = steamApiClient;
     }
 
     /**
@@ -352,15 +366,20 @@ public class AuthController {
      * Steam then redirects back to {@code /api/auth/steam/openid/callback} with the {@code action}
      * preserved in the query string.
      *
-     * @param action either {@code login} (issue a session for an existing linked account) or
-     *               {@code link} (attach the SteamID to the currently authenticated user)
+     * @param action {@code login} (issue a session for an existing linked account),
+     *               {@code link} (attach the SteamID to the currently authenticated user), or
+     *               {@code signup} (open the prefilled signup form when no account is linked)
      * @return 302 redirect to Steam
      */
     @GetMapping("/steam/openid/start")
     public ResponseEntity<?> steamOpenIdStart(
             @RequestParam(defaultValue = STEAM_ACTION_LOGIN) String action,
             @AuthenticationPrincipal UserDetails userDetails) {
-        String normalizedAction = STEAM_ACTION_LINK.equals(action) ? STEAM_ACTION_LINK : STEAM_ACTION_LOGIN;
+        String normalizedAction = switch (action) {
+            case STEAM_ACTION_LINK -> STEAM_ACTION_LINK;
+            case STEAM_ACTION_SIGNUP -> STEAM_ACTION_SIGNUP;
+            default -> STEAM_ACTION_LOGIN;
+        };
 
         String stateEmail = STEAM_ACTION_LINK.equals(normalizedAction) && userDetails != null
                 ? userDetails.getUsername()
@@ -379,9 +398,10 @@ public class AuthController {
     /**
      * Steam OpenID 2.0 callback. Verifies the response with Steam, extracts the SteamID64, then:
      * <ul>
-     *   <li>{@code action=login}: looks up the user with this SteamID. If found, establishes a web
-     *       session (sets auth cookies) and redirects to the frontend root. Otherwise redirects to
-     *       {@code /login?error=steam_not_linked}.</li>
+     *   <li>{@code action=login} or {@code action=signup}: looks up the user with this SteamID.
+     *       If found, establishes a web session (sets auth cookies) and redirects to the frontend
+     *       root. If not found, issues a short-lived Steam signup token and redirects to
+     *       {@code /register?steam_token=<jwt>} with the Steam display name and avatar prefilled.</li>
      *   <li>{@code action=link}: attaches the SteamID to the currently authenticated user and
      *       redirects to {@code /settings/integrations}.</li>
      * </ul>
@@ -434,15 +454,71 @@ public class AuthController {
             return clientSideRedirect(frontendUrl + "/settings/integrations?linked=steam");
         }
 
-        // Default action: login
+        // login / signup: try to log in the existing user, otherwise hand off to the prefilled signup.
         User user = steamService.findUserBySteamId(steamId).orElse(null);
-        if (user == null) {
-            log.info("Steam OpenID login: no user linked to SteamID {}", steamId);
-            return clientSideRedirect(frontendUrl + "/login?error=steam_not_linked");
+        if (user != null) {
+            authService.establishWebSession(user.getEmail(), servletResponse);
+            log.info("Steam OpenID login successful for {}", user.getEmail());
+            return clientSideRedirect(frontendUrl + "/");
         }
-        authService.establishWebSession(user.getEmail(), servletResponse);
-        log.info("Steam OpenID login successful for {}", user.getEmail());
-        return clientSideRedirect(frontendUrl + "/");
+
+        log.info("Steam OpenID: no user linked to SteamID {}, issuing signup token", steamId);
+        return clientSideRedirect(frontendUrl + "/register?steam_token=" + buildSteamSignupToken(steamId));
+    }
+
+    /**
+     * Returns the Steam identity carried by a verified signup token, so the {@code /register}
+     * page can prefill the signup form. Idempotent and read-only.
+     *
+     * @param token the signed JWT from the {@code steam_token} query parameter
+     * @return the prefill payload (steam id, display name, avatar URL, profile URL)
+     */
+    @GetMapping("/steam/signup-prefill")
+    public ResponseEntity<SteamSignupPrefillDto> steamSignupPrefill(@RequestParam String token) {
+        SteamSignupTokenService.Claims claims = steamSignupTokenService.verify(token)
+                .orElseThrow(() -> new InvalidTokenException("Steam signup token is invalid or expired"));
+        return ResponseEntity.ok(new SteamSignupPrefillDto(
+                claims.steamId(),
+                claims.steamDisplayName(),
+                claims.steamAvatarUrl(),
+                claims.steamProfileUrl()));
+    }
+
+    /**
+     * Creates a new account from a verified Steam signup token, with optional password,
+     * and establishes a web session (sets the auth cookies).
+     *
+     * @param request         the Steam-prefilled registration details
+     * @param servletResponse the HTTP servlet response to write the auth cookies on
+     * @return 201 Created with a confirmation message
+     */
+    @PostMapping("/register/steam")
+    public ResponseEntity<AuthMessageDto> registerWithSteam(
+            @Valid @RequestBody RegisterWithSteamRequestDto request,
+            HttpServletResponse servletResponse) {
+        authService.registerWithSteam(request, servletResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthMessageDto("Registration successful"));
+    }
+
+    /**
+     * Mints a Steam signup token, best-effort enriching it with the Steam profile fields.
+     * Failures to reach the Steam Web API are non-fatal: only the verified SteamID is required.
+     */
+    private String buildSteamSignupToken(String steamId) {
+        String displayName = null;
+        String avatarUrl = null;
+        String profileUrl = null;
+        try {
+            SteamPlayerSummaryDto summary = steamApiClient.fetchPlayerSummary(steamId).orElse(null);
+            if (summary != null) {
+                displayName = summary.personaName();
+                avatarUrl = summary.avatarMedium();
+                profileUrl = summary.profileUrl();
+            }
+        } catch (SteamApiException e) {
+            log.warn("Could not fetch Steam profile for signup prefill ({}): {}", steamId, e.getMessage());
+        }
+        return steamSignupTokenService.issue(steamId, displayName, avatarUrl, profileUrl);
     }
 
     private static Map<String, String> collectOpenIdParams(HttpServletRequest request) {

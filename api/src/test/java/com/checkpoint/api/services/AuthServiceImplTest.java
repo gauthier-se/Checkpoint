@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.RegisterWithSteamRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
@@ -83,6 +84,9 @@ class AuthServiceImplTest {
     @Mock
     private TwoFactorService twoFactorService;
 
+    @Mock
+    private SteamSignupTokenService steamSignupTokenService;
+
     private AuthServiceImpl authService;
 
     @BeforeEach
@@ -98,6 +102,7 @@ class AuthServiceImplTest {
                 emailService,
                 refreshTokenService,
                 twoFactorService,
+                steamSignupTokenService,
                 false,       // cookieSecure = false in tests
                 86400000L,   // jwtExpirationMs = 24h
                 604800000L   // refreshExpirationMs = 7d
@@ -335,6 +340,178 @@ class AuthServiceImplTest {
                     .hasMessageContaining("Passwords do not match");
 
             verify(userRepository, never()).existsByEmail(any());
+            verify(userRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("registerWithSteam")
+    class RegisterWithSteamTests {
+
+        private static final String STEAM_ID = "76561198000000000";
+
+        private SteamSignupTokenService.Claims claims() {
+            return new SteamSignupTokenService.Claims(
+                    STEAM_ID,
+                    "SteamPersona",
+                    "https://cdn/avatar.jpg",
+                    "https://steamcommunity.com/id/persona");
+        }
+
+        @Test
+        @DisplayName("Should create the Steam-linked user, hash the optional password, then establish a web session")
+        void shouldCreateUserWithPasswordAndEstablishSession() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "valid-token", "alice@test.com", "alice", true, "password123");
+            Role role = new Role("USER");
+
+            when(steamSignupTokenService.verify("valid-token")).thenReturn(Optional.of(claims()));
+            when(userRepository.existsByEmail("alice@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("alice")).thenReturn(false);
+            when(userRepository.findBySteamId(STEAM_ID)).thenReturn(Optional.empty());
+            when(roleRepository.findByName("USER")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+
+            com.checkpoint.api.entities.User loadedAfterSave = new com.checkpoint.api.entities.User(
+                    "alice", "alice@test.com", "encodedPassword");
+            loadedAfterSave.setSteamId(STEAM_ID);
+            when(userRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(loadedAfterSave));
+            UserDetails userDetails = User.builder()
+                    .username("alice@test.com")
+                    .password("encodedPassword")
+                    .roles("USER")
+                    .build();
+            when(userDetailsService.loadUserByUsername("alice@test.com")).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("access.token");
+            RefreshToken refresh = mock(RefreshToken.class);
+            when(refresh.getToken()).thenReturn("refresh-token");
+            when(refreshTokenService.createRefreshToken(any())).thenReturn(refresh);
+
+            authService.registerWithSteam(request, response);
+
+            ArgumentCaptor<com.checkpoint.api.entities.User> savedCaptor =
+                    ArgumentCaptor.forClass(com.checkpoint.api.entities.User.class);
+            verify(userRepository).save(savedCaptor.capture());
+            com.checkpoint.api.entities.User saved = savedCaptor.getValue();
+            assertThat(saved.getPseudo()).isEqualTo("alice");
+            assertThat(saved.getEmail()).isEqualTo("alice@test.com");
+            assertThat(saved.getPassword()).isEqualTo("encodedPassword");
+            assertThat(saved.getSteamId()).isEqualTo(STEAM_ID);
+            assertThat(saved.getSteamDisplayName()).isEqualTo("SteamPersona");
+            assertThat(saved.getSteamAvatarUrl()).isEqualTo("https://cdn/avatar.jpg");
+            assertThat(saved.getSteamProfileUrl()).isEqualTo("https://steamcommunity.com/id/persona");
+            assertThat(saved.getSteamSyncedAt()).isNotNull();
+
+            verify(response, org.mockito.Mockito.atLeastOnce())
+                    .addHeader(org.mockito.ArgumentMatchers.eq("Set-Cookie"), org.mockito.ArgumentMatchers.anyString());
+        }
+
+        @Test
+        @DisplayName("Should create the user with a null password when none is provided")
+        void shouldCreateUserWithoutPassword() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "valid-token", "alice@test.com", "alice", true, null);
+            Role role = new Role("USER");
+
+            when(steamSignupTokenService.verify("valid-token")).thenReturn(Optional.of(claims()));
+            when(userRepository.existsByEmail("alice@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("alice")).thenReturn(false);
+            when(userRepository.findBySteamId(STEAM_ID)).thenReturn(Optional.empty());
+            when(roleRepository.findByName("USER")).thenReturn(Optional.of(role));
+
+            com.checkpoint.api.entities.User loadedAfterSave = new com.checkpoint.api.entities.User(
+                    "alice", "alice@test.com", null);
+            when(userRepository.findByEmail("alice@test.com")).thenReturn(Optional.of(loadedAfterSave));
+            UserDetails userDetails = User.builder()
+                    .username("alice@test.com")
+                    .password("noop")
+                    .roles("USER")
+                    .build();
+            when(userDetailsService.loadUserByUsername("alice@test.com")).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("access.token");
+            RefreshToken refresh = mock(RefreshToken.class);
+            when(refresh.getToken()).thenReturn("refresh-token");
+            when(refreshTokenService.createRefreshToken(any())).thenReturn(refresh);
+
+            authService.registerWithSteam(request, response);
+
+            ArgumentCaptor<com.checkpoint.api.entities.User> savedCaptor =
+                    ArgumentCaptor.forClass(com.checkpoint.api.entities.User.class);
+            verify(userRepository).save(savedCaptor.capture());
+            assertThat(savedCaptor.getValue().getPassword()).isNull();
+            verify(passwordEncoder, never()).encode(any());
+        }
+
+        @Test
+        @DisplayName("Should reject an invalid signup token")
+        void shouldRejectInvalidToken() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "bad-token", "alice@test.com", "alice", true, null);
+
+            when(steamSignupTokenService.verify("bad-token")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> authService.registerWithSteam(request, response))
+                    .isInstanceOf(InvalidTokenException.class);
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should reject when the email is already in use")
+        void shouldRejectExistingEmail() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "valid-token", "alice@test.com", "alice", true, null);
+
+            when(steamSignupTokenService.verify("valid-token")).thenReturn(Optional.of(claims()));
+            when(userRepository.existsByEmail("alice@test.com")).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.registerWithSteam(request, response))
+                    .isInstanceOf(RegistrationConflictException.class)
+                    .hasMessageContaining("Email");
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should reject when the pseudo is already in use")
+        void shouldRejectExistingPseudo() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "valid-token", "alice@test.com", "alice", true, null);
+
+            when(steamSignupTokenService.verify("valid-token")).thenReturn(Optional.of(claims()));
+            when(userRepository.existsByEmail("alice@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("alice")).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.registerWithSteam(request, response))
+                    .isInstanceOf(RegistrationConflictException.class)
+                    .hasMessageContaining("Pseudo");
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should reject when the SteamID is already linked to another user")
+        void shouldRejectAlreadyLinkedSteamId() {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            RegisterWithSteamRequestDto request = new RegisterWithSteamRequestDto(
+                    "valid-token", "alice@test.com", "alice", true, null);
+
+            when(steamSignupTokenService.verify("valid-token")).thenReturn(Optional.of(claims()));
+            when(userRepository.existsByEmail("alice@test.com")).thenReturn(false);
+            when(userRepository.existsByPseudo("alice")).thenReturn(false);
+            com.checkpoint.api.entities.User other = new com.checkpoint.api.entities.User();
+            other.setSteamId(STEAM_ID);
+            when(userRepository.findBySteamId(STEAM_ID)).thenReturn(Optional.of(other));
+
+            assertThatThrownBy(() -> authService.registerWithSteam(request, response))
+                    .isInstanceOf(RegistrationConflictException.class)
+                    .hasMessageContaining("Steam");
+
             verify(userRepository, never()).save(any());
         }
     }

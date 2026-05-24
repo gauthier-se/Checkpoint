@@ -66,6 +66,12 @@ class TwoFactorControllerTest {
     private com.checkpoint.api.services.SteamOpenIdStateService steamOpenIdStateService;
 
     @MockitoBean
+    private com.checkpoint.api.services.SteamSignupTokenService steamSignupTokenService;
+
+    @MockitoBean
+    private com.checkpoint.api.client.SteamApiClient steamApiClient;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean

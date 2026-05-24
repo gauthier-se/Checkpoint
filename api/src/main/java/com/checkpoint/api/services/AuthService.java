@@ -87,6 +87,17 @@ public interface AuthService {
     void register(com.checkpoint.api.dto.auth.RegisterRequestDto request);
 
     /**
+     * Registers a new user account from a verified Steam signup token and immediately
+     * establishes a web session (sets the {@code checkpoint_token} and {@code checkpoint_refresh}
+     * cookies). Password is optional; when omitted, a Steam-only account is created.
+     *
+     * @param request         the Steam-prefilled registration details, including the signup token
+     * @param servletResponse the HTTP servlet response to write the cookies on
+     */
+    void registerWithSteam(com.checkpoint.api.dto.auth.RegisterWithSteamRequestDto request,
+                           jakarta.servlet.http.HttpServletResponse servletResponse);
+
+    /**
      * Handles forgot password requests by generating a token.
      *
      * @param request the forgot password request containing the email

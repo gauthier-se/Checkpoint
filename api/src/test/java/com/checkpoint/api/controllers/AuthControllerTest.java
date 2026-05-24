@@ -31,17 +31,22 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.checkpoint.api.dto.auth.ForgotPasswordRequestDto;
 import com.checkpoint.api.dto.auth.LoginRequestDto;
 import com.checkpoint.api.dto.auth.RegisterRequestDto;
+import com.checkpoint.api.dto.auth.RegisterWithSteamRequestDto;
 import com.checkpoint.api.dto.auth.ResetPasswordRequestDto;
 import com.checkpoint.api.dto.auth.TokenPairDto;
 import com.checkpoint.api.dto.auth.UserMeDto;
+import com.checkpoint.api.dto.steam.SteamPlayerSummaryDto;
 import com.checkpoint.api.exceptions.InvalidRefreshTokenException;
+import com.checkpoint.api.exceptions.InvalidTokenException;
 import com.checkpoint.api.exceptions.RegistrationConflictException;
+import com.checkpoint.api.client.SteamApiClient;
 import com.checkpoint.api.client.SteamOpenIdClient;
 import com.checkpoint.api.security.ApiAuthenticationEntryPoint;
 import com.checkpoint.api.security.JwtAuthenticationFilter;
 import com.checkpoint.api.services.AuthService;
 import com.checkpoint.api.services.SteamOpenIdStateService;
 import com.checkpoint.api.services.SteamService;
+import com.checkpoint.api.services.SteamSignupTokenService;
 import com.checkpoint.api.services.TwoFactorService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -73,6 +78,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private SteamOpenIdStateService steamOpenIdStateService;
+
+    @MockitoBean
+    private SteamSignupTokenService steamSignupTokenService;
+
+    @MockitoBean
+    private SteamApiClient steamApiClient;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -720,12 +731,22 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("GET /steam/openid/callback action=login navigates to /login?error=steam_not_linked when no user")
-        void callback_loginNoLinkedUser() throws Exception {
+        @DisplayName("GET /steam/openid/callback action=login redirects to /register?steam_token=... when no user")
+        void callback_loginNoLinkedUserRedirectsToSignup() throws Exception {
             stubValidLoginState();
             when(steamOpenIdClient.verifyAndExtractSteamId(any())).thenReturn(STEAM_ID);
             when(steamService.findUserBySteamId(STEAM_ID))
                     .thenReturn(java.util.Optional.empty());
+            when(steamApiClient.fetchPlayerSummary(STEAM_ID))
+                    .thenReturn(java.util.Optional.of(new SteamPlayerSummaryDto(
+                            STEAM_ID, "Persona", "https://steamcommunity.com/id/persona",
+                            "av.s", "av.m", "av.f", 3)));
+            when(steamSignupTokenService.issue(
+                    org.mockito.ArgumentMatchers.eq(STEAM_ID),
+                    org.mockito.ArgumentMatchers.eq("Persona"),
+                    org.mockito.ArgumentMatchers.eq("av.m"),
+                    org.mockito.ArgumentMatchers.eq("https://steamcommunity.com/id/persona")))
+                    .thenReturn("issued.signup.jwt");
 
             mockMvc.perform(get("/api/auth/steam/openid/callback")
                             .param("action", "login")
@@ -734,10 +755,84 @@ class AuthControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                             .content().string(org.hamcrest.Matchers.containsString(
-                                    "error=steam_not_linked")));
+                                    "/register?steam_token=issued.signup.jwt")));
 
             verify(authService, never()).establishWebSession(
                     org.mockito.ArgumentMatchers.anyString(), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("GET /steam/openid/callback issues a signup token even when the Steam profile fetch fails")
+        void callback_loginNoLinkedUserStillIssuesTokenWhenSteamApiFails() throws Exception {
+            stubValidLoginState();
+            when(steamOpenIdClient.verifyAndExtractSteamId(any())).thenReturn(STEAM_ID);
+            when(steamService.findUserBySteamId(STEAM_ID))
+                    .thenReturn(java.util.Optional.empty());
+            when(steamApiClient.fetchPlayerSummary(STEAM_ID))
+                    .thenThrow(new com.checkpoint.api.exceptions.SteamApiException("Steam unreachable"));
+            when(steamSignupTokenService.issue(
+                    org.mockito.ArgumentMatchers.eq(STEAM_ID),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.isNull()))
+                    .thenReturn("fallback.signup.jwt");
+
+            mockMvc.perform(get("/api/auth/steam/openid/callback")
+                            .param("action", "login")
+                            .param("state", STATE_TOKEN)
+                            .param("openid.mode", "id_res"))
+                    .andExpect(status().isOk())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                            .content().string(org.hamcrest.Matchers.containsString(
+                                    "steam_token=fallback.signup.jwt")));
+        }
+
+        @Test
+        @DisplayName("GET /steam/openid/callback action=signup logs in an already-linked user")
+        void callback_signupExistingUserLogsIn() throws Exception {
+            when(steamOpenIdStateService.verify(org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn(java.util.Optional.of(
+                            new SteamOpenIdStateService.Claims("signup", null)));
+            com.checkpoint.api.entities.User user = new com.checkpoint.api.entities.User();
+            user.setEmail("alice@test.com");
+            when(steamOpenIdClient.verifyAndExtractSteamId(any())).thenReturn(STEAM_ID);
+            when(steamService.findUserBySteamId(STEAM_ID))
+                    .thenReturn(java.util.Optional.of(user));
+            doNothing().when(authService)
+                    .establishWebSession(org.mockito.ArgumentMatchers.eq("alice@test.com"),
+                            any(HttpServletResponse.class));
+
+            mockMvc.perform(get("/api/auth/steam/openid/callback")
+                            .param("action", "signup")
+                            .param("state", STATE_TOKEN)
+                            .param("openid.mode", "id_res"))
+                    .andExpect(status().isOk())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                            .content().string(org.hamcrest.Matchers.containsString(
+                                    "localhost:3000/")));
+
+            verify(authService).establishWebSession(org.mockito.ArgumentMatchers.eq("alice@test.com"),
+                    any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("GET /steam/openid/start accepts action=signup")
+        void start_signupAction() throws Exception {
+            when(steamOpenIdStateService.issue(org.mockito.ArgumentMatchers.eq("signup"),
+                    org.mockito.ArgumentMatchers.isNull()))
+                    .thenReturn(STATE_TOKEN);
+            org.mockito.ArgumentCaptor<String> returnUrlCaptor =
+                    org.mockito.ArgumentCaptor.forClass(String.class);
+            when(steamOpenIdClient.buildAuthenticationUrl(returnUrlCaptor.capture(),
+                    org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn("https://steamcommunity.com/openid/login");
+
+            mockMvc.perform(get("/api/auth/steam/openid/start").param("action", "signup"))
+                    .andExpect(status().isOk());
+
+            String returnUrl = returnUrlCaptor.getValue();
+            org.junit.jupiter.api.Assertions.assertTrue(returnUrl.contains("action=signup"),
+                    "return URL should carry action=signup: " + returnUrl);
         }
 
         @Test
@@ -855,6 +950,117 @@ class AuthControllerTest {
             verify(steamService, never()).linkVerifiedSteamAccount(
                     org.mockito.ArgumentMatchers.anyString(),
                     org.mockito.ArgumentMatchers.anyString());
+        }
+    }
+
+    @Nested
+    @DisplayName("Steam-prefilled signup endpoints")
+    class SteamSignupFlow {
+
+        private static final String STEAM_ID = "76561198000000000";
+
+        @Test
+        @DisplayName("GET /api/auth/steam/signup-prefill returns the claims for a valid token")
+        void prefill_returnsClaimsForValidToken() throws Exception {
+            when(steamSignupTokenService.verify("valid.jwt"))
+                    .thenReturn(java.util.Optional.of(new SteamSignupTokenService.Claims(
+                            STEAM_ID, "Persona", "https://cdn/av.jpg",
+                            "https://steamcommunity.com/id/persona")));
+
+            mockMvc.perform(get("/api/auth/steam/signup-prefill").param("token", "valid.jwt"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.steamId").value(STEAM_ID))
+                    .andExpect(jsonPath("$.steamDisplayName").value("Persona"))
+                    .andExpect(jsonPath("$.steamAvatarUrl").value("https://cdn/av.jpg"))
+                    .andExpect(jsonPath("$.steamProfileUrl")
+                            .value("https://steamcommunity.com/id/persona"));
+        }
+
+        @Test
+        @DisplayName("GET /api/auth/steam/signup-prefill returns 400 for an invalid token")
+        void prefill_returns400ForInvalidToken() throws Exception {
+            when(steamSignupTokenService.verify("bad.jwt"))
+                    .thenReturn(java.util.Optional.empty());
+
+            mockMvc.perform(get("/api/auth/steam/signup-prefill").param("token", "bad.jwt"))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("POST /api/auth/register/steam returns 201 and delegates to the auth service")
+        void registerSteam_happyPath() throws Exception {
+            RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
+                    "valid.jwt", "alice@test.com", "alice", true, "password123");
+            doNothing().when(authService).registerWithSteam(
+                    any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+
+            mockMvc.perform(post("/api/auth/register/steam")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.message").value("Registration successful"));
+
+            verify(authService).registerWithSteam(
+                    any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("POST /api/auth/register/steam accepts a request with no password")
+        void registerSteam_acceptsMissingPassword() throws Exception {
+            RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
+                    "valid.jwt", "alice@test.com", "alice", true, null);
+            doNothing().when(authService).registerWithSteam(
+                    any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+
+            mockMvc.perform(post("/api/auth/register/steam")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("POST /api/auth/register/steam returns 400 when acceptTerms is false")
+        void registerSteam_requiresAcceptTerms() throws Exception {
+            RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
+                    "valid.jwt", "alice@test.com", "alice", false, "password123");
+
+            mockMvc.perform(post("/api/auth/register/steam")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isBadRequest());
+
+            verify(authService, never()).registerWithSteam(
+                    any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("POST /api/auth/register/steam returns 400 when the service rejects the token")
+        void registerSteam_returns400OnInvalidToken() throws Exception {
+            RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
+                    "bad.jwt", "alice@test.com", "alice", true, null);
+            doThrow(new InvalidTokenException("Steam signup token is invalid or expired"))
+                    .when(authService).registerWithSteam(
+                            any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+
+            mockMvc.perform(post("/api/auth/register/steam")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("POST /api/auth/register/steam returns 409 when the email/pseudo/steamId conflicts")
+        void registerSteam_returns409OnConflict() throws Exception {
+            RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
+                    "valid.jwt", "alice@test.com", "alice", true, null);
+            doThrow(new RegistrationConflictException("Email is already in use"))
+                    .when(authService).registerWithSteam(
+                            any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
+
+            mockMvc.perform(post("/api/auth/register/steam")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isConflict());
         }
     }
 }
