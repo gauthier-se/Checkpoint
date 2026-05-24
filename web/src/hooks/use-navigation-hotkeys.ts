@@ -32,7 +32,7 @@ export function useNavigationHotkeys() {
       {
         sequence: ['G', 'M'],
         callback: () => {
-          void navigate({ to: '/members', search: { page: 1 } })
+          void navigate({ to: '/members/all', search: { page: 1 } })
         },
       },
       {

@@ -71,7 +71,7 @@ function RouteComponent() {
               reviewing here.
             </p>
             <Button asChild>
-              <Link to="/members" search={{ page: 1 }}>
+              <Link to="/members/all" search={{ page: 1 }}>
                 Find people to follow
               </Link>
             </Button>

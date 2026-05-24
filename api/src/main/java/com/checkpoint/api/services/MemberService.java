@@ -49,4 +49,13 @@ public interface MemberService {
      * @return a paginated list of member cards
      */
     Page<MemberCardDto> searchMembers(String search, Pageable pageable, String viewerEmail);
+
+    /**
+     * Returns the most recently registered members.
+     *
+     * @param pageable    pagination parameters
+     * @param viewerEmail the authenticated viewer's email (nullable)
+     * @return a list of member cards sorted by creation date descending
+     */
+    List<MemberCardDto> getRecentMembers(Pageable pageable, String viewerEmail);
 }

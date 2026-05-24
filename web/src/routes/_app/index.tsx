@@ -331,7 +331,7 @@ function SuggestedMembersSection({
           People you might know
         </h2>
         <Link
-          to="/members"
+          to="/members/all"
           search={{ page: 1 }}
           className="text-sm text-muted-foreground hover:text-foreground"
         >

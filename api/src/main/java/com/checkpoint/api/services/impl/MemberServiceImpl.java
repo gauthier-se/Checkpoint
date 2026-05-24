@@ -133,6 +133,26 @@ public class MemberServiceImpl implements MemberService {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<MemberCardDto> getRecentMembers(Pageable pageable, String viewerEmail) {
+        log.info("Fetching recent members (size={})", pageable.getPageSize());
+
+        Set<UUID> followingIds = getFollowingIds(viewerEmail);
+        Page<User> page = userRepository.findRecentMembers(pageable);
+
+        return page.getContent().stream()
+                .map(user -> {
+                    long followerCount = userRepository.countFollowersByUserId(user.getId());
+                    long reviewCount = reviewRepository.countByUserPseudo(user.getPseudo());
+                    Boolean isFollowing = resolveIsFollowing(user.getId(), followingIds, viewerEmail);
+                    return memberMapper.toMemberCardDto(user, followerCount, reviewCount, isFollowing);
+                })
+                .toList();
+    }
+
+    /**
      * Loads the set of user IDs that the viewer follows.
      * Returns an empty set if the viewer is not authenticated.
      *
