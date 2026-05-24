@@ -79,11 +79,7 @@ export const Header = () => {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link
-              to="/members"
-              search={{ page: 1 }}
-              className="text-muted-foreground font-semibold"
-            >
+            <Link to="/members" className="text-muted-foreground font-semibold">
               Members
             </Link>
           </TooltipTrigger>

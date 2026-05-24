@@ -1,0 +1,42 @@
+meta {
+  name: Steam Signup Prefill
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/auth/steam/signup-prefill?token={{steamSignupToken}}
+  body: none
+  auth: none
+}
+
+params:query {
+  token: {{steamSignupToken}}
+}
+
+docs {
+  # Steam Signup Prefill
+
+  Returns the Steam identity (steam id, persona name, avatar URL, profile URL)
+  carried by a verified Steam signup token. Used by the `/register` page to
+  prefill the form when the user is redirected from the Steam OpenID callback.
+
+  Idempotent and read-only — the token is consumed only when the signup is
+  actually submitted via `POST /api/auth/register/steam`.
+
+  ## Query Parameters
+
+  - **token** (required): the JWT received as `?steam_token=` after the Steam
+    OpenID callback. Short-lived (~10 min).
+
+  ## Responses
+
+  - **200 OK**: `{ steamId, steamDisplayName, steamAvatarUrl, steamProfileUrl }`.
+    Display name / avatar / profile URL may be `null` when the Steam Web API
+    was unreachable at token-issuance time.
+  - **400 Bad Request**: invalid, tampered, or expired token.
+
+  ## Variables
+
+  Set `steamSignupToken` in your environment, or paste the JWT in-line.
+}
