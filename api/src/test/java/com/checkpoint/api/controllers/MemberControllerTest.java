@@ -183,6 +183,63 @@ class MemberControllerTest {
     }
 
     @Nested
+    @DisplayName("GET /api/members/recent")
+    class GetRecentMembers {
+
+        @Test
+        @DisplayName("should return recent members sorted by creation date")
+        void getRecentMembers_shouldReturnMembers() throws Exception {
+            // Given
+            List<MemberCardDto> members = List.of(
+                    createMemberCard("newcomer1", 0L, 0L, null),
+                    createMemberCard("newcomer2", 1L, 0L, null)
+            );
+            when(memberService.getRecentMembers(any(Pageable.class), eq(null)))
+                    .thenReturn(members);
+
+            // When / Then
+            mockMvc.perform(get("/api/members/recent"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].pseudo").value("newcomer1"))
+                    .andExpect(jsonPath("$[1].pseudo").value("newcomer2"));
+        }
+
+        @Test
+        @DisplayName("should accept custom size parameter")
+        void getRecentMembers_shouldAcceptCustomSize() throws Exception {
+            // Given
+            List<MemberCardDto> members = List.of(
+                    createMemberCard("newcomer1", 0L, 0L, null)
+            );
+            when(memberService.getRecentMembers(any(Pageable.class), eq(null)))
+                    .thenReturn(members);
+
+            // When / Then
+            mockMvc.perform(get("/api/members/recent").param("size", "5"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1));
+        }
+
+        @Test
+        @DisplayName("should include isFollowing when authenticated")
+        @WithMockUser(username = "viewer@example.com")
+        void getRecentMembers_shouldIncludeIsFollowingWhenAuthenticated() throws Exception {
+            // Given
+            List<MemberCardDto> members = List.of(
+                    createMemberCard("newcomer1", 0L, 0L, false)
+            );
+            when(memberService.getRecentMembers(any(Pageable.class), eq("viewer@example.com")))
+                    .thenReturn(members);
+
+            // When / Then
+            mockMvc.perform(get("/api/members/recent"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].isFollowing").value(false));
+        }
+    }
+
+    @Nested
     @DisplayName("GET /api/members")
     class SearchMembers {
 

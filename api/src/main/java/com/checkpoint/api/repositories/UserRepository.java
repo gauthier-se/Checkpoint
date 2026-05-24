@@ -200,6 +200,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Page<Object[]> findSuggestedMembers(@Param("userId") UUID userId, Pageable pageable);
 
     /**
+     * Finds users ranked by creation date (descending).
+     * Used by the "recent members" curated section.
+     *
+     * @param pageable pagination parameters
+     * @return a page of users sorted by creation date descending
+     */
+    @Query("SELECT u FROM User u ORDER BY u.createdAt DESC")
+    Page<User> findRecentMembers(Pageable pageable);
+
+    /**
      * Searches users by pseudo with case-insensitive partial matching.
      *
      * @param pseudo the search term

@@ -116,6 +116,29 @@ public class MemberController {
     }
 
     /**
+     * Returns the most recently registered members.
+     *
+     * @param size        the number of members to return (default 10, max 100)
+     * @param userDetails the authenticated viewer (nullable)
+     * @return a list of recently joined member cards
+     */
+    @GetMapping("/recent")
+    public ResponseEntity<List<MemberCardDto>> getRecentMembers(
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
+        String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
+
+        log.info("GET /api/members/recent - size: {}, viewer: {}", validatedSize, viewerEmail);
+
+        Pageable pageable = PageRequest.of(0, validatedSize);
+        List<MemberCardDto> members = memberService.getRecentMembers(pageable, viewerEmail);
+
+        return ResponseEntity.ok(members);
+    }
+
+    /**
      * Searches and browses members with optional pseudo filter.
      *
      * @param search      the search term for pseudo (optional)

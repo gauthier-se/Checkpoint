@@ -1,0 +1,47 @@
+meta {
+  name: Get Recent Members
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/members/recent
+  body: none
+  auth: none
+}
+
+params:query {
+  size: 10
+}
+
+docs {
+  # Get Recent Members
+
+  Returns the most recently registered members ordered by creation date (descending).
+
+  ## Authentication
+
+  No authentication required. If authenticated, `isFollowing` will be populated.
+
+  ## Query Parameters
+
+  | Parameter | Type | Default | Description |
+  |-----------|------|---------|-------------|
+  | size | Integer | 10 | Number of members to return (max 100) |
+
+  ## Response (200 OK)
+
+  ```json
+  [
+    {
+      "id": "uuid",
+      "pseudo": "username",
+      "picture": "url",
+      "level": 1,
+      "followerCount": 0,
+      "reviewCount": 0,
+      "isFollowing": null
+    }
+  ]
+  ```
+}

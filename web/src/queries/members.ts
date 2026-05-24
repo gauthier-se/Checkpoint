@@ -35,6 +35,17 @@ export function suggestedMembersQueryOptions(size: number = 10) {
   })
 }
 
+export function recentMembersQueryOptions(size: number = 10) {
+  return queryOptions({
+    queryKey: ['members', 'recent', size],
+    queryFn: async (): Promise<Array<MemberCard>> => {
+      const res = await apiFetch(`/api/members/recent?size=${size}`)
+      return res.json()
+    },
+    staleTime: 60 * 1000,
+  })
+}
+
 export function searchMembersQueryOptions(query: string) {
   return queryOptions({
     queryKey: ['members', 'search', query],
