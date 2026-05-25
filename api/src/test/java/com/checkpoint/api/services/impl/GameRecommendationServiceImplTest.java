@@ -37,6 +37,7 @@ import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.enums.GameStatus;
+import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.RateRepository;
 import com.checkpoint.api.repositories.UserGameRepository;
 import com.checkpoint.api.repositories.UserRepository;
@@ -53,6 +54,7 @@ class GameRecommendationServiceImplTest {
     @Mock private RateRepository rateRepository;
     @Mock private UserGameRepository userGameRepository;
     @Mock private WishRepository wishRepository;
+    @Mock private LikeRepository likeRepository;
     @Mock private VideoGameRepository videoGameRepository;
     @Mock private GameTrendingService gameTrendingService;
 
@@ -72,7 +74,7 @@ class GameRecommendationServiceImplTest {
     void setUp() {
         service = new GameRecommendationServiceImpl(
                 userRepository, rateRepository, userGameRepository,
-                wishRepository, videoGameRepository, gameTrendingService);
+                wishRepository, likeRepository, videoGameRepository, gameTrendingService);
 
         userId = UUID.randomUUID();
         user = new User();
@@ -87,6 +89,8 @@ class GameRecommendationServiceImplTest {
         pcPlatform = newPlatform("PC");
 
         lenient().when(userRepository.findByEmail(USER_EMAIL)).thenReturn(java.util.Optional.of(user));
+        // Most tests have no game-likes; the affinity builder always queries them.
+        lenient().when(likeRepository.findVideoGameIdsByUser(userId)).thenReturn(List.of());
     }
 
     @Nested
@@ -227,9 +231,10 @@ class GameRecommendationServiceImplTest {
         }
 
         @Test
-        @DisplayName("wishlist-only profile still produces a tag-overlap recommendation")
+        @DisplayName("wishlist-driven recommendation is phrased as wishlist, never 'liked'")
         void wishOnlyProfileProducesRecommendation() {
-            VideoGame wished = newGame("Wished", List.of(actionGenre), List.of(), List.of(studioA));
+            // Three shared genres so the strong shared-tag branch (>= 3) fires.
+            VideoGame wished = newGame("Wished", List.of(rpgGenre, actionGenre, puzzleGenre), List.of(), List.of(studioA));
             when(rateRepository.findAllByUserId(userId)).thenReturn(List.of());
             when(userGameRepository.findAllByUserId(userId)).thenReturn(List.of());
             when(wishRepository.findVideoGameIdsByUserId(userId)).thenReturn(List.of(wished.getId()));
@@ -237,7 +242,7 @@ class GameRecommendationServiceImplTest {
             when(videoGameRepository.findAllByIdInWithRelationships(Set.of(wished.getId())))
                     .thenReturn(List.of(wished));
 
-            VideoGame candidate = newGame("Action Sequel", List.of(actionGenre), List.of(), List.of(studioA));
+            VideoGame candidate = newGame("Action Sequel", List.of(rpgGenre, actionGenre, puzzleGenre), List.of(), List.of(studioA));
             when(videoGameRepository.findCandidateIdsForRecommendation(
                     eq(userId), any(), any(), any(Pageable.class)))
                     .thenReturn(List.of(candidate.getId()));
@@ -248,7 +253,34 @@ class GameRecommendationServiceImplTest {
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).id()).isEqualTo(candidate.getId());
-            assertThat(result.get(0).reason()).isNotEmpty();
+            assertThat(result.get(0).reason()).isEqualTo("Similar to Wished on your wishlist");
+        }
+
+        @Test
+        @DisplayName("game-likes feed the affinity profile and are phrased as 'liked'")
+        void likeOnlyProfileProducesLikedRecommendation() {
+            // Three shared genres so the strong shared-tag branch (>= 3) fires.
+            VideoGame liked = newGame("Liked Game", List.of(rpgGenre, actionGenre, puzzleGenre), List.of(), List.of(studioA));
+            when(rateRepository.findAllByUserId(userId)).thenReturn(List.of());
+            when(userGameRepository.findAllByUserId(userId)).thenReturn(List.of());
+            when(wishRepository.findVideoGameIdsByUserId(userId)).thenReturn(List.of());
+            when(likeRepository.findVideoGameIdsByUser(userId)).thenReturn(List.of(liked.getId()));
+
+            when(videoGameRepository.findAllByIdInWithRelationships(Set.of(liked.getId())))
+                    .thenReturn(List.of(liked));
+
+            VideoGame candidate = newGame("Similar Game", List.of(rpgGenre, actionGenre, puzzleGenre), List.of(), List.of(studioA));
+            when(videoGameRepository.findCandidateIdsForRecommendation(
+                    eq(userId), any(), any(), any(Pageable.class)))
+                    .thenReturn(List.of(candidate.getId()));
+            when(videoGameRepository.findAllByIdInWithRelationships(List.of(candidate.getId())))
+                    .thenReturn(List.of(candidate));
+
+            List<RecommendedGameDto> result = service.getRecommendationsFor(USER_EMAIL, 5);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).id()).isEqualTo(candidate.getId());
+            assertThat(result.get(0).reason()).isEqualTo("Because you liked Liked Game");
         }
     }
 

@@ -26,6 +26,7 @@ import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.UserGame;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.enums.GameStatus;
+import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.RateRepository;
 import com.checkpoint.api.repositories.UserGameRepository;
 import com.checkpoint.api.repositories.UserRepository;
@@ -37,9 +38,11 @@ import com.checkpoint.api.services.GameTrendingService;
 /**
  * v1 SQL-based tag-overlap implementation of {@link GameRecommendationService}.
  *
- * <p>Builds a per-user affinity profile from rates, library statuses, and wishes,
- * then scores candidate games by the sum of shared genre / platform / company
- * weights plus a small average-rating tiebreaker and a recency boost.</p>
+ * <p>Builds a per-user affinity profile from rates, library statuses, game-likes, and
+ * wishes, then scores candidate games by the sum of shared genre / platform / company
+ * weights plus a small average-rating tiebreaker and a recency boost. The profile also
+ * remembers whether each source game was <em>loved</em> (rated/owned/liked) or only
+ * <em>wishlisted</em>, so the per-recommendation reason can be phrased accordingly.</p>
  */
 @Service
 @Transactional(readOnly = true)
@@ -55,6 +58,7 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
     private static final double RATE_MID_WEIGHT = 1.0;
     private static final double STATUS_COMPLETED_WEIGHT = 1.5;
     private static final double STATUS_PLAYING_WEIGHT = 0.5;
+    private static final double LIKE_WEIGHT = 2.0;
     private static final double WISH_WEIGHT = 0.5;
 
     private static final double GENRE_SCORE_WEIGHT = 1.0;
@@ -70,6 +74,7 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
     private final RateRepository rateRepository;
     private final UserGameRepository userGameRepository;
     private final WishRepository wishRepository;
+    private final LikeRepository likeRepository;
     private final VideoGameRepository videoGameRepository;
     private final GameTrendingService gameTrendingService;
 
@@ -77,12 +82,14 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
                                          RateRepository rateRepository,
                                          UserGameRepository userGameRepository,
                                          WishRepository wishRepository,
+                                         LikeRepository likeRepository,
                                          VideoGameRepository videoGameRepository,
                                          GameTrendingService gameTrendingService) {
         this.userRepository = userRepository;
         this.rateRepository = rateRepository;
         this.userGameRepository = userGameRepository;
         this.wishRepository = wishRepository;
+        this.likeRepository = likeRepository;
         this.videoGameRepository = videoGameRepository;
         this.gameTrendingService = gameTrendingService;
     }
@@ -97,18 +104,19 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
 
         log.debug("Building recommendations for user {} (size={})", userEmail, validatedSize);
 
-        Map<UUID, Double> affinityByGameId = buildAffinityByGameId(userId);
+        AffinityProfile profile = buildAffinityProfile(userId);
+        Map<UUID, Double> affinityByGameId = profile.weightByGameId();
         if (affinityByGameId.isEmpty()) {
-            log.debug("Cold-start path for user {} — no liked games, falling back to trending", userEmail);
+            log.debug("Cold-start path for user {} — no affinity signal, falling back to trending", userEmail);
             return mapTrendingToRecommendations(gameTrendingService.getTrendingGames(validatedSize));
         }
 
-        List<VideoGame> likedGames = videoGameRepository.findAllByIdInWithRelationships(affinityByGameId.keySet());
+        List<VideoGame> affinityGames = videoGameRepository.findAllByIdInWithRelationships(affinityByGameId.keySet());
 
         Map<UUID, Double> genreScores = new HashMap<>();
         Map<UUID, Double> platformScores = new HashMap<>();
         Map<UUID, Double> companyScores = new HashMap<>();
-        for (VideoGame liked : likedGames) {
+        for (VideoGame liked : affinityGames) {
             double weight = affinityByGameId.getOrDefault(liked.getId(), 0.0);
             if (weight <= 0) {
                 continue;
@@ -177,7 +185,9 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
             if (top.size() >= validatedSize) {
                 break;
             }
-            String reason = buildReason(s, likedGames, genreScores, companyScores);
+            String reason = buildReason(s, affinityGames,
+                    profile.lovedGameIds(), profile.wishlistedGameIds(),
+                    genreScores, companyScores);
             top.add(new RecommendedGameDto(
                     s.game.getId(),
                     s.game.getTitle(),
@@ -189,8 +199,18 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
         return top;
     }
 
-    private Map<UUID, Double> buildAffinityByGameId(UUID userId) {
-        Map<UUID, Double> affinity = new HashMap<>();
+    /**
+     * Builds the user's affinity profile: a per-game weight map (used to score candidate
+     * tags) plus two source sets — games the user <em>loved</em> (high/mid rates,
+     * COMPLETED/PLAYING library entries, or game-likes) and games they only
+     * <em>wishlisted</em>. The source sets let {@link #buildReason} phrase the reason as
+     * "Because you liked …" versus "Similar to … on your wishlist". A game may legitimately
+     * appear in both sets; {@code buildReason} treats "loved" as taking precedence.
+     */
+    private AffinityProfile buildAffinityProfile(UUID userId) {
+        Map<UUID, Double> weightByGameId = new HashMap<>();
+        Set<UUID> lovedGameIds = new HashSet<>();
+        Set<UUID> wishlistedGameIds = new HashSet<>();
 
         for (Rate rate : rateRepository.findAllByUserId(userId)) {
             Integer score = rate.getScore();
@@ -199,22 +219,32 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
             }
             double weight = ratingWeight(score);
             if (weight > 0) {
-                affinity.merge(rate.getVideoGame().getId(), weight, Double::sum);
+                UUID gameId = rate.getVideoGame().getId();
+                weightByGameId.merge(gameId, weight, Double::sum);
+                lovedGameIds.add(gameId);
             }
         }
 
         for (UserGame ug : userGameRepository.findAllByUserId(userId)) {
             double weight = statusWeight(ug.getStatus());
             if (weight > 0) {
-                affinity.merge(ug.getVideoGame().getId(), weight, Double::sum);
+                UUID gameId = ug.getVideoGame().getId();
+                weightByGameId.merge(gameId, weight, Double::sum);
+                lovedGameIds.add(gameId);
             }
         }
 
-        for (UUID wishedId : wishRepository.findVideoGameIdsByUserId(userId)) {
-            affinity.merge(wishedId, WISH_WEIGHT, Double::sum);
+        for (UUID likedId : likeRepository.findVideoGameIdsByUser(userId)) {
+            weightByGameId.merge(likedId, LIKE_WEIGHT, Double::sum);
+            lovedGameIds.add(likedId);
         }
 
-        return affinity;
+        for (UUID wishedId : wishRepository.findVideoGameIdsByUserId(userId)) {
+            weightByGameId.merge(wishedId, WISH_WEIGHT, Double::sum);
+            wishlistedGameIds.add(wishedId);
+        }
+
+        return new AffinityProfile(weightByGameId, lovedGameIds, wishlistedGameIds);
     }
 
     private static double ratingWeight(int score) {
@@ -275,38 +305,46 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
     }
 
     private String buildReason(ScoredCandidate scored,
-                               List<VideoGame> likedGames,
+                               List<VideoGame> affinityGames,
+                               Set<UUID> lovedGameIds,
+                               Set<UUID> wishlistedGameIds,
                                Map<UUID, Double> genreScores,
                                Map<UUID, Double> companyScores) {
         VideoGame candidate = scored.game;
         Set<UUID> candidateGenreIds = idSet(candidate.getGenres().stream().map(Genre::getId).toList());
         Set<UUID> candidateCompanyIds = idSet(candidate.getCompanies().stream().map(Company::getId).toList());
 
-        VideoGame bestSingleLiked = null;
+        VideoGame bestSource = null;
         int bestSharedTags = 0;
-        for (VideoGame liked : likedGames) {
+        for (VideoGame source : affinityGames) {
             int shared = 0;
-            for (Genre g : liked.getGenres()) {
+            for (Genre g : source.getGenres()) {
                 if (candidateGenreIds.contains(g.getId())) {
                     shared++;
                 }
             }
-            for (Company c : liked.getCompanies()) {
+            for (Company c : source.getCompanies()) {
                 if (candidateCompanyIds.contains(c.getId())) {
                     shared++;
                 }
             }
             if (shared > bestSharedTags
-                    || (shared == bestSharedTags && shared > 0 && bestSingleLiked != null
-                        && liked.getTitle() != null
-                        && liked.getTitle().compareTo(bestSingleLiked.getTitle()) < 0)) {
+                    || (shared == bestSharedTags && shared > 0 && bestSource != null
+                        && source.getTitle() != null
+                        && source.getTitle().compareTo(bestSource.getTitle()) < 0)) {
                 bestSharedTags = shared;
-                bestSingleLiked = liked;
+                bestSource = source;
             }
         }
 
-        if (bestSharedTags >= 3 && bestSingleLiked != null) {
-            return "Because you liked " + bestSingleLiked.getTitle();
+        if (bestSharedTags >= 3 && bestSource != null) {
+            // "loved" (rated/owned/liked) takes precedence over a pure wishlist source.
+            if (lovedGameIds.contains(bestSource.getId())) {
+                return "Because you liked " + bestSource.getTitle();
+            }
+            if (wishlistedGameIds.contains(bestSource.getId())) {
+                return "Similar to " + bestSource.getTitle() + " on your wishlist";
+            }
         }
 
         if (scored.companyContribution > scored.genreContribution && !candidateCompanyIds.isEmpty()) {
@@ -317,8 +355,8 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
                             .thenComparing(Comparator.comparing(Company::getName, Comparator.nullsLast(String::compareTo)).reversed()))
                     .orElse(null);
             if (topCompany != null) {
-                if (bestSingleLiked != null && bestSharedTags > 0) {
-                    return "From " + topCompany.getName() + ", like " + bestSingleLiked.getTitle();
+                if (bestSource != null && bestSharedTags > 0) {
+                    return "From " + topCompany.getName() + ", like " + bestSource.getTitle();
                 }
                 return "From " + topCompany.getName();
             }
@@ -350,6 +388,15 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
             return DEFAULT_SIZE;
         }
         return Math.min(size, MAX_SIZE);
+    }
+
+    /**
+     * Per-user taste signal: the merged tag-scoring weight for each source game, plus the
+     * set of games the user loved (rated/owned/liked) and the set they only wishlisted.
+     */
+    private record AffinityProfile(Map<UUID, Double> weightByGameId,
+                                   Set<UUID> lovedGameIds,
+                                   Set<UUID> wishlistedGameIds) {
     }
 
     private static final class ScoredCandidate {

@@ -76,6 +76,23 @@ public interface LikeRepository extends JpaRepository<Like, UUID> {
                                             @Param("videoGameIds") Collection<UUID> videoGameIds);
 
     /**
+     * Returns every video game ID the given user has liked (top-level game likes only).
+     * Unbounded counterpart of {@link #findVideoGameIdsLikedByUser} — used by the
+     * recommendation service to fold game-likes into the affinity profile. The
+     * {@code videoGame IS NOT NULL} guard is required because {@link Like} is polymorphic
+     * (it may instead point at a review, list, or comment).
+     *
+     * @param userId the user ID
+     * @return the liked video game IDs (may be empty)
+     */
+    @Query("""
+            SELECT l.videoGame.id FROM Like l
+            WHERE l.user.id = :userId
+              AND l.videoGame IS NOT NULL
+            """)
+    List<UUID> findVideoGameIdsByUser(@Param("userId") UUID userId);
+
+    /**
      * Counts the number of likes for a comment.
      */
     long countByCommentId(UUID commentId);
