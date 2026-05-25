@@ -136,8 +136,10 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID>, Vid
 
     /**
      * Pre-filters the catalog to games sharing at least one genre or company with the
-     * user's taste profile, excluding games already in their library or wishlist and
-     * any DLC. Returns only IDs so the caller can apply an upper bound via
+     * user's taste profile, excluding any DLC and any game the user already has a
+     * relationship with — library ({@code UserGame}), wishlist ({@code Wish}),
+     * favorites ({@code Favorite}), or a top-level game-like ({@code Like}). Returns
+     * only IDs so the caller can apply an upper bound via
      * {@link org.springframework.data.domain.Pageable} without hitting Hibernate's
      * JOIN FETCH + first/max in-memory pagination caveat — load the entities in a
      * second pass through {@link #findAllByIdInWithRelationships}.
@@ -162,6 +164,12 @@ public interface VideoGameRepository extends JpaRepository<VideoGame, UUID>, Vid
               )
               AND vg.id NOT IN (
                   SELECT w.videoGame.id FROM Wish w WHERE w.user.id = :userId
+              )
+              AND vg.id NOT IN (
+                  SELECT f.videoGame.id FROM Favorite f WHERE f.user.id = :userId
+              )
+              AND vg.id NOT IN (
+                  SELECT l.videoGame.id FROM Like l WHERE l.user.id = :userId AND l.videoGame IS NOT NULL
               )
             GROUP BY vg.id
             """)
