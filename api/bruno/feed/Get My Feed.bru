@@ -13,6 +13,7 @@ get {
 params:query {
   ~page: 0
   ~size: 20
+  ~type: RATING
 }
 
 auth:bearer {
@@ -35,6 +36,7 @@ docs {
   |-----------|---------|-------------|
   | page | 0 | Page number (0-based) |
   | size | 20 | Number of items per page (max 50) |
+  | type | (none) | Filter by activity type: PLAY, RATING, REVIEW, LIST, LIKE_GAME. Omit for all types. |
 
   ## Response (200 OK)
 
@@ -105,8 +107,9 @@ docs {
   |------|-------------|-----------------|
   | PLAY | Play session started/completed | `playStatus` (ARE_PLAYING, COMPLETED, ABANDONED, PLANNING) |
   | RATING | Game rated | `score` (1-5) |
-  | REVIEW | Game reviewed | `reviewContent` (truncated), `haveSpoilers` |
+  | REVIEW | Game reviewed | `reviewContent` (truncated), `haveSpoilers`, `logId` (associated play-log, may be absent) |
   | LIST | List created | `listTitle`, `listGameCount` |
+  | LIKE_GAME | Game liked | `game` |
 
   ## Error Responses
 

@@ -69,6 +69,13 @@ export function useNavigationHotkeys() {
         },
         options: { enabled: isDesktop && !!user },
       },
+      {
+        sequence: ['G', 'S'],
+        callback: () => {
+          void navigate({ to: '/settings/profile' })
+        },
+        options: { enabled: isDesktop && !!user },
+      },
     ],
     { enabled: isDesktop },
   )

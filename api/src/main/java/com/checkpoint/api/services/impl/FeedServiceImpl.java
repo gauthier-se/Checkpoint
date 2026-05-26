@@ -23,6 +23,7 @@ import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.social.FeedItemDto;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
+import com.checkpoint.api.enums.FeedItemType;
 import com.checkpoint.api.mapper.FeedMapper;
 import com.checkpoint.api.repositories.FeedRepository;
 import com.checkpoint.api.repositories.UserRepository;
@@ -66,11 +67,11 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public PagedResponseDto<FeedItemDto> getFeed(String userEmail, int page, int size) {
+    public PagedResponseDto<FeedItemDto> getFeed(String userEmail, int page, int size, FeedItemType type) {
         int validatedPage = Math.max(0, page);
         int validatedSize = Math.min(Math.max(1, size), MAX_FEED_SIZE);
 
-        log.debug("Fetching feed for user {} - page: {}, size: {}", userEmail, validatedPage, validatedSize);
+        log.debug("Fetching feed for user {} - page: {}, size: {}, type: {}", userEmail, validatedPage, validatedSize, type);
 
         User currentUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
@@ -85,7 +86,7 @@ public class FeedServiceImpl implements FeedService {
         LocalDateTime since = LocalDateTime.now().minusDays(FEED_WINDOW_DAYS);
         Pageable pageable = PageRequest.of(validatedPage, validatedSize);
 
-        Page<Object[]> rawPage = feedRepository.findFeedItems(followingIds, since, pageable);
+        Page<Object[]> rawPage = feedRepository.findFeedItems(followingIds, since, type, pageable);
 
         List<Object[]> rows = rawPage.getContent();
 

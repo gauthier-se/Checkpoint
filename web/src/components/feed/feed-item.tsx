@@ -102,15 +102,29 @@ export function FeedItem({ item }: FeedItemProps) {
           )}
         </div>
 
-        {item.type === 'REVIEW' && item.reviewContent && (
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-            {item.haveSpoilers ? (
-              <span className="italic">Contains spoilers</span>
-            ) : (
-              item.reviewContent
-            )}
-          </p>
-        )}
+        {item.type === 'REVIEW' &&
+          item.reviewContent &&
+          (item.logId ? (
+            <Link
+              to="/plays/$id"
+              params={{ id: item.logId }}
+              className="mt-1 line-clamp-2 block text-sm text-muted-foreground hover:text-foreground hover:underline"
+            >
+              {item.haveSpoilers ? (
+                <span className="italic">Contains spoilers</span>
+              ) : (
+                item.reviewContent
+              )}
+            </Link>
+          ) : (
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {item.haveSpoilers ? (
+                <span className="italic">Contains spoilers</span>
+              ) : (
+                item.reviewContent
+              )}
+            </p>
+          ))}
 
         {item.type === 'LIST' && item.listGameCount != null && (
           <p className="mt-0.5 text-xs text-muted-foreground">

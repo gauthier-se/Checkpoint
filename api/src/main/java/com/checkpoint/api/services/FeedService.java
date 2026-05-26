@@ -5,6 +5,7 @@ import java.util.List;
 import com.checkpoint.api.dto.catalog.GameCardDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.social.FeedItemDto;
+import com.checkpoint.api.enums.FeedItemType;
 
 /**
  * Service for retrieving activity feed and friends-related trending data.
@@ -18,9 +19,10 @@ public interface FeedService {
      * @param userEmail the authenticated user's email
      * @param page      the page number (0-based)
      * @param size      the page size
+     * @param type      optional activity type filter (null = all types)
      * @return a paginated response of feed items
      */
-    PagedResponseDto<FeedItemDto> getFeed(String userEmail, int page, int size);
+    PagedResponseDto<FeedItemDto> getFeed(String userEmail, int page, int size, FeedItemType type);
 
     /**
      * Returns trending games among the authenticated user's followed users.

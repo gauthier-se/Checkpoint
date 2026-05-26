@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,7 +104,7 @@ class FeedServiceImplTest {
         List<Object[]> rows = Collections.singletonList(row);
         Page<Object[]> rawPage = new PageImpl<>(rows, pageable, 1);
 
-        when(feedRepository.findFeedItems(anyList(), any(LocalDateTime.class), any(Pageable.class)))
+        when(feedRepository.findFeedItems(anyList(), any(LocalDateTime.class), any(), any(Pageable.class)))
                 .thenReturn(rawPage);
         when(userRepository.findAllById(anyList())).thenReturn(List.of(friendUser));
         when(videoGameRepository.findAllById(anyList())).thenReturn(List.of(game));
@@ -112,13 +113,13 @@ class FeedServiceImplTest {
                 feedItemId, FeedItemType.RATING, LocalDateTime.now(),
                 new FeedUserDto(friendUser.getId(), "frienduser", "avatar.jpg"),
                 new FeedGameDto(game.getId(), "Elden Ring", "cover.jpg", null),
-                null, 5, null, null, null, null
+                null, 5, null, null, null, null, null
         );
         when(feedMapper.toFeedItemDto(any(Object[].class), any(Map.class), any(Map.class)))
                 .thenReturn(expectedItem);
 
         // When
-        PagedResponseDto<FeedItemDto> result = feedService.getFeed("user@test.com", 0, 20);
+        PagedResponseDto<FeedItemDto> result = feedService.getFeed("user@test.com", 0, 20, null);
 
         // Then
         assertThat(result.content()).hasSize(1);
@@ -136,11 +137,32 @@ class FeedServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         // When
-        PagedResponseDto<FeedItemDto> result = feedService.getFeed("user@test.com", 0, 20);
+        PagedResponseDto<FeedItemDto> result = feedService.getFeed("user@test.com", 0, 20, null);
 
         // Then
         assertThat(result.content()).isEmpty();
         assertThat(result.metadata().totalElements()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("getFeed should forward the type filter to the repository")
+    void getFeed_shouldForwardTypeFilterToRepository() {
+        // Given
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(currentUser));
+        when(userRepository.findFollowingIdsByUserId(currentUser.getId()))
+                .thenReturn(List.of(friendUser.getId()));
+
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Object[]> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(feedRepository.findFeedItems(anyList(), any(LocalDateTime.class), any(), any(Pageable.class)))
+                .thenReturn(emptyPage);
+
+        // When
+        feedService.getFeed("user@test.com", 0, 20, FeedItemType.PLAY);
+
+        // Then
+        verify(feedRepository)
+                .findFeedItems(anyList(), any(LocalDateTime.class), eq(FeedItemType.PLAY), any(Pageable.class));
     }
 
     @Test

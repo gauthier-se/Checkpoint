@@ -20,6 +20,7 @@ export const SHORTCUT_GROUPS: ReadonlyArray<ShortcutGroup> = [
       { keys: ['G', 'W'], label: 'Go to news' },
       { keys: ['G', 'N'], label: 'Go to notifications', authOnly: true },
       { keys: ['G', 'P'], label: 'Go to my profile', authOnly: true },
+      { keys: ['G', 'S'], label: 'Go to settings', authOnly: true },
     ],
   },
   {
@@ -33,6 +34,7 @@ export const SHORTCUT_GROUPS: ReadonlyArray<ShortcutGroup> = [
   {
     title: 'Game page',
     items: [
+      { keys: ['L'], label: 'Toggle like', authOnly: true },
       { keys: ['W'], label: 'Toggle wishlist', authOnly: true },
       { keys: ['B'], label: 'Toggle backlog', authOnly: true },
     ],

@@ -1,8 +1,10 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Users } from 'lucide-react'
-import type { FeedResponse } from '@/types/feed'
+import type { FeedItemType, FeedResponse, FeedTab } from '@/types/feed'
+import { FEED_ITEM_TYPES } from '@/types/feed'
 import { FeedList } from '@/components/feed/feed-list'
 import { FeedPagination } from '@/components/feed/feed-pagination'
+import { FEED_TAB_OPTIONS, FeedTabs } from '@/components/feed/feed-tabs'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -10,18 +12,26 @@ import { feedQueryOptions } from '@/queries/feed'
 
 type FeedSearchParams = {
   page: number
+  type?: FeedItemType
 }
 
 const PAGE_SIZE = 20
 
 export const Route = createFileRoute('/_app/_protected/feed/')({
-  validateSearch: (search: Record<string, unknown>): FeedSearchParams => ({
-    page: Math.max(1, Math.floor(Number(search.page ?? 1)) || 1),
-  }),
+  validateSearch: (search: Record<string, unknown>): FeedSearchParams => {
+    const rawType = search.type
+    const type = FEED_ITEM_TYPES.includes(rawType as FeedItemType)
+      ? (rawType as FeedItemType)
+      : undefined
+    return {
+      page: Math.max(1, Math.floor(Number(search.page ?? 1)) || 1),
+      type,
+    }
+  },
   loaderDeps: ({ search }) => search,
   loader: async ({ deps, context }): Promise<FeedResponse> => {
     return context.queryClient.ensureQueryData(
-      feedQueryOptions(deps.page - 1, PAGE_SIZE),
+      feedQueryOptions(deps.page - 1, PAGE_SIZE, deps.type),
     )
   },
   component: RouteComponent,
@@ -29,7 +39,19 @@ export const Route = createFileRoute('/_app/_protected/feed/')({
 
 function RouteComponent() {
   const data = Route.useLoaderData()
-  const { page } = Route.useSearch()
+  const { page, type } = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  function handleTabChange(value: FeedTab) {
+    // Reset to the first page whenever the filter changes.
+    navigate({
+      search: { page: 1, type: value === 'all' ? undefined : value },
+    })
+  }
+
+  const activeLabel = FEED_TAB_OPTIONS.find(
+    (opt) => opt.value === (type ?? 'all'),
+  )?.label
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -45,6 +67,7 @@ function RouteComponent() {
           </h2>
         </div>
         <Separator />
+        <FeedTabs value={type ?? 'all'} onValueChange={handleTabChange} />
 
         {data.content.length > 0 ? (
           <>
@@ -56,6 +79,16 @@ function RouteComponent() {
               hasPrevious={data.metadata.hasPrevious}
             />
           </>
+        ) : type ? (
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <Users className="text-muted-foreground size-12" />
+            <p className="text-muted-foreground text-lg">
+              No {activeLabel?.toLowerCase()} activity in the last 30 days
+            </p>
+            <Button variant="outline" onClick={() => handleTabChange('all')}>
+              Show all activity
+            </Button>
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <Users className="text-muted-foreground size-12" />
