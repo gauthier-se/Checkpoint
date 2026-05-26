@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ComponentProps, ReactNode } from 'react'
 
@@ -7,9 +7,9 @@ import { GamesPagination } from '@/components/games/pagination'
 
 vi.mock('@tanstack/react-router', () => ({
   // Replace TanStack Router's <Link> with a plain <a> so the component can
-  // render outside of a router context. We forward `disabled` to the DOM as a
-  // data attribute (anchors don't support the native disabled attribute) and
-  // drop router-only props (to/search/hash) before spreading.
+  // render outside of a router context. Router-only props (to/search/hash) are
+  // dropped before spreading; everything else (className, aria-*, data-*) is
+  // forwarded so the shadcn pagination styling/state attributes survive.
   Link: ({
     children,
     disabled,
@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-router', () => ({
     children: ReactNode
     disabled?: boolean
     to?: string
-    search?: Record<string, unknown>
+    search?: unknown
     hash?: string
   } & ComponentProps<'a'>) => (
     <a
@@ -35,7 +35,7 @@ vi.mock('@tanstack/react-router', () => ({
 }))
 
 describe('GamesPagination', () => {
-  it('renders one page button per page when totalPages <= 7', () => {
+  it('renders one page link per page when totalPages <= 7', () => {
     render(
       <GamesPagination
         page={1}
@@ -47,13 +47,13 @@ describe('GamesPagination', () => {
     )
 
     for (const label of ['1', '2', '3', '4', '5']) {
-      expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
     }
-    // No ellipsis buttons.
-    expect(screen.queryByRole('button', { name: '...' })).toBeNull()
+    // No ellipsis links.
+    expect(screen.queryByRole('link', { name: '...' })).toBeNull()
   })
 
-  it('marks only the current page button with the default (filled) variant', () => {
+  it('marks only the current page link with aria-current', () => {
     render(
       <GamesPagination
         page={3}
@@ -64,14 +64,13 @@ describe('GamesPagination', () => {
       />,
     )
 
-    const current = screen.getByRole('button', { name: '3' })
-    const other = screen.getByRole('button', { name: '2' })
-    // The shadcn Button maps variant="default" to "bg-primary"; outline keeps a border without bg-primary.
-    expect(current.className).toContain('bg-primary')
-    expect(other.className).not.toContain('bg-primary')
+    const current = screen.getByRole('link', { name: '3' })
+    const other = screen.getByRole('link', { name: '2' })
+    expect(current).toHaveAttribute('aria-current', 'page')
+    expect(other).not.toHaveAttribute('aria-current')
   })
 
-  it('disables the Previous and Next buttons at the boundaries', () => {
+  it('renders Previous and Next as non-link disabled controls at the boundaries', () => {
     render(
       <GamesPagination
         page={1}
@@ -82,20 +81,13 @@ describe('GamesPagination', () => {
       />,
     )
 
-    const prev = screen.getByRole('button', { name: /previous/i })
-    const next = screen.getByRole('button', { name: /next/i })
-    expect(prev).toBeDisabled()
-    expect(next).toBeDisabled()
-
-    // The wrapping anchor is also flagged via data-disabled (forwarded by the Link mock).
-    const prevLink = prev.closest('a')!
-    const nextLink = next.closest('a')!
-    expect(prevLink.dataset.disabled).toBe('true')
-    expect(nextLink.dataset.disabled).toBe('true')
-    // Sanity: the surrounding link wrappers contain the expected button text.
-    expect(within(prevLink).getByRole('button', { name: /previous/i })).toBe(
-      prev,
-    )
-    expect(within(nextLink).getByRole('button', { name: /next/i })).toBe(next)
+    // Disabled edges are not navigable links...
+    expect(screen.queryByRole('link', { name: /previous/i })).toBeNull()
+    expect(screen.queryByRole('link', { name: /next/i })).toBeNull()
+    // ...but they are present and flagged as disabled.
+    expect(
+      screen.getByText('Previous').closest('[aria-disabled]'),
+    ).not.toBeNull()
+    expect(screen.getByText('Next').closest('[aria-disabled]')).not.toBeNull()
   })
 })

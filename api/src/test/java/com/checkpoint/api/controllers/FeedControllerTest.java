@@ -1,7 +1,9 @@
 package com.checkpoint.api.controllers;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -63,14 +65,14 @@ class FeedControllerTest {
         FeedGameDto feedGame = new FeedGameDto(UUID.randomUUID(), "Elden Ring", "cover.jpg", null);
         FeedItemDto item = new FeedItemDto(
                 UUID.randomUUID(), FeedItemType.RATING, LocalDateTime.now(),
-                feedUser, feedGame, null, 5, null, null, null, null
+                feedUser, feedGame, null, 5, null, null, null, null, null
         );
 
         List<FeedItemDto> items = List.of(item);
         Page<FeedItemDto> page = new PageImpl<>(items, PageRequest.of(0, 20), 1);
         PagedResponseDto<FeedItemDto> response = PagedResponseDto.from(page);
 
-        when(feedService.getFeed(eq("user@test.com"), anyInt(), anyInt())).thenReturn(response);
+        when(feedService.getFeed(eq("user@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
 
         // When / Then
         mockMvc.perform(get("/api/me/feed"))
@@ -91,7 +93,7 @@ class FeedControllerTest {
         Page<FeedItemDto> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0);
         PagedResponseDto<FeedItemDto> response = PagedResponseDto.from(emptyPage);
 
-        when(feedService.getFeed(eq("lonely@test.com"), anyInt(), anyInt())).thenReturn(response);
+        when(feedService.getFeed(eq("lonely@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
 
         // When / Then
         mockMvc.perform(get("/api/me/feed"))
@@ -99,6 +101,23 @@ class FeedControllerTest {
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.metadata.totalElements").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /api/me/feed should pass the type filter to the service")
+    @WithMockUser(username = "user@test.com")
+    void getFeed_shouldPassTypeFilterToService() throws Exception {
+        // Given
+        Page<FeedItemDto> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 20), 0);
+        PagedResponseDto<FeedItemDto> response = PagedResponseDto.from(emptyPage);
+
+        when(feedService.getFeed(eq("user@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
+
+        // When / Then
+        mockMvc.perform(get("/api/me/feed").param("type", "RATING"))
+                .andExpect(status().isOk());
+
+        verify(feedService).getFeed(eq("user@test.com"), anyInt(), anyInt(), eq(FeedItemType.RATING));
     }
 
     @Test

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.checkpoint.api.dto.catalog.GameCardDto;
 import com.checkpoint.api.dto.catalog.PagedResponseDto;
 import com.checkpoint.api.dto.social.FeedItemDto;
+import com.checkpoint.api.enums.FeedItemType;
 import com.checkpoint.api.services.FeedService;
 
 /**
@@ -40,17 +41,20 @@ public class FeedController {
      * @param userDetails the authenticated user
      * @param page        the page number (0-based, default 0)
      * @param size        the page size (default 20)
+     * @param type        optional activity type filter (null = all types)
      * @return a paginated response of feed items
      */
     @GetMapping("/feed")
     public ResponseEntity<PagedResponseDto<FeedItemDto>> getFeed(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) FeedItemType type) {
 
-        log.info("GET /api/me/feed - user: {}, page: {}, size: {}", userDetails.getUsername(), page, size);
+        log.info("GET /api/me/feed - user: {}, page: {}, size: {}, type: {}",
+                userDetails.getUsername(), page, size, type);
 
-        PagedResponseDto<FeedItemDto> feed = feedService.getFeed(userDetails.getUsername(), page, size);
+        PagedResponseDto<FeedItemDto> feed = feedService.getFeed(userDetails.getUsername(), page, size, type);
         return ResponseEntity.ok(feed);
     }
 

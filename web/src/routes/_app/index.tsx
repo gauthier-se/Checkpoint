@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import {
   Gamepad2,
   Heart,
@@ -15,7 +16,7 @@ import type { User } from '@/types/user'
 import type { UserProfile } from '@/types/profile'
 import type { MemberCard as MemberCardType } from '@/types/member'
 import type { GameListCard } from '@/types/list'
-import type { FeedItem as FeedItemType } from '@/types/feed'
+import type { FeedTab } from '@/types/feed'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -24,7 +25,8 @@ import { RecommendedForYouSection } from '@/components/games/recommended-for-you
 import { NewsCard } from '@/components/news/news-card'
 import { MemberCard } from '@/components/members/member-card'
 import { ListsGrid } from '@/components/lists/lists-grid'
-import { FeedList } from '@/components/feed/feed-list'
+import { FeedList, FeedListSkeleton } from '@/components/feed/feed-list'
+import { FeedTabs } from '@/components/feed/feed-tabs'
 import { OnboardingChecklist } from '@/components/onboarding/onboarding-checklist'
 import { useAuth } from '@/hooks/use-auth'
 import {
@@ -230,7 +232,6 @@ function AuthenticatedHome({ user, data }: { user: User; data: HomeData }) {
   const profileQuery = useQuery(userProfileQueryOptions(user.username))
   const suggestedQuery = useQuery(suggestedMembersQueryOptions(5))
   const popularListsQuery = useQuery(popularListsQueryOptions(0, 4))
-  const feedQuery = useQuery(feedQueryOptions(0, 5))
   const friendsTrendingQuery = useQuery(friendsTrendingGamesQueryOptions(7))
   const recommendedQuery = useQuery(recommendedGamesQueryOptions(7))
 
@@ -238,10 +239,7 @@ function AuthenticatedHome({ user, data }: { user: User; data: HomeData }) {
     <div className="mx-auto max-w-7xl px-4">
       <OnboardingChecklist />
       <WelcomeSection user={user} profile={profileQuery.data} />
-      <FriendsActivitySection
-        items={feedQuery.data?.content}
-        isLoading={feedQuery.isLoading}
-      />
+      <FriendsActivitySection />
       <FriendsTrendingSection
         games={friendsTrendingQuery.data}
         isLoading={friendsTrendingQuery.isLoading}
@@ -386,14 +384,35 @@ function PopularListsSection({
   )
 }
 
-function FriendsActivitySection({
-  items,
-  isLoading,
-}: {
-  items: Array<FeedItemType> | undefined
-  isLoading: boolean
-}) {
-  if (isLoading || !items || items.length === 0) return null
+function FriendsActivitySection() {
+  const [tab, setTab] = useState<FeedTab>('all')
+  const feedQuery = useQuery(
+    feedQueryOptions(0, 5, tab === 'all' ? undefined : tab),
+  )
+  const items = feedQuery.data?.content
+
+  // First load (no data yet): show a skeleton rather than a blank gap.
+  if (tab === 'all' && feedQuery.isLoading) {
+    return (
+      <section className="my-12">
+        <div className="flex items-center justify-between py-2">
+          <h2 className="font-semibold text-muted-foreground">
+            New from friends
+          </h2>
+        </div>
+        <Separator />
+        <FeedListSkeleton />
+      </section>
+    )
+  }
+
+  // Loaded: hide the whole section if the user has no friend activity at all —
+  // no point showing an empty teaser on the home page. Once the "All" tab has
+  // returned items, the tabs stay mounted even if a filtered view is empty so
+  // the user can switch back.
+  if (tab === 'all' && (!items || items.length === 0)) {
+    return null
+  }
 
   return (
     <section className="my-12">
@@ -403,14 +422,23 @@ function FriendsActivitySection({
         </h2>
         <Link
           to="/feed"
-          search={{ page: 1 }}
+          search={{ page: 1, type: tab === 'all' ? undefined : tab }}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
           More
         </Link>
       </div>
       <Separator />
-      <FeedList items={items} />
+      <FeedTabs value={tab} onValueChange={setTab} className="mt-5 mb-1" />
+      {feedQuery.isLoading ? (
+        <FeedListSkeleton />
+      ) : items && items.length > 0 ? (
+        <FeedList items={items} />
+      ) : (
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          No activity to show for this filter.
+        </p>
+      )}
     </section>
   )
 }

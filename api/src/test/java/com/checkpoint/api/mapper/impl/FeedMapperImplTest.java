@@ -47,7 +47,7 @@ class FeedMapperImplTest {
         UUID likeId = UUID.randomUUID();
         Object[] row = new Object[]{
                 likeId, "LIKE_GAME", Timestamp.valueOf(LocalDateTime.now()),
-                user.getId(), game.getId(), null, null
+                user.getId(), game.getId(), null, null, null
         };
 
         FeedItemDto result = feedMapper.toFeedItemDto(
@@ -73,11 +73,33 @@ class FeedMapperImplTest {
     void shouldReturnNullWhenUserMissing() {
         Object[] row = new Object[]{
                 UUID.randomUUID(), "LIKE_GAME", Timestamp.valueOf(LocalDateTime.now()),
-                user.getId(), game.getId(), null, null
+                user.getId(), game.getId(), null, null, null
         };
 
         FeedItemDto result = feedMapper.toFeedItemDto(row, Map.of(), Map.of(game.getId(), game));
 
         assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("should map a REVIEW row carrying the associated play-log id")
+    void shouldMapReviewRowWithLogId() {
+        UUID reviewId = UUID.randomUUID();
+        UUID logId = UUID.randomUUID();
+        Object[] row = new Object[]{
+                reviewId, "REVIEW", Timestamp.valueOf(LocalDateTime.now()),
+                user.getId(), game.getId(), "Great game!", "false", logId.toString()
+        };
+
+        FeedItemDto result = feedMapper.toFeedItemDto(
+                row,
+                Map.of(user.getId(), user),
+                Map.of(game.getId(), game));
+
+        assertThat(result).isNotNull();
+        assertThat(result.type()).isEqualTo(FeedItemType.REVIEW);
+        assertThat(result.reviewContent()).isEqualTo("Great game!");
+        assertThat(result.haveSpoilers()).isFalse();
+        assertThat(result.logId()).isEqualTo(logId);
     }
 }

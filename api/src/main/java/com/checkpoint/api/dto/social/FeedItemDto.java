@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param haveSpoilers  whether the review contains spoilers (REVIEW type only)
  * @param listTitle     the list title (LIST type only)
  * @param listGameCount number of games in the list (LIST type only)
+ * @param logId         the associated play-log ID, used to link to the log detail page (REVIEW type only, may be null)
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record FeedItemDto(
@@ -34,6 +35,7 @@ public record FeedItemDto(
         String reviewContent,
         Boolean haveSpoilers,
         String listTitle,
-        Integer listGameCount
+        Integer listGameCount,
+        UUID logId
 ) {
 }

@@ -29,6 +29,7 @@ public class FeedMapperImpl implements FeedMapper {
         UUID videoGameId = row[4] != null ? (UUID) row[4] : null;
         String extra1 = row[5] != null ? row[5].toString() : null;
         String extra2 = row[6] != null ? row[6].toString() : null;
+        String extra3 = row[7] != null ? row[7].toString() : null;
 
         FeedItemType type = FeedItemType.valueOf(typeStr);
 
@@ -52,6 +53,7 @@ public class FeedMapperImpl implements FeedMapper {
         Boolean haveSpoilers = null;
         String listTitle = null;
         Integer listGameCount = null;
+        UUID logId = null;
 
         switch (type) {
             case PLAY:
@@ -63,6 +65,7 @@ public class FeedMapperImpl implements FeedMapper {
             case REVIEW:
                 reviewContent = extra1;
                 haveSpoilers = extra2 != null ? Boolean.parseBoolean(extra2) : null;
+                logId = extra3 != null ? UUID.fromString(extra3) : null;
                 break;
             case LIST:
                 listTitle = extra1;
@@ -76,7 +79,7 @@ public class FeedMapperImpl implements FeedMapper {
         return new FeedItemDto(
                 id, type, createdAt, feedUser, feedGame,
                 playStatus, score, reviewContent, haveSpoilers,
-                listTitle, listGameCount
+                listTitle, listGameCount, logId
         );
     }
 }

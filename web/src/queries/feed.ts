@@ -1,13 +1,22 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { Game, GamesResponse } from '@/types/game'
-import type { FeedResponse } from '@/types/feed'
+import type { FeedItemType, FeedResponse } from '@/types/feed'
 import { apiFetch } from '@/services/api'
 
-export function feedQueryOptions(page: number = 0, size: number = 5) {
+export function feedQueryOptions(
+  page: number = 0,
+  size: number = 5,
+  type?: FeedItemType,
+) {
   return queryOptions({
-    queryKey: ['feed', page, size],
+    queryKey: ['feed', page, size, type ?? null],
     queryFn: async (): Promise<FeedResponse> => {
-      const res = await apiFetch(`/api/me/feed?page=${page}&size=${size}`)
+      const params = new URLSearchParams({
+        page: String(page),
+        size: String(size),
+      })
+      if (type) params.set('type', type)
+      const res = await apiFetch(`/api/me/feed?${params.toString()}`)
       return res.json()
     },
     staleTime: 60 * 1000,
