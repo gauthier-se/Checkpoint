@@ -172,6 +172,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^3.0.5
         version: 3.2.4(vitest@3.2.4(@types/node@22.18.13)(jiti@2.7.0)(jsdom@27.1.0)(lightningcss@1.32.0))
+      eslint:
+        specifier: ^9.38.0
+        version: 9.38.0(jiti@2.7.0)
       jsdom:
         specifier: ^27.0.0
         version: 27.1.0
