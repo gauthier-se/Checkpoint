@@ -98,6 +98,23 @@ public interface BacklogRepository extends JpaRepository<Backlog, UUID> {
     long countByVideoGameId(UUID videoGameId);
 
     /**
+     * Counts how many backlog entries the user has. Used to detect when starting a
+     * new game while the backlog is "screaming" (LEEROY easter-egg badge).
+     */
+    long countByUserId(UUID userId);
+
+    /**
+     * Returns the IDs of users who have at least one backlog entry created on or
+     * before the given cutoff. Used by the SNAKE_BACKLOG nightly job to award the
+     * year-long-backlog easter-egg badge.
+     */
+    @Query("""
+            SELECT DISTINCT b.user.id FROM Backlog b
+            WHERE b.createdAt <= :cutoff
+            """)
+    List<UUID> findUserIdsWithEntryOlderThan(@Param("cutoff") java.time.LocalDateTime cutoff);
+
+    /**
      * Returns the games appearing in the most users' backlogs, ranked by descending count.
      * Joins through to the rates table so the {@link GameCardDto} projection includes
      * the average rating and rating count in a single query (avoids N+1).

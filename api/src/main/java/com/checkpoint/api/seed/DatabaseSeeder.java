@@ -176,22 +176,45 @@ public class DatabaseSeeder implements ApplicationRunner {
 
     /**
      * Inserts a {@code badges} row for every {@link BadgeCode} that does not yet
-     * exist. Idempotent: re-running the seeder does not duplicate rows.
+     * exist, and re-syncs each existing row's name/description/hidden so changes
+     * to the enum (e.g. the {@link BadgeCode#LIFER} display rename in TE-306)
+     * propagate without manual SQL. Idempotent.
      */
     private void seedBadges() {
         int created = 0;
+        int updated = 0;
         for (BadgeCode code : BadgeCode.values()) {
-            if (badgeRepository.findByCode(code.name()).isEmpty()) {
+            Badge existing = badgeRepository.findByCode(code.name()).orElse(null);
+            if (existing == null) {
                 badgeRepository.save(new Badge(
                         code.name(),
                         code.getDefaultName(),
                         code.getDefaultDescription(),
-                        null));
+                        null,
+                        code.isHidden()));
                 created++;
+                continue;
+            }
+            boolean changed = false;
+            if (!code.getDefaultName().equals(existing.getName())) {
+                existing.setName(code.getDefaultName());
+                changed = true;
+            }
+            if (!code.getDefaultDescription().equals(existing.getDescription())) {
+                existing.setDescription(code.getDefaultDescription());
+                changed = true;
+            }
+            if (existing.isHidden() != code.isHidden()) {
+                existing.setHidden(code.isHidden());
+                changed = true;
+            }
+            if (changed) {
+                badgeRepository.save(existing);
+                updated++;
             }
         }
-        log.info("Badge catalog: {} new badge(s) inserted ({} total in catalog).",
-                created, BadgeCode.values().length);
+        log.info("Badge catalog: {} new badge(s) inserted, {} re-synced ({} total in catalog).",
+                created, updated, BadgeCode.values().length);
     }
 
     /**

@@ -14,12 +14,14 @@ import {
   Tag as TagIcon,
   Trash2,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { PlayStatus } from '@/types/interaction'
 import type { ReviewSummary } from '@/types/play-log'
 import { deletePlayLog, playLogDetailQueryOptions } from '@/queries/plays'
 import { gameDetailQueryOptions } from '@/queries/catalog'
+import { triggerReviewView } from '@/queries/easter-eggs'
+import { useAuth } from '@/hooks/use-auth'
 import { CommentSection } from '@/components/comments/comment-section'
 import { PlayLogDialog } from '@/components/games/play-log-dialog'
 import { ScoreStars } from '@/components/games/score-stars'
@@ -90,11 +92,19 @@ function PlayLogDetailPage() {
   const { id } = Route.useParams()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     data: play,
     isLoading,
     error,
   } = useQuery(playLogDetailQueryOptions(id))
+
+  // STAY_AWHILE_REVIEWS: signal that the viewer opened a review by someone
+  // else. The server dedupes and ignores self-views.
+  useEffect(() => {
+    if (!user || !play?.review || play.isOwner) return
+    void triggerReviewView(play.review.id)
+  }, [user, play?.review?.id, play?.isOwner])
 
   // Editing requires platforms list; we load the game detail lazily once the
   // owner opens the dialog. Keep it stable across renders.

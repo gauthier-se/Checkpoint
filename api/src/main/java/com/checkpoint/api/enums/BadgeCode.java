@@ -8,6 +8,10 @@ package com.checkpoint.api.enums;
  * name (e.g. {@code FIRST_REVIEW}) is the immutable contract between in-code
  * logic and the persisted {@code Badge.code} column — admins may later edit
  * the display name/description in the DB without breaking awarding.
+ *
+ * <p>{@code hidden} marks easter-egg badges: until earned, the UI shows a
+ * silhouette and the name as {@code ???}. The trigger logic stays server-side
+ * so a hidden badge cannot be forged with a crafted payload.
  */
 public enum BadgeCode {
 
@@ -100,15 +104,85 @@ public enum BadgeCode {
             "I Used to Be an Adventurer Like You",
             "Awarded for staying active 30 days since registration."),
     LIFER(
+            "Lifer",
+            "Awarded for staying active 365 days since registration."),
+
+    // Hidden easter-egg badges — discovered, not chased.
+    // The display name is part of the joke; the description is intentionally
+    // vague so it doesn't spoil the trigger once unlocked.
+    NIGHT_OWL(
+            "Wake Me Up When September Ends",
+            "Logged a play at a very unreasonable hour.",
+            true),
+    SNAKE_BACKLOG(
+            "Snake? SNAAAKE!",
+            "Kept a game in the backlog for a full year.",
+            true),
+    THE_CAKE_IS_A_LIE(
             "The Cake Is a Lie",
-            "Awarded for staying active 365 days since registration.");
+            "Rated exactly 13 games with one star.",
+            true),
+    KONAMI(
+            "Up Up Down Down Left Right Left Right B A",
+            "Typed the legendary cheat code.",
+            true),
+    TIME_TRAVELER(
+            "It's-a Me, Mario",
+            "Finished a game older than most teenagers.",
+            true),
+    INDECISIVE(
+            "Hadouken!",
+            "Changed your mind about a game five times over.",
+            true),
+    WAKE_UP_MR_FREEMAN(
+            "Wake Up, Mr. Freeman",
+            "Returned after a month-long disappearance.",
+            true),
+    YOU_DIED(
+            "YOU DIED",
+            "Removed a game from your library.",
+            true),
+    MISSION_FAILED(
+            "Mission Failed — We'll Get 'Em Next Time",
+            "Deleted a review right after posting it.",
+            true),
+    HEY_LISTEN(
+            "Hey! Listen!",
+            "Could not stop poking the notification bell.",
+            true),
+    BARREL_ROLL(
+            "Do a Barrel Roll!",
+            "Discovered an unusual way to sort your games.",
+            true),
+    ALL_YOUR_BASE(
+            "All Your Base Are Belong to Us",
+            "Logged a thousand plays. All of them.",
+            true),
+    STAY_AWHILE_REVIEWS(
+            "Stay Awhile and Read",
+            "Read fifty reviews from fellow critics.",
+            true),
+    LEEROY(
+            "LEEROY JENKINS!",
+            "Started a new game while your backlog was screaming.",
+            true),
+    RICKROLL(
+            "Never Gonna Give You Up",
+            "You know the rules, and so do we.",
+            true);
 
     private final String defaultName;
     private final String defaultDescription;
+    private final boolean hidden;
 
     BadgeCode(String defaultName, String defaultDescription) {
+        this(defaultName, defaultDescription, false);
+    }
+
+    BadgeCode(String defaultName, String defaultDescription, boolean hidden) {
         this.defaultName = defaultName;
         this.defaultDescription = defaultDescription;
+        this.hidden = hidden;
     }
 
     public String getDefaultName() {
@@ -117,5 +191,9 @@ public enum BadgeCode {
 
     public String getDefaultDescription() {
         return defaultDescription;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 }

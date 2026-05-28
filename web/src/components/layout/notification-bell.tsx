@@ -34,6 +34,7 @@ import {
   notificationsQueryOptions,
   unreadCountQueryOptions,
 } from '@/queries/notifications'
+import { triggerNaviClick } from '@/queries/easter-eggs'
 
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(false)
@@ -181,8 +182,20 @@ export function NotificationBell() {
 
   const unreadCount = unreadData?.count ?? 0
 
+  // HEY_LISTEN: each click is recorded server-side; the badge fires once the
+  // in-memory click counter for this session crosses 50. The server is in
+  // charge so this stays un-forgeable.
+  const handleBellClick = () => {
+    void triggerNaviClick()
+  }
+
   const bellButton = (
-    <Button variant="ghost" size="icon" className="relative size-9">
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative size-9"
+      onClick={handleBellClick}
+    >
       <Bell className="size-5" />
       {unreadCount > 0 && (
         <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">

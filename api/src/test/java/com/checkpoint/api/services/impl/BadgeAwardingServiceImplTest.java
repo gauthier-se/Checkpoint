@@ -51,6 +51,9 @@ class BadgeAwardingServiceImplTest {
     @Mock private UserGameRepository userGameRepository;
     @Mock private UserGamePlayRepository userGamePlayRepository;
     @Mock private LikeRepository likeRepository;
+    @Mock private com.checkpoint.api.repositories.RateRepository rateRepository;
+    @Mock private com.checkpoint.api.repositories.BacklogRepository backlogRepository;
+    @Mock private com.checkpoint.api.repositories.ReviewViewRepository reviewViewRepository;
     @Mock private ApplicationEventPublisher eventPublisher;
 
     private BadgeAwardingServiceImpl service;
@@ -63,7 +66,7 @@ class BadgeAwardingServiceImplTest {
         service = new BadgeAwardingServiceImpl(
                 userRepository, badgeRepository, reviewRepository,
                 userGameRepository, userGamePlayRepository, likeRepository,
-                eventPublisher);
+                rateRepository, backlogRepository, reviewViewRepository, eventPublisher);
 
         userId = UUID.randomUUID();
         user = new User();

@@ -2,6 +2,9 @@ package com.checkpoint.api.mapper.impl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -26,12 +29,19 @@ public class ProfileMapperImpl implements ProfileMapper {
      * {@inheritDoc}
      */
     @Override
-    public UserProfileDto toUserProfileDto(User user, List<RecentPlayDto> recentPlays,
+    public UserProfileDto toUserProfileDto(User user, List<Badge> catalog, List<RecentPlayDto> recentPlays,
                                             Long followerCount, Long followingCount,
                                             Long reviewCount, Long wishlistCount,
                                             Boolean isFollowing, Boolean isOwner) {
-        List<BadgeDto> badgeDtos = user.getBadges().stream()
-                .map(this::toBadgeDto)
+        Set<UUID> earnedIds = user.getBadges().stream()
+                .map(Badge::getId)
+                .collect(Collectors.toSet());
+
+        // Visible badges first (so the earned set leads), then hidden ones; within
+        // each group sort by code so the order is stable across requests.
+        List<BadgeDto> badgeDtos = catalog.stream()
+                .sorted(Comparator.comparing(Badge::isHidden).thenComparing(Badge::getCode))
+                .map(badge -> toBadgeDto(badge, earnedIds.contains(badge.getId())))
                 .toList();
 
         List<FavoriteDto> favoriteDtos = user.getFavorites().stream()
@@ -85,12 +95,15 @@ public class ProfileMapperImpl implements ProfileMapper {
      * {@inheritDoc}
      */
     @Override
-    public BadgeDto toBadgeDto(Badge badge) {
+    public BadgeDto toBadgeDto(Badge badge, boolean earned) {
         return new BadgeDto(
                 badge.getId(),
+                badge.getCode(),
                 badge.getName(),
                 badge.getPicture(),
-                badge.getDescription()
+                badge.getDescription(),
+                badge.isHidden(),
+                earned
         );
     }
 

@@ -41,6 +41,7 @@ import com.checkpoint.api.mapper.ReviewMapper;
 import com.checkpoint.api.mapper.UserGameMapper;
 import com.checkpoint.api.mapper.WishMapper;
 import com.checkpoint.api.repositories.BacklogRepository;
+import com.checkpoint.api.repositories.BadgeRepository;
 import com.checkpoint.api.repositories.LikeRepository;
 import com.checkpoint.api.repositories.ReviewRepository;
 import com.checkpoint.api.repositories.UserGamePlayRepository;
@@ -72,6 +73,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final LikeRepository likeRepository;
     private final UserGameRepository userGameRepository;
     private final BacklogRepository backlogRepository;
+    private final BadgeRepository badgeRepository;
     private final GameListService gameListService;
     private final StorageService storageService;
     private final ProfileMapper profileMapper;
@@ -93,6 +95,7 @@ public class ProfileServiceImpl implements ProfileService {
                                LikeRepository likeRepository,
                                UserGameRepository userGameRepository,
                                BacklogRepository backlogRepository,
+                               BadgeRepository badgeRepository,
                                GameListService gameListService,
                                StorageService storageService,
                                ProfileMapper profileMapper,
@@ -110,6 +113,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.likeRepository = likeRepository;
         this.userGameRepository = userGameRepository;
         this.backlogRepository = backlogRepository;
+        this.badgeRepository = badgeRepository;
         this.gameListService = gameListService;
         this.storageService = storageService;
         this.profileMapper = profileMapper;
@@ -149,9 +153,10 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         List<RecentPlayDto> recentPlays = buildRecentPlays(user, isOwner);
+        List<com.checkpoint.api.entities.Badge> badgeCatalog = badgeRepository.findAll();
 
         return profileMapper.toUserProfileDto(
-                user, recentPlays, followerCount, followingCount,
+                user, badgeCatalog, recentPlays, followerCount, followingCount,
                 reviewCount, wishlistCount, isFollowing, isOwner);
     }
 
