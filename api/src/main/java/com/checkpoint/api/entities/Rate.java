@@ -33,6 +33,11 @@ public class Rate {
     @Column(nullable = false)
     private Integer score; // 1-10 (half-star steps; display = score / 2)
 
+    // Number of times this rating has been updated. Powers the INDECISIVE
+    // easter-egg badge (5+ rating changes on the same game).
+    @Column(name = "change_count", nullable = false, columnDefinition = "INTEGER NOT NULL DEFAULT 0")
+    private int changeCount = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -82,6 +87,14 @@ public class Rate {
 
     public void setScore(Integer score) {
         this.score = score;
+    }
+
+    public int getChangeCount() {
+        return changeCount;
+    }
+
+    public void setChangeCount(int changeCount) {
+        this.changeCount = changeCount;
     }
 
     public LocalDateTime getCreatedAt() {

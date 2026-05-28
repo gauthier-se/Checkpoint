@@ -132,4 +132,19 @@ public interface UserGameRepository extends JpaRepository<UserGame, UUID> {
             """)
     long countDistinctGamesByUserIds(@Param("userId1") UUID userId1,
                                      @Param("userId2") UUID userId2);
+
+    /**
+     * Returns true if the user has at least one COMPLETED library entry whose
+     * video game's release date is on or before the given cutoff. Powers the
+     * {@code TIME_TRAVELER} easter-egg badge (finish a game ≥ 30 years old).
+     */
+    @Query("""
+            SELECT COUNT(ug) > 0 FROM UserGame ug
+            WHERE ug.user.id = :userId
+              AND ug.status = com.checkpoint.api.enums.GameStatus.COMPLETED
+              AND ug.videoGame.releaseDate IS NOT NULL
+              AND ug.videoGame.releaseDate <= :cutoff
+            """)
+    boolean existsCompletedGameOlderThan(@Param("userId") UUID userId,
+                                          @Param("cutoff") java.time.LocalDate cutoff);
 }

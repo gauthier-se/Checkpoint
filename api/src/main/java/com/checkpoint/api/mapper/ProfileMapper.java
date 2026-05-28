@@ -21,6 +21,8 @@ public interface ProfileMapper {
      * Maps a User entity and computed stats to a UserProfileDto.
      *
      * @param user           the user entity (with badges loaded)
+     * @param catalog        the full badge catalog, used to mark earned vs. not
+     *                       and to surface hidden silhouettes
      * @param recentPlays    the user's recent play projections (pre-computed by the service)
      * @param followerCount  the number of followers
      * @param followingCount the number of users being followed
@@ -30,7 +32,7 @@ public interface ProfileMapper {
      * @param isOwner        whether the viewer is the profile owner
      * @return the user profile DTO
      */
-    UserProfileDto toUserProfileDto(User user, List<RecentPlayDto> recentPlays,
+    UserProfileDto toUserProfileDto(User user, List<Badge> catalog, List<RecentPlayDto> recentPlays,
                                      Long followerCount, Long followingCount,
                                      Long reviewCount, Long wishlistCount,
                                      Boolean isFollowing, Boolean isOwner);
@@ -45,12 +47,13 @@ public interface ProfileMapper {
     RecentPlayDto toRecentPlayDto(UserGamePlay play, boolean isLiked);
 
     /**
-     * Maps a Badge entity to a BadgeDto.
+     * Maps a Badge entity to a BadgeDto with an explicit earned flag.
      *
-     * @param badge the badge entity
+     * @param badge  the badge entity
+     * @param earned whether the profile owner has earned this badge
      * @return the badge DTO
      */
-    BadgeDto toBadgeDto(Badge badge);
+    BadgeDto toBadgeDto(Badge badge, boolean earned);
 
     /**
      * Maps a Favorite entity (with its video game) to a FavoriteDto.

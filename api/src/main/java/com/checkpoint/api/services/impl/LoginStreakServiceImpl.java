@@ -17,6 +17,7 @@ import com.checkpoint.api.entities.UserLoginStreak;
 import com.checkpoint.api.enums.XpEventType;
 import com.checkpoint.api.repositories.UserLoginStreakRepository;
 import com.checkpoint.api.repositories.UserRepository;
+import com.checkpoint.api.services.BadgeAwardingService;
 import com.checkpoint.api.services.GamificationService;
 import com.checkpoint.api.services.LoginStreakService;
 
@@ -40,15 +41,18 @@ public class LoginStreakServiceImpl implements LoginStreakService {
     private final UserLoginStreakRepository streakRepository;
     private final UserRepository userRepository;
     private final GamificationService gamificationService;
+    private final BadgeAwardingService badgeAwardingService;
     private final Clock clock;
 
     public LoginStreakServiceImpl(UserLoginStreakRepository streakRepository,
                                   UserRepository userRepository,
                                   GamificationService gamificationService,
+                                  BadgeAwardingService badgeAwardingService,
                                   Clock clock) {
         this.streakRepository = streakRepository;
         this.userRepository = userRepository;
         this.gamificationService = gamificationService;
+        this.badgeAwardingService = badgeAwardingService;
         this.clock = clock;
     }
 
@@ -69,7 +73,8 @@ public class LoginStreakServiceImpl implements LoginStreakService {
         }
 
         int newDay;
-        if (last == null || ChronoUnit.DAYS.between(last, today) > 1) {
+        long daysAway = (last == null) ? 0 : ChronoUnit.DAYS.between(last, today);
+        if (last == null || daysAway > 1) {
             newDay = 1;
         } else {
             // last is exactly today - 1
@@ -80,6 +85,10 @@ public class LoginStreakServiceImpl implements LoginStreakService {
         streak.setLastActivityDate(today);
         streakRepository.save(streak);
         log.info("User {} streak advanced to day {}", userId, newDay);
+
+        if (daysAway > 0) {
+            badgeAwardingService.checkReturningUserBadges(userId, daysAway);
+        }
 
         int dailyBonus = DAILY_XP_PER_DAY * Math.min(newDay, DAILY_XP_DAY_CAP);
         gamificationService.awardXp(userId, dailyBonus, XpEventType.STREAK_DAILY, null);

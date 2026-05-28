@@ -59,6 +59,9 @@ class UserGameCollectionServiceImplTest {
     @Mock
     private UserGameMapper userGameMapper;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     private UserGameCollectionServiceImpl service;
 
     private User testUser;
@@ -69,7 +72,7 @@ class UserGameCollectionServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new UserGameCollectionServiceImpl(
-                userGameRepository, userRepository, videoGameRepository, userGameMapper);
+                userGameRepository, userRepository, videoGameRepository, userGameMapper, eventPublisher);
 
         testUser = new User("testuser", "user@example.com", "password");
         testUser.setId(UUID.randomUUID());

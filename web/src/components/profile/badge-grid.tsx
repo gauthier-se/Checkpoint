@@ -6,49 +6,102 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 interface BadgeGridProps {
   badges: Array<BadgeDto>
 }
 
 export function BadgeGrid({ badges }: BadgeGridProps) {
-  if (badges.length === 0) {
+  // Visible (non-hidden) badges always render in the grid — earned ones in
+  // full colour, locked ones desaturated so the user knows what to chase.
+  // Hidden badges only show as silhouettes until earned (and then in full).
+  const visible = badges.filter((b) => !b.hidden || b.earned)
+  const hiddenLocked = badges.filter((b) => b.hidden && !b.earned)
+
+  const hiddenTotal = badges.filter((b) => b.hidden).length
+  const hiddenEarned = badges.filter((b) => b.hidden && b.earned).length
+
+  if (visible.length === 0 && hiddenLocked.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">No badges earned yet.</p>
+      <p className="text-muted-foreground text-sm">No badges to display.</p>
     )
   }
 
   return (
     <TooltipProvider>
-      <div
-        id="badges"
-        className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
-      >
-        {badges.map((badge) => (
-          <Tooltip key={badge.id}>
-            <TooltipTrigger asChild>
-              <div className="bg-muted flex flex-col items-center gap-1 rounded-lg p-3">
-                {badge.picture ? (
-                  <img
-                    src={badge.picture}
-                    alt={badge.name}
-                    className="size-8"
-                  />
-                ) : (
-                  <Award className="text-primary size-8" />
-                )}
-                <span className="text-center text-xs font-medium leading-tight">
-                  {badge.name}
-                </span>
-              </div>
-            </TooltipTrigger>
-            {badge.description && (
+      <div id="badges" className="space-y-3">
+        <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+          {visible.map((badge) => (
+            <Tooltip key={badge.id}>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    'flex flex-col items-center gap-1 rounded-lg p-3',
+                    badge.earned
+                      ? 'bg-muted'
+                      : 'bg-muted/30 opacity-50 grayscale',
+                  )}
+                >
+                  {badge.picture ? (
+                    <img
+                      src={badge.picture}
+                      alt={badge.name}
+                      className="size-8"
+                    />
+                  ) : (
+                    <Award
+                      className={cn(
+                        'size-8',
+                        badge.earned ? 'text-primary' : 'text-muted-foreground',
+                      )}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      'text-center text-xs font-medium leading-tight',
+                      !badge.earned && 'text-muted-foreground',
+                    )}
+                  >
+                    {badge.name}
+                  </span>
+                </div>
+              </TooltipTrigger>
               <TooltipContent>
-                <p>{badge.description}</p>
+                {badge.description ? (
+                  <p>{badge.description}</p>
+                ) : (
+                  <p>{badge.name}</p>
+                )}
+                {!badge.earned && (
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Not earned yet
+                  </p>
+                )}
               </TooltipContent>
-            )}
-          </Tooltip>
-        ))}
+            </Tooltip>
+          ))}
+          {hiddenLocked.map((badge) => (
+            <Tooltip key={badge.id}>
+              <TooltipTrigger asChild>
+                <div className="bg-muted/30 flex flex-col items-center gap-1 rounded-lg p-3 opacity-50 grayscale">
+                  <Award className="text-muted-foreground size-8" />
+                  <span className="text-muted-foreground text-center text-xs font-medium leading-tight">
+                    ???
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Hidden badge — unlock it to reveal.</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+        {hiddenTotal > 0 && (
+          <p className="text-muted-foreground text-xs">
+            {hiddenEarned} of {hiddenTotal} hidden discovered
+          </p>
+        )}
       </div>
     </TooltipProvider>
   )

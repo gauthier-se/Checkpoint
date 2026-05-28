@@ -8,8 +8,12 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.checkpoint.api.events.GameFinishedEvent;
+import com.checkpoint.api.events.GameRemovedFromLibraryEvent;
+import com.checkpoint.api.events.GameStartedPlayingEvent;
 import com.checkpoint.api.events.PlayLogCreatedEvent;
+import com.checkpoint.api.events.RateRecordedEvent;
 import com.checkpoint.api.events.ReviewCreatedEvent;
+import com.checkpoint.api.events.ReviewDeletedEvent;
 import com.checkpoint.api.events.ReviewLikedEvent;
 import com.checkpoint.api.events.UserActivityEvent;
 import com.checkpoint.api.events.UserFollowedEvent;
@@ -131,5 +135,50 @@ public class BadgeListener {
     public void onUserActivity(UserActivityEvent event) {
         log.debug("Handling UserActivityEvent for longevity badge evaluation, user {}", event.getUserId());
         badgeAwardingService.checkLongevityBadges(event.getUserId());
+    }
+
+    /**
+     * Handles a {@link RateRecordedEvent} by evaluating rating-driven easter-egg
+     * badges ({@code THE_CAKE_IS_A_LIE}, {@code INDECISIVE}). Fires on every rate
+     * create or update, unlike {@code GameRatedEvent} which is first-time only.
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onRateRecorded(RateRecordedEvent event) {
+        log.debug("Handling RateRecordedEvent for badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkRatingBadges(event.getUserId());
+    }
+
+    /**
+     * Handles a {@link GameRemovedFromLibraryEvent} by awarding the
+     * {@code YOU_DIED} easter-egg badge.
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onGameRemoved(GameRemovedFromLibraryEvent event) {
+        log.debug("Handling GameRemovedFromLibraryEvent for badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkGameRemovedBadges(event.getUserId());
+    }
+
+    /**
+     * Handles a {@link ReviewDeletedEvent} by checking whether the review lived
+     * less than five minutes (MISSION_FAILED easter-egg badge).
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onReviewDeleted(ReviewDeletedEvent event) {
+        log.debug("Handling ReviewDeletedEvent for badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkReviewDeletedBadges(event.getUserId(), event.getReviewCreatedAt());
+    }
+
+    /**
+     * Handles a {@link GameStartedPlayingEvent} by checking the backlog size
+     * for the LEEROY easter-egg badge.
+     */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onGameStartedPlaying(GameStartedPlayingEvent event) {
+        log.debug("Handling GameStartedPlayingEvent for badge evaluation, user {}", event.getUserId());
+        badgeAwardingService.checkGameStartedBadges(event.getUserId());
     }
 }

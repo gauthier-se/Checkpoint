@@ -89,7 +89,8 @@ class ProfileControllerTest {
             UserProfileDto profile = new UserProfileDto(
                     UUID.randomUUID(), "testuser", "A bio", null,
                     5, 4500, 5000, false,
-                    List.of(new BadgeDto(UUID.randomUUID(), "First Review", null, "Write your first review")),
+                    List.of(new BadgeDto(UUID.randomUUID(), "FIRST_REVIEW", "First Review",
+                            null, "Write your first review", false, true)),
                     List.of(),
                     List.of(recentPlay),
                     10L, 5L, 3L, 7L,

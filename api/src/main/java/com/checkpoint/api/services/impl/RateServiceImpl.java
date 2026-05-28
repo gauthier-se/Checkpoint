@@ -14,6 +14,7 @@ import com.checkpoint.api.entities.Rate;
 import com.checkpoint.api.entities.User;
 import com.checkpoint.api.entities.VideoGame;
 import com.checkpoint.api.events.GameRatedEvent;
+import com.checkpoint.api.events.RateRecordedEvent;
 import com.checkpoint.api.events.UserActivityEvent;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.RateNotFoundException;
@@ -68,6 +69,9 @@ public class RateServiceImpl implements RateService {
         boolean firstTime = existing.isEmpty();
 
         Rate rate = existing.orElseGet(() -> new Rate(user, videoGame, score));
+        if (!firstTime) {
+            rate.setChangeCount(rate.getChangeCount() + 1);
+        }
         rate.setScore(score);
         Rate savedRate = rateRepository.save(rate);
 
@@ -76,6 +80,7 @@ public class RateServiceImpl implements RateService {
         if (firstTime) {
             eventPublisher.publishEvent(new GameRatedEvent(user.getId(), videoGameId));
         }
+        eventPublisher.publishEvent(new RateRecordedEvent(user.getId(), videoGameId));
         eventPublisher.publishEvent(new UserActivityEvent(user.getId()));
 
         return rateMapper.toDto(savedRate);

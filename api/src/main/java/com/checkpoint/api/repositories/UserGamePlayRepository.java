@@ -117,4 +117,20 @@ public interface UserGamePlayRepository extends JpaRepository<UserGamePlay, UUID
      */
     @Query("SELECT COUNT(DISTINCT p.platform.id) FROM UserGamePlay p WHERE p.user.id = :userId")
     long countDistinctPlatformsByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Returns true if the user has at least one play log whose {@code createdAt}
+     * hour is 02, 03 or 04 (server time). Powers the {@code NIGHT_OWL} easter-egg
+     * badge ("log a play between 02:00 and 05:00").
+     *
+     * <p>Server-time is used as a proxy for the user's local time since the
+     * platform does not currently track per-user timezone. The badge is meant
+     * to be fun rather than precise.</p>
+     */
+    @Query(value = """
+            SELECT COUNT(*) > 0 FROM user_game_plays
+            WHERE user_id = :userId
+              AND EXTRACT(HOUR FROM created_at) IN (2, 3, 4)
+            """, nativeQuery = true)
+    boolean existsNightOwlPlayByUserId(@Param("userId") UUID userId);
 }

@@ -7,6 +7,7 @@ import { OnboardingProvider } from '@/components/onboarding/onboarding-provider'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useNotificationsWebSocket } from '@/hooks/use-notifications-websocket'
 import { useHelpHotkey } from '@/hooks/use-help-hotkey'
+import { useKonamiHotkey } from '@/hooks/use-konami-hotkey'
 import { authQueryOptions } from '@/hooks/use-auth'
 
 export const Route = createFileRoute('/_app')({
@@ -28,6 +29,7 @@ function AppLayout() {
   const openHelp = () => setHelpOpen(true)
 
   useHelpHotkey(openHelp)
+  useKonamiHotkey()
 
   return (
     <OnboardingProvider>

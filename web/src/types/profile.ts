@@ -1,8 +1,11 @@
 export interface BadgeDto {
   id: string
+  code: string
   name: string
   picture: string | null
   description: string | null
+  hidden: boolean
+  earned: boolean
 }
 
 export interface FavoriteGame {

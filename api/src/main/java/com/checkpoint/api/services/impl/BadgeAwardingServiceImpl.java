@@ -1,10 +1,15 @@
 package com.checkpoint.api.services.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+
+import com.checkpoint.api.repositories.BacklogRepository;
+import com.checkpoint.api.repositories.RateRepository;
+import com.checkpoint.api.repositories.ReviewViewRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +48,26 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
     private static final String GENRE_PLATFORM = "Platform";
     private static final String GENRE_INDIE = "Indie";
 
+    // Easter-egg thresholds.
+    private static final int TIME_TRAVELER_YEARS = 30;
+    private static final int ALL_YOUR_BASE_PLAYS = 1000;
+    private static final int CAKE_IS_A_LIE_ONE_STAR_COUNT = 13;
+    private static final int INDECISIVE_CHANGE_THRESHOLD = 5;
+    private static final long MISSION_FAILED_DELETE_WINDOW_MINUTES = 5;
+    private static final int LEEROY_BACKLOG_THRESHOLD = 20;
+    private static final int FREEMAN_DAYS_AWAY = 30;
+    private static final int SNAKE_BACKLOG_DAYS = 365;
+    private static final int STAY_AWHILE_REVIEWS_THRESHOLD = 50;
+
     private final UserRepository userRepository;
     private final BadgeRepository badgeRepository;
     private final ReviewRepository reviewRepository;
     private final UserGameRepository userGameRepository;
     private final UserGamePlayRepository userGamePlayRepository;
     private final LikeRepository likeRepository;
+    private final RateRepository rateRepository;
+    private final BacklogRepository backlogRepository;
+    private final ReviewViewRepository reviewViewRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public BadgeAwardingServiceImpl(UserRepository userRepository,
@@ -57,6 +76,9 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
                                     UserGameRepository userGameRepository,
                                     UserGamePlayRepository userGamePlayRepository,
                                     LikeRepository likeRepository,
+                                    RateRepository rateRepository,
+                                    BacklogRepository backlogRepository,
+                                    ReviewViewRepository reviewViewRepository,
                                     ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.badgeRepository = badgeRepository;
@@ -64,6 +86,9 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
         this.userGameRepository = userGameRepository;
         this.userGamePlayRepository = userGamePlayRepository;
         this.likeRepository = likeRepository;
+        this.rateRepository = rateRepository;
+        this.backlogRepository = backlogRepository;
+        this.reviewViewRepository = reviewViewRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -118,6 +143,12 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
         if (count >= 100) {
             awardIfEligible(userId, BadgeCode.BACKLOG_HUNDRED);
         }
+
+        // TIME_TRAVELER: finishing a game released ≥ 30 years ago.
+        LocalDate cutoff = LocalDate.now(ZoneOffset.UTC).minusYears(TIME_TRAVELER_YEARS);
+        if (userGameRepository.existsCompletedGameOlderThan(userId, cutoff)) {
+            awardIfEligible(userId, BadgeCode.TIME_TRAVELER);
+        }
     }
 
     @Override
@@ -139,10 +170,18 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
         if (playCount >= 100) {
             awardIfEligible(userId, BadgeCode.CENTURION);
         }
+        if (playCount >= ALL_YOUR_BASE_PLAYS) {
+            awardIfEligible(userId, BadgeCode.ALL_YOUR_BASE);
+        }
 
         long platformCount = userGamePlayRepository.countDistinctPlatformsByUserId(userId);
         if (platformCount >= 5) {
             awardIfEligible(userId, BadgeCode.MULTIPLATFORM_NOMAD);
+        }
+
+        // NIGHT_OWL: any play logged between 02:00 and 04:59 server time.
+        if (userGamePlayRepository.existsNightOwlPlayByUserId(userId)) {
+            awardIfEligible(userId, BadgeCode.NIGHT_OWL);
         }
     }
 
@@ -210,6 +249,64 @@ public class BadgeAwardingServiceImpl implements BadgeAwardingService {
         }
         if (likeRepository.countLikesReceivedOnReviewsByUserId(userId) >= 50) {
             awardIfEligible(userId, BadgeCode.BELOVED_REVIEWER);
+        }
+    }
+
+    @Override
+    public void checkRatingBadges(UUID userId) {
+        if (rateRepository.countOneStarByUserId(userId) == CAKE_IS_A_LIE_ONE_STAR_COUNT) {
+            awardIfEligible(userId, BadgeCode.THE_CAKE_IS_A_LIE);
+        }
+        if (rateRepository.existsRateChangedAtLeastByUserId(userId, INDECISIVE_CHANGE_THRESHOLD)) {
+            awardIfEligible(userId, BadgeCode.INDECISIVE);
+        }
+    }
+
+    @Override
+    public void checkGameRemovedBadges(UUID userId) {
+        awardIfEligible(userId, BadgeCode.YOU_DIED);
+    }
+
+    @Override
+    public void checkReviewDeletedBadges(UUID userId, LocalDateTime reviewCreatedAt) {
+        if (reviewCreatedAt == null) {
+            return;
+        }
+        long minutesLived = ChronoUnit.MINUTES.between(reviewCreatedAt, LocalDateTime.now());
+        if (minutesLived >= 0 && minutesLived <= MISSION_FAILED_DELETE_WINDOW_MINUTES) {
+            awardIfEligible(userId, BadgeCode.MISSION_FAILED);
+        }
+    }
+
+    @Override
+    public void checkGameStartedBadges(UUID userId) {
+        if (backlogRepository.countByUserId(userId) >= LEEROY_BACKLOG_THRESHOLD) {
+            awardIfEligible(userId, BadgeCode.LEEROY);
+        }
+    }
+
+    @Override
+    public void checkReturningUserBadges(UUID userId, long daysAway) {
+        if (daysAway >= FREEMAN_DAYS_AWAY) {
+            awardIfEligible(userId, BadgeCode.WAKE_UP_MR_FREEMAN);
+        }
+    }
+
+    @Override
+    public void awardLongBacklogUsers() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(SNAKE_BACKLOG_DAYS);
+        List<UUID> userIds = backlogRepository.findUserIdsWithEntryOlderThan(cutoff);
+        log.info("SNAKE_BACKLOG sweep: {} candidate user(s) with backlog entries older than {} days",
+                userIds.size(), SNAKE_BACKLOG_DAYS);
+        for (UUID userId : userIds) {
+            awardIfEligible(userId, BadgeCode.SNAKE_BACKLOG);
+        }
+    }
+
+    @Override
+    public void checkReaderBadges(UUID userId) {
+        if (reviewViewRepository.countByUserId(userId) >= STAY_AWHILE_REVIEWS_THRESHOLD) {
+            awardIfEligible(userId, BadgeCode.STAY_AWHILE_REVIEWS);
         }
     }
 

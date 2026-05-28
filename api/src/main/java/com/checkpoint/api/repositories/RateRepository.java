@@ -73,4 +73,26 @@ public interface RateRepository extends JpaRepository<Rate, UUID> {
      * Used by the recommendation service to build the user's affinity profile.
      */
     List<Rate> findAllByUserId(UUID userId);
+
+    /**
+     * Counts the user's "one-star" ratings ({@code score <= 2}, i.e. 0.5 or 1
+     * star on the 5-star display). Powers the {@code THE_CAKE_IS_A_LIE} badge,
+     * which fires when the count is exactly 13.
+     */
+    @Query("""
+            SELECT COUNT(r) FROM Rate r
+            WHERE r.user.id = :userId AND r.score <= 2
+            """)
+    long countOneStarByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Returns true if the user has changed at least one rating's score the given
+     * number of times. Powers the {@code INDECISIVE} easter-egg badge.
+     */
+    @Query("""
+            SELECT COUNT(r) > 0 FROM Rate r
+            WHERE r.user.id = :userId AND r.changeCount >= :threshold
+            """)
+    boolean existsRateChangedAtLeastByUserId(@Param("userId") UUID userId,
+                                              @Param("threshold") int threshold);
 }

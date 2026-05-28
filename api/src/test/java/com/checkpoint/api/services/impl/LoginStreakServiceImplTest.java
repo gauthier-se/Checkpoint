@@ -48,6 +48,9 @@ class LoginStreakServiceImplTest {
     @Mock
     private GamificationService gamificationService;
 
+    @Mock
+    private com.checkpoint.api.services.BadgeAwardingService badgeAwardingService;
+
     private LoginStreakServiceImpl streakService;
 
     private User testUser;
@@ -59,7 +62,7 @@ class LoginStreakServiceImplTest {
                 TODAY.atStartOfDay(ZoneOffset.UTC).plusHours(12).toInstant(),
                 ZoneOffset.UTC);
         streakService = new LoginStreakServiceImpl(
-                streakRepository, userRepository, gamificationService, fixedClock);
+                streakRepository, userRepository, gamificationService, badgeAwardingService, fixedClock);
 
         userId = UUID.randomUUID();
         testUser = new User();

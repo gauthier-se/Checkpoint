@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Gamepad2, Loader2, Monitor, Newspaper, Tag, Users } from 'lucide-react'
@@ -18,6 +18,7 @@ import {
 } from '@/queries/catalog'
 import { searchMembersQueryOptions } from '@/queries/members'
 import { searchNewsQueryOptions } from '@/queries/news'
+import { triggerRickroll } from '@/queries/easter-eggs'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -28,12 +29,31 @@ interface SearchCommandProps {
   onOpenChange: (open: boolean) => void
 }
 
+// Patterns that flag a Rickroll attempt anywhere in the global search.
+const RICKROLL_PATTERNS = [
+  /rickroll/i,
+  /never gonna give you up/i,
+  /dQw4w9WgXcQ/, // canonical Rickroll YouTube ID
+] as const
+
 export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<SearchTab>('all')
   const deferredQuery = useDeferredValue(query)
   const isSearchActive = deferredQuery.length >= 2
+
+  // RICKROLL: fire-and-forget when the user types one of the giveaway phrases.
+  // The local flag means we only POST once per session, but the badge is
+  // server-side idempotent either way.
+  const rickrolledRef = useRef(false)
+  useEffect(() => {
+    if (rickrolledRef.current) return
+    if (RICKROLL_PATTERNS.some((re) => re.test(deferredQuery))) {
+      rickrolledRef.current = true
+      void triggerRickroll()
+    }
+  }, [deferredQuery])
 
   const showGames = tab === 'all' || tab === 'games'
   const showMembers = tab === 'all' || tab === 'members'

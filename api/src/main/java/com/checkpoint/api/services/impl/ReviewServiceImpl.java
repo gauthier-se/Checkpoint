@@ -23,6 +23,7 @@ import com.checkpoint.api.entities.UserGamePlay;
 import com.checkpoint.api.enums.NotificationType;
 import com.checkpoint.api.events.NotificationEvent;
 import com.checkpoint.api.events.ReviewCreatedEvent;
+import com.checkpoint.api.events.ReviewDeletedEvent;
 import com.checkpoint.api.events.UserActivityEvent;
 import com.checkpoint.api.exceptions.GameNotFoundException;
 import com.checkpoint.api.exceptions.PlayLogNotFoundException;
@@ -179,8 +180,11 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findByUserGamePlayId(playId)
                 .orElseThrow(() -> new ReviewNotFoundException(playId));
 
+        UUID reviewId = review.getId();
+        java.time.LocalDateTime reviewCreatedAt = review.getCreatedAt();
         reviewRepository.delete(review);
         log.info("Deleted review for play log {} by user {}", playId, user.getPseudo());
+        eventPublisher.publishEvent(new ReviewDeletedEvent(user.getId(), reviewId, reviewCreatedAt));
     }
 
     /**

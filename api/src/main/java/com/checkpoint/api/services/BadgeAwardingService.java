@@ -94,4 +94,61 @@ public interface BadgeAwardingService {
      * @param userId the ID of the user
      */
     void checkLongevityBadges(UUID userId);
+
+    /**
+     * Evaluates rating-driven easter-egg badges ({@code THE_CAKE_IS_A_LIE},
+     * {@code INDECISIVE}). Called on every rating create or update.
+     *
+     * @param userId the ID of the user
+     */
+    void checkRatingBadges(UUID userId);
+
+    /**
+     * Awards the {@code YOU_DIED} easter-egg badge. Called whenever a user
+     * removes a game from their library.
+     *
+     * @param userId the ID of the user
+     */
+    void checkGameRemovedBadges(UUID userId);
+
+    /**
+     * Evaluates the {@code MISSION_FAILED} easter-egg badge: awarded when the
+     * user deletes a review within five minutes of posting it.
+     *
+     * @param userId          the ID of the user
+     * @param reviewCreatedAt the timestamp the deleted review was created
+     */
+    void checkReviewDeletedBadges(UUID userId, java.time.LocalDateTime reviewCreatedAt);
+
+    /**
+     * Evaluates the {@code LEEROY} easter-egg badge: awarded when the user marks
+     * a game as PLAYING while their backlog already holds 20+ entries.
+     *
+     * @param userId the ID of the user
+     */
+    void checkGameStartedBadges(UUID userId);
+
+    /**
+     * Evaluates the {@code WAKE_UP_MR_FREEMAN} easter-egg badge: awarded when
+     * the user logs activity after a long absence.
+     *
+     * @param userId   the ID of the user
+     * @param daysAway the gap, in days, since the user's previous activity
+     */
+    void checkReturningUserBadges(UUID userId, long daysAway);
+
+    /**
+     * Sweeps every user with a backlog entry that has been sitting for at least
+     * a year and awards them the {@code SNAKE_BACKLOG} easter-egg badge. Driven
+     * by a nightly scheduled job.
+     */
+    void awardLongBacklogUsers();
+
+    /**
+     * Evaluates the {@code STAY_AWHILE_REVIEWS} easter-egg badge: awarded once
+     * the user has opened 50 distinct reviews from other users.
+     *
+     * @param userId the ID of the user
+     */
+    void checkReaderBadges(UUID userId);
 }

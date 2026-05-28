@@ -34,6 +34,9 @@ public class Badge {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private boolean hidden = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -67,6 +70,14 @@ public class Badge {
         this.name = name;
         this.description = description;
         this.picture = picture;
+    }
+
+    public Badge(String code, String name, String description, String picture, boolean hidden) {
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.picture = picture;
+        this.hidden = hidden;
     }
 
     public UUID getId() {
@@ -107,6 +118,14 @@ public class Badge {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
     public LocalDateTime getCreatedAt() {

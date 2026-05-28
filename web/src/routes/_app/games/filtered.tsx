@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { Loader2, Search, X } from 'lucide-react'
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { apiFetch } from '@/services/api'
 import { genresQueryOptions, platformsQueryOptions } from '@/queries/catalog'
+import { triggerBarrelRoll } from '@/queries/easter-eggs'
 
 const PAGE_SIZE = 32
 
@@ -139,6 +140,22 @@ function RouteComponent() {
     }
   }, [q])
 
+  // BARREL_ROLL: special sort param triggers a one-shot CSS roll animation on
+  // the grid and pings the server. parseSort() strips the value out of the
+  // validated search, so we look at the raw URL.
+  const [isRolling, setIsRolling] = useState(false)
+  const hasRolledRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === 'undefined' || hasRolledRef.current) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('sort') !== 'barrel-roll') return
+    hasRolledRef.current = true
+    setIsRolling(true)
+    void triggerBarrelRoll()
+    const timeout = window.setTimeout(() => setIsRolling(false), 1100)
+    return () => window.clearTimeout(timeout)
+  }, [])
+
   function clearSearch() {
     setInputValue('')
     navigate({
@@ -213,7 +230,16 @@ function RouteComponent() {
           <Separator />
           {data.catalog.content.length > 0 ? (
             <>
-              <GameGrid games={data.catalog.content} />
+              <div
+                className={
+                  isRolling
+                    ? 'transition-transform duration-1000 ease-in-out'
+                    : undefined
+                }
+                style={isRolling ? { transform: 'rotate(360deg)' } : undefined}
+              >
+                <GameGrid games={data.catalog.content} />
+              </div>
               <GamesPagination
                 page={page}
                 totalPages={data.catalog.metadata.totalPages}
