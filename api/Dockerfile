@@ -25,7 +25,7 @@ WORKDIR /app
 
 COPY --from=builder --chown=spring:spring /app/target/*.jar app.jar
 
-RUN mkdir -p /app/data/search-index && chown spring:spring /app/data/search-index
+RUN mkdir -p /app/data/search-index /app/uploads && chown -R spring:spring /app/data /app/uploads
 
 USER spring
 
