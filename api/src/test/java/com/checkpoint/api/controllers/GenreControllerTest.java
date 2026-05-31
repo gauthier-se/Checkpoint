@@ -41,7 +41,7 @@ class GenreControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/genres should return list of genres sorted by name")
+    @DisplayName("GET /api/v1/genres should return list of genres sorted by name")
     void getAllGenres_shouldReturnGenreList() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -54,7 +54,7 @@ class GenreControllerTest {
         when(genreCatalogService.getAllGenres()).thenReturn(genres);
 
         // When / Then
-        mockMvc.perform(get("/api/genres"))
+        mockMvc.perform(get("/api/v1/genres"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -66,13 +66,13 @@ class GenreControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/genres should return empty list when no genres exist")
+    @DisplayName("GET /api/v1/genres should return empty list when no genres exist")
     void getAllGenres_shouldReturnEmptyList() throws Exception {
         // Given
         when(genreCatalogService.getAllGenres()).thenReturn(List.of());
 
         // When / Then
-        mockMvc.perform(get("/api/genres"))
+        mockMvc.perform(get("/api/v1/genres"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));

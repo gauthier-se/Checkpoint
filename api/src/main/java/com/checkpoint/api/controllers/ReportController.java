@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Reviews and Comments", description = "Report inappropriate reviews")
 @RestController
-@RequestMapping("/api/reviews/{reviewId}/report")
+@RequestMapping("/reviews/{reviewId}/report")
 public class ReportController {
 
     private static final Logger log = LoggerFactory.getLogger(ReportController.class);
@@ -58,7 +58,7 @@ public class ReportController {
             @PathVariable UUID reviewId,
             @Valid @RequestBody ReportRequestDto request) {
 
-        log.info("POST /api/reviews/{}/report - user: {}", reviewId, userDetails.getUsername());
+        log.info("POST /api/v1/reviews/{}/report - user: {}", reviewId, userDetails.getUsername());
 
         ReportResponseDto response = reportService.reportReview(
                 userDetails.getUsername(), reviewId, request);

@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeader } from '@tanstack/react-start/server'
 import type { User } from '@/types/user'
 import { logDebug } from '@/debug-cookie'
+import { API_PREFIX } from '@/services/api-config'
 
 // Throws when no auth cookie is present so the loader leaves the cache empty
 // and the client refetches after hydration. Returns null only when the cookie
@@ -16,7 +17,7 @@ export const fetchCurrentUserServerFn = createServerFn({
   }
 
   const apiUrl = process.env.API_INTERNAL_URL ?? 'http://localhost:8080'
-  const res = await fetch(`${apiUrl}/api/auth/me`, {
+  const res = await fetch(`${apiUrl}${API_PREFIX}/auth/me`, {
     headers: { Cookie: cookie },
   })
   if (!res.ok) return null

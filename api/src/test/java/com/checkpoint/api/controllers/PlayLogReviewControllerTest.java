@@ -85,7 +85,7 @@ class PlayLogReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/me/plays/{playId}/review")
+    @DisplayName("POST /api/v1/me/plays/{playId}/review")
     class CreateReview {
 
         @Test
@@ -98,7 +98,7 @@ class PlayLogReviewControllerTest {
                     .thenReturn(reviewResponseDto);
 
             // When / Then
-            mockMvc.perform(post("/api/me/plays/{playId}/review", playId)
+            mockMvc.perform(post("/api/v1/me/plays/{playId}/review", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -118,7 +118,7 @@ class PlayLogReviewControllerTest {
                     .thenThrow(new ReviewAlreadyExistsException(playId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/plays/{playId}/review", playId)
+            mockMvc.perform(post("/api/v1/me/plays/{playId}/review", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
@@ -134,7 +134,7 @@ class PlayLogReviewControllerTest {
                     .thenThrow(new PlayLogNotFoundException("Play log not found with ID: " + playId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/plays/{playId}/review", playId)
+            mockMvc.perform(post("/api/v1/me/plays/{playId}/review", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -142,7 +142,7 @@ class PlayLogReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/plays/{playId}/review")
+    @DisplayName("PUT /api/v1/me/plays/{playId}/review")
     class UpdateReview {
 
         @Test
@@ -170,7 +170,7 @@ class PlayLogReviewControllerTest {
                     .thenReturn(updatedResponse);
 
             // When / Then
-            mockMvc.perform(put("/api/me/plays/{playId}/review", playId)
+            mockMvc.perform(put("/api/v1/me/plays/{playId}/review", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -188,7 +188,7 @@ class PlayLogReviewControllerTest {
                     .thenThrow(new ReviewNotFoundException(playId));
 
             // When / Then
-            mockMvc.perform(put("/api/me/plays/{playId}/review", playId)
+            mockMvc.perform(put("/api/v1/me/plays/{playId}/review", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -196,7 +196,7 @@ class PlayLogReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/plays/{playId}/review")
+    @DisplayName("DELETE /api/v1/me/plays/{playId}/review")
     class DeleteReview {
 
         @Test
@@ -207,7 +207,7 @@ class PlayLogReviewControllerTest {
             doNothing().when(reviewService).deletePlayLogReview("user@example.com", playId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/plays/{playId}/review", playId))
+            mockMvc.perform(delete("/api/v1/me/plays/{playId}/review", playId))
                     .andExpect(status().isNoContent());
         }
 
@@ -220,13 +220,13 @@ class PlayLogReviewControllerTest {
                     .when(reviewService).deletePlayLogReview("user@example.com", playId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/plays/{playId}/review", playId))
+            mockMvc.perform(delete("/api/v1/me/plays/{playId}/review", playId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/plays/{playId}/review")
+    @DisplayName("GET /api/v1/me/plays/{playId}/review")
     class GetReview {
 
         @Test
@@ -238,7 +238,7 @@ class PlayLogReviewControllerTest {
                     .thenReturn(reviewResponseDto);
 
             // When / Then
-            mockMvc.perform(get("/api/me/plays/{playId}/review", playId))
+            mockMvc.perform(get("/api/v1/me/plays/{playId}/review", playId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").value("Great game!"))
                     .andExpect(jsonPath("$.playLogId").value(playId.toString()));
@@ -253,7 +253,7 @@ class PlayLogReviewControllerTest {
                     .thenThrow(new ReviewNotFoundException(playId));
 
             // When / Then
-            mockMvc.perform(get("/api/me/plays/{playId}/review", playId))
+            mockMvc.perform(get("/api/v1/me/plays/{playId}/review", playId))
                     .andExpect(status().isNotFound());
         }
     }

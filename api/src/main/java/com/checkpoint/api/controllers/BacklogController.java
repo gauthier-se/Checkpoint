@@ -38,7 +38,7 @@ import com.checkpoint.api.services.BacklogService;
  */
 @Tag(name = "Library and Collection", description = "Current user backlog")
 @RestController
-@RequestMapping("/api/me/backlog")
+@RequestMapping("/me/backlog")
 public class BacklogController {
 
     private static final Logger log = LoggerFactory.getLogger(BacklogController.class);
@@ -68,7 +68,7 @@ public class BacklogController {
             @RequestBody(required = false) UpdatePriorityRequestDto request) {
 
         Priority priority = request != null ? request.priority() : null;
-        log.info("POST /api/me/backlog/{} - user: {}, priority: {}",
+        log.info("POST /api/v1/me/backlog/{} - user: {}, priority: {}",
                 videoGameId, userDetails.getUsername(), priority);
 
         BacklogResponseDto response = backlogService.addToBacklog(
@@ -89,7 +89,7 @@ public class BacklogController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("DELETE /api/me/backlog/{} - user: {}", videoGameId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/backlog/{} - user: {}", videoGameId, userDetails.getUsername());
 
         backlogService.removeFromBacklog(userDetails.getUsername(), videoGameId);
 
@@ -112,7 +112,7 @@ public class BacklogController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/me/backlog - user: {}, page: {}, size: {}, sort: {}",
+        log.info("GET /api/v1/me/backlog - user: {}, page: {}, size: {}, sort: {}",
                 userDetails.getUsername(), page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -139,7 +139,7 @@ public class BacklogController {
             @PathVariable UUID videoGameId,
             @RequestBody UpdatePriorityRequestDto request) {
 
-        log.info("PATCH /api/me/backlog/{}/priority - user: {}, priority: {}",
+        log.info("PATCH /api/v1/me/backlog/{}/priority - user: {}, priority: {}",
                 videoGameId, userDetails.getUsername(), request.priority());
 
         BacklogResponseDto response = backlogService.updatePriority(
@@ -160,7 +160,7 @@ public class BacklogController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("GET /api/me/backlog/{}/status - user: {}", videoGameId, userDetails.getUsername());
+        log.info("GET /api/v1/me/backlog/{}/status - user: {}", videoGameId, userDetails.getUsername());
 
         boolean inBacklog = backlogService.isInBacklog(
                 userDetails.getUsername(), videoGameId);

@@ -14,7 +14,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,16 +28,15 @@ import com.checkpoint.api.services.ReviewService;
  *
  * <p>Provides:
  * <ul>
- *   <li>Paginated reviews for a specific game ({@code /api/games/{gameId}/reviews})</li>
+ *   <li>Paginated reviews for a specific game ({@code /api/v1/games/{gameId}/reviews})</li>
  *   <li>Cross-game discovery feeds: popular and recent reviews
- *       ({@code /api/reviews/popular}, {@code /api/reviews/recent})</li>
+ *       ({@code /api/v1/reviews/popular}, {@code /api/v1/reviews/recent})</li>
  * </ul>
  * Reviews are created, updated, and deleted via play log endpoints
  * ({@link PlayLogReviewController}).</p>
  */
 @Tag(name = "Reviews and Comments", description = "Game reviews")
 @RestController
-@RequestMapping("/api")
 public class ReviewController {
 
     private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
@@ -83,7 +81,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/games/{}/reviews - page: {}, size: {}, sort: {}, viewer: {}",
+        log.info("GET /api/v1/games/{}/reviews - page: {}, size: {}, sort: {}, viewer: {}",
                 gameId, page, size, sort,
                 userDetails != null ? userDetails.getUsername() : "anonymous");
 
@@ -110,7 +108,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "" + DEFAULT_DISCOVERY_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_DISCOVERY_SIZE);
-        log.info("GET /api/reviews/popular - size: {}, viewer: {}",
+        log.info("GET /api/v1/reviews/popular - size: {}, viewer: {}",
                 validatedSize, userDetails != null ? userDetails.getUsername() : "anonymous");
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
@@ -133,7 +131,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "" + DEFAULT_DISCOVERY_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_DISCOVERY_SIZE);
-        log.info("GET /api/games/{}/reviews/popular - size: {}, viewer: {}",
+        log.info("GET /api/v1/games/{}/reviews/popular - size: {}, viewer: {}",
                 gameId, validatedSize, userDetails != null ? userDetails.getUsername() : "anonymous");
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
@@ -160,7 +158,7 @@ public class ReviewController {
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
 
-        log.info("GET /api/games/{}/reviews/from-friends - page: {}, size: {}, viewer: {}",
+        log.info("GET /api/v1/games/{}/reviews/from-friends - page: {}, size: {}, viewer: {}",
                 gameId, validatedPage, validatedSize,
                 userDetails != null ? userDetails.getUsername() : "anonymous");
 
@@ -184,7 +182,7 @@ public class ReviewController {
             @RequestParam(defaultValue = "" + DEFAULT_DISCOVERY_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_DISCOVERY_SIZE);
-        log.info("GET /api/reviews/recent - size: {}, viewer: {}",
+        log.info("GET /api/v1/reviews/recent - size: {}, viewer: {}",
                 validatedSize, userDetails != null ? userDetails.getUsername() : "anonymous");
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;

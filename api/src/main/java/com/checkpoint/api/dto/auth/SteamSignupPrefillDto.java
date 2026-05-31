@@ -1,7 +1,7 @@
 package com.checkpoint.api.dto.auth;
 
 /**
- * Prefill payload returned to the frontend on {@code GET /api/auth/steam/signup-prefill}.
+ * Prefill payload returned to the frontend on {@code GET /api/v1/auth/steam/signup-prefill}.
  * Built from the claims of a verified Steam signup token. Display name, avatar URL and
  * profile URL may be {@code null} when the Steam API was unavailable at token-issuance time.
  *

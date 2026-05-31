@@ -78,7 +78,7 @@ class TwoFactorControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/auth/login — 2FA flow")
+    @DisplayName("POST /api/v1/auth/login — 2FA flow")
     class LoginTwoFactorTests {
 
         @Test
@@ -89,7 +89,7 @@ class TwoFactorControllerTest {
                     .when(authService).authenticateAndSetCookie(any(LoginRequestDto.class), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new LoginRequestDto("user@example.com", "password"))))
                     .andExpect(status().isOk())
@@ -105,7 +105,7 @@ class TwoFactorControllerTest {
                     .thenThrow(new TwoFactorRequiredException("intermediate.jwt.token"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .header("X-Client-Type", "Desktop")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new LoginRequestDto("user@example.com", "password"))))
@@ -116,7 +116,7 @@ class TwoFactorControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/2fa/setup")
+    @DisplayName("POST /api/v1/auth/2fa/setup")
     class SetupTests {
 
         @Test
@@ -128,7 +128,7 @@ class TwoFactorControllerTest {
                     .thenReturn(new TwoFactorSetupResponseDto("otpauth://totp/Checkpoint:user@example.com?secret=SECRET", "data:image/png;base64,ABC"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/setup"))
+            mockMvc.perform(post("/api/v1/auth/2fa/setup"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.provisioningUri").value("otpauth://totp/Checkpoint:user@example.com?secret=SECRET"))
                     .andExpect(jsonPath("$.qrCodeDataUrl").value("data:image/png;base64,ABC"));
@@ -136,7 +136,7 @@ class TwoFactorControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/2fa/verify")
+    @DisplayName("POST /api/v1/auth/2fa/verify")
     class VerifyTests {
 
         @Test
@@ -147,7 +147,7 @@ class TwoFactorControllerTest {
             doNothing().when(twoFactorService).verifyAndEnable(anyString(), anyString());
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/verify")
+            mockMvc.perform(post("/api/v1/auth/2fa/verify")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorVerifyRequestDto("123456"))))
                     .andExpect(status().isOk())
@@ -163,7 +163,7 @@ class TwoFactorControllerTest {
                     .when(twoFactorService).verifyAndEnable(anyString(), anyString());
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/verify")
+            mockMvc.perform(post("/api/v1/auth/2fa/verify")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorVerifyRequestDto("000000"))))
                     .andExpect(status().isUnauthorized())
@@ -174,7 +174,7 @@ class TwoFactorControllerTest {
         @DisplayName("Should return 400 when code is blank")
         @WithMockUser(username = "user@example.com")
         void verify_shouldReturn400WhenCodeIsBlank() throws Exception {
-            mockMvc.perform(post("/api/auth/2fa/verify")
+            mockMvc.perform(post("/api/v1/auth/2fa/verify")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorVerifyRequestDto(""))))
                     .andExpect(status().isBadRequest());
@@ -182,7 +182,7 @@ class TwoFactorControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/2fa/disable")
+    @DisplayName("POST /api/v1/auth/2fa/disable")
     class DisableTests {
 
         @Test
@@ -193,7 +193,7 @@ class TwoFactorControllerTest {
             doNothing().when(twoFactorService).disable(anyString(), anyString(), anyString());
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/disable")
+            mockMvc.perform(post("/api/v1/auth/2fa/disable")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorDisableRequestDto("my-password", "123456"))))
                     .andExpect(status().isOk())
@@ -209,7 +209,7 @@ class TwoFactorControllerTest {
                     .when(twoFactorService).disable(anyString(), anyString(), anyString());
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/disable")
+            mockMvc.perform(post("/api/v1/auth/2fa/disable")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorDisableRequestDto("wrong-password", "000000"))))
                     .andExpect(status().isUnauthorized());
@@ -217,7 +217,7 @@ class TwoFactorControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/2fa/login")
+    @DisplayName("POST /api/v1/auth/2fa/login")
     class TwoFactorLoginTests {
 
         @Test
@@ -228,7 +228,7 @@ class TwoFactorControllerTest {
                     .thenReturn(new TokenPairDto("access.token", "refresh.token"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/login")
+            mockMvc.perform(post("/api/v1/auth/2fa/login")
                             .header("X-Client-Type", "Desktop")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorLoginRequestDto("intermediate.jwt", "123456"))))
@@ -245,7 +245,7 @@ class TwoFactorControllerTest {
                     any(TwoFactorLoginRequestDto.class), anyString(), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/login")
+            mockMvc.perform(post("/api/v1/auth/2fa/login")
                             .cookie(new jakarta.servlet.http.Cookie("checkpoint_2fa", "intermediate.jwt"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorLoginRequestDto(null, "123456"))))
@@ -262,7 +262,7 @@ class TwoFactorControllerTest {
                             any(TwoFactorLoginRequestDto.class), any(), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/2fa/login")
+            mockMvc.perform(post("/api/v1/auth/2fa/login")
                             .cookie(new jakarta.servlet.http.Cookie("checkpoint_2fa", "intermediate.jwt"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new TwoFactorLoginRequestDto(null, "000000"))))

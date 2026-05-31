@@ -20,7 +20,7 @@ import com.checkpoint.api.services.AdminCommentService;
  */
 @Tag(name = "Admin", description = "Admin: comment moderation")
 @RestController
-@RequestMapping("/api/admin/comments")
+@RequestMapping("/admin/comments")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminCommentController {
 

@@ -3,7 +3,7 @@ package com.checkpoint.api.dto.onboarding;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Request body for {@code PATCH /api/me/onboarding}.
+ * Request body for {@code PATCH /api/v1/me/onboarding}.
  *
  * @param step the step key (see {@link OnboardingSteps})
  * @param done {@code true} when the step has been completed,

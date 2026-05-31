@@ -26,7 +26,7 @@ import com.checkpoint.api.services.GameSocialService;
  */
 @Tag(name = "Games", description = "Reviews and comments on a game")
 @RestController
-@RequestMapping("/api/games/{gameId}")
+@RequestMapping("/games/{gameId}")
 public class GameSocialController {
 
     private static final Logger log = LoggerFactory.getLogger(GameSocialController.class);
@@ -50,7 +50,7 @@ public class GameSocialController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/games/{}/friends-activity - viewer: {}",
+        log.info("GET /api/v1/games/{}/friends-activity - viewer: {}",
                 gameId, viewerEmail != null ? viewerEmail : "anonymous");
 
         return ResponseEntity.ok(gameSocialService.getFriendsActivity(gameId, viewerEmail));
@@ -69,7 +69,7 @@ public class GameSocialController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/games/{}/friends-want-to-play - viewer: {}",
+        log.info("GET /api/v1/games/{}/friends-want-to-play - viewer: {}",
                 gameId, viewerEmail != null ? viewerEmail : "anonymous");
 
         return ResponseEntity.ok(gameSocialService.getFriendsWantToPlay(gameId, viewerEmail));

@@ -29,7 +29,7 @@ import com.checkpoint.api.services.AdminUserService;
  */
 @Tag(name = "Admin", description = "Admin: user management")
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/admin/users")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
 

@@ -35,7 +35,7 @@ public class AuthApiClient implements AuthenticationService {
         String jsonBody = String.format("{\"email\":\"%s\",\"password\":\"%s\"}", email, password);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/api/auth/token"))
+                .uri(URI.create(BASE_URL + "/api/v1/auth/token"))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
@@ -75,7 +75,7 @@ public class AuthApiClient implements AuthenticationService {
         String jsonBody = String.format("{\"refreshToken\":\"%s\"}", refreshToken);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + "/api/auth/refresh"))
+                .uri(URI.create(BASE_URL + "/api/v1/auth/refresh"))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .header("X-Client-Type", "Desktop")

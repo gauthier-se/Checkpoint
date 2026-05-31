@@ -30,7 +30,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @Tag(name = "Account and Profile", description = "Current user account settings and security")
 @RestController
-@RequestMapping("/api/me")
+@RequestMapping("/me")
 public class AccountController {
 
     private static final Logger log = LoggerFactory.getLogger(AccountController.class);
@@ -69,7 +69,7 @@ public class AccountController {
             @CookieValue(value = "checkpoint_refresh", required = false) String refreshCookie,
             HttpServletResponse response) {
 
-        log.info("DELETE /api/me - user: {}", userDetails.getUsername());
+        log.info("DELETE /api/v1/me - user: {}", userDetails.getUsername());
 
         accountService.deleteCurrentUser(userDetails.getUsername());
         authService.clearAuthCookie(refreshCookie, response);
@@ -93,7 +93,7 @@ public class AccountController {
     public ResponseEntity<UserDataExportDto> exportData(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/me/export - user: {}", userDetails.getUsername());
+        log.info("GET /api/v1/me/export - user: {}", userDetails.getUsername());
 
         UserDataExportDto export = dataExportService.exportForUser(userDetails.getUsername());
         String filename = "checkpoint-export-" + LocalDate.now() + ".json";

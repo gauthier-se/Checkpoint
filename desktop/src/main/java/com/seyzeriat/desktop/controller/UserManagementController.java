@@ -24,7 +24,7 @@ import javafx.scene.layout.HBox;
 /**
  * Controller for the User Management view.
  *
- * <p>Sends a {@code GET} request to {@code /api/admin/users} with the JWT Bearer token.
+ * <p>Sends a {@code GET} request to {@code /api/v1/admin/users} with the JWT Bearer token.
  * The backend verifies the user has {@code ROLE_ADMIN} authority before returning
  * the list. Displays ID, Username, Email, Status, and Actions in a table.</p>
  */

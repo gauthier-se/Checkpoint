@@ -22,7 +22,7 @@ import javafx.scene.control.TableView;
 /**
  * Controller for the admin analytics dashboard view.
  *
- * <p>Sends a {@code GET} request to {@code /api/admin/analytics} with the JWT
+ * <p>Sends a {@code GET} request to {@code /api/v1/admin/analytics} with the JWT
  * Bearer token. The backend verifies the user has {@code ROLE_ADMIN} authority
  * before returning the aggregated KPIs and top-5 lists.</p>
  */

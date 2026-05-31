@@ -98,7 +98,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/external-games/search")
+    @DisplayName("GET /api/v1/admin/external-games/search")
     class SearchExternalGamesTests {
 
         @Test
@@ -107,7 +107,7 @@ class AdminGameControllerTest {
             when(adminGameService.searchExternalGames(eq("witcher"), anyInt()))
                     .thenReturn(sampleExternalGames);
 
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "witcher"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(3))
@@ -125,7 +125,7 @@ class AdminGameControllerTest {
             when(adminGameService.searchExternalGames(anyString(), anyInt()))
                     .thenReturn(List.of());
 
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda")
                             .param("limit", "10"))
                     .andExpect(status().isOk());
@@ -139,7 +139,7 @@ class AdminGameControllerTest {
             when(adminGameService.searchExternalGames(anyString(), anyInt()))
                     .thenReturn(List.of());
 
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "mario")
                             .param("limit", "100"))
                     .andExpect(status().isOk());
@@ -153,7 +153,7 @@ class AdminGameControllerTest {
             when(adminGameService.searchExternalGames(anyString(), anyInt()))
                     .thenReturn(List.of());
 
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "nonexistentgame12345"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
@@ -162,7 +162,7 @@ class AdminGameControllerTest {
         @Test
         @DisplayName("Should return 400 when query parameter is missing")
         void shouldReturn400WhenQueryMissing() throws Exception {
-            mockMvc.perform(get("/api/admin/external-games/search"))
+            mockMvc.perform(get("/api/v1/admin/external-games/search"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -172,7 +172,7 @@ class AdminGameControllerTest {
             when(adminGameService.searchExternalGames(anyString(), anyInt()))
                     .thenThrow(new ExternalApiUnavailableException("IGDB API is unavailable"));
 
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda"))
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error").value("Service Unavailable"))
@@ -181,7 +181,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/admin/games/import/{externalId}")
+    @DisplayName("POST /api/v1/admin/games/import/{externalId}")
     class ImportGameTests {
 
         @Test
@@ -190,7 +190,7 @@ class AdminGameControllerTest {
             when(adminGameService.importGameByExternalId(1942L))
                     .thenReturn(sampleVideoGame);
 
-            mockMvc.perform(post("/api/admin/games/import/1942"))
+            mockMvc.perform(post("/api/v1/admin/games/import/1942"))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(sampleVideoGame.getId().toString()))
                     .andExpect(jsonPath("$.title").value("The Witcher 3: Wild Hunt"))
@@ -206,7 +206,7 @@ class AdminGameControllerTest {
             when(adminGameService.importGameByExternalId(99999L))
                     .thenThrow(new ExternalGameNotFoundException(99999L));
 
-            mockMvc.perform(post("/api/admin/games/import/99999"))
+            mockMvc.perform(post("/api/v1/admin/games/import/99999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("Not Found"))
                     .andExpect(jsonPath("$.message").value("External game not found with ID: 99999"));
@@ -218,7 +218,7 @@ class AdminGameControllerTest {
             when(adminGameService.importGameByExternalId(1942L))
                     .thenThrow(new ExternalApiUnavailableException("IGDB API is unavailable"));
 
-            mockMvc.perform(post("/api/admin/games/import/1942"))
+            mockMvc.perform(post("/api/v1/admin/games/import/1942"))
                     .andExpect(status().isServiceUnavailable())
                     .andExpect(jsonPath("$.error").value("Service Unavailable"));
         }
@@ -232,7 +232,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/admin/games/import/top-rated")
+    @DisplayName("POST /api/v1/admin/games/import/top-rated")
     class BulkImportTopRatedTests {
 
         @Test
@@ -241,7 +241,7 @@ class AdminGameControllerTest {
             ImportJobStatusDto job = pendingJob("TOP_RATED", 50, 200);
             when(adminGameService.startTopRatedImport(50, 200)).thenReturn(job);
 
-            mockMvc.perform(post("/api/admin/games/import/top-rated")
+            mockMvc.perform(post("/api/v1/admin/games/import/top-rated")
                             .param("limit", "50")
                             .param("minRatingCount", "200"))
                     .andExpect(status().isAccepted())
@@ -258,7 +258,7 @@ class AdminGameControllerTest {
             when(adminGameService.startTopRatedImport(anyInt(), anyInt()))
                     .thenReturn(pendingJob("TOP_RATED", 100, 100));
 
-            mockMvc.perform(post("/api/admin/games/import/top-rated"))
+            mockMvc.perform(post("/api/v1/admin/games/import/top-rated"))
                     .andExpect(status().isAccepted());
 
             verify(adminGameService).startTopRatedImport(100, 100);
@@ -270,7 +270,7 @@ class AdminGameControllerTest {
             when(adminGameService.startTopRatedImport(anyInt(), anyInt()))
                     .thenReturn(pendingJob("TOP_RATED", 5000, 50));
 
-            mockMvc.perform(post("/api/admin/games/import/top-rated")
+            mockMvc.perform(post("/api/v1/admin/games/import/top-rated")
                             .param("limit", "99999")
                             .param("minRatingCount", "50"))
                     .andExpect(status().isAccepted());
@@ -284,14 +284,14 @@ class AdminGameControllerTest {
             when(adminGameService.startTopRatedImport(anyInt(), anyInt()))
                     .thenThrow(new ImportAlreadyRunningException());
 
-            mockMvc.perform(post("/api/admin/games/import/top-rated"))
+            mockMvc.perform(post("/api/v1/admin/games/import/top-rated"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.error").value("Conflict"));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/admin/games/import/jobs/{jobId}")
+    @DisplayName("GET /api/v1/admin/games/import/jobs/{jobId}")
     class ImportJobStatusEndpointTests {
 
         @Test
@@ -301,7 +301,7 @@ class AdminGameControllerTest {
             UUID id = UUID.fromString(job.jobId());
             when(adminGameService.findImportJob(id)).thenReturn(Optional.of(job));
 
-            mockMvc.perform(get("/api/admin/games/import/jobs/" + id))
+            mockMvc.perform(get("/api/v1/admin/games/import/jobs/" + id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.jobId").value(job.jobId()));
         }
@@ -312,13 +312,13 @@ class AdminGameControllerTest {
             UUID id = UUID.randomUUID();
             when(adminGameService.findImportJob(id)).thenReturn(Optional.empty());
 
-            mockMvc.perform(get("/api/admin/games/import/jobs/" + id))
+            mockMvc.perform(get("/api/v1/admin/games/import/jobs/" + id))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("POST /api/admin/games")
+    @DisplayName("POST /api/v1/admin/games")
     class CreateGameTests {
 
         private final ObjectMapper objectMapper = new ObjectMapper()
@@ -337,7 +337,7 @@ class AdminGameControllerTest {
             when(adminGameService.createGame(any(CreateGameRequestDto.class)))
                     .thenReturn(sampleVideoGame);
 
-            mockMvc.perform(post("/api/admin/games")
+            mockMvc.perform(post("/api/v1/admin/games")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -355,7 +355,7 @@ class AdminGameControllerTest {
                     java.util.Set.of(), java.util.Set.of(), java.util.Set.of()
             );
 
-            mockMvc.perform(post("/api/admin/games")
+            mockMvc.perform(post("/api/v1/admin/games")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -371,7 +371,7 @@ class AdminGameControllerTest {
             when(adminGameService.createGame(any(CreateGameRequestDto.class)))
                     .thenThrow(new IllegalArgumentException("A game with this title already exists"));
 
-            mockMvc.perform(post("/api/admin/games")
+            mockMvc.perform(post("/api/v1/admin/games")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
@@ -380,7 +380,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/games/{id}")
+    @DisplayName("PUT /api/v1/admin/games/{id}")
     class UpdateGameTests {
 
         private final ObjectMapper objectMapper = new ObjectMapper()
@@ -398,7 +398,7 @@ class AdminGameControllerTest {
             when(adminGameService.updateGame(eq(sampleVideoGame.getId()), any(UpdateGameRequestDto.class)))
                     .thenReturn(sampleVideoGame);
 
-            mockMvc.perform(put("/api/admin/games/" + sampleVideoGame.getId())
+            mockMvc.perform(put("/api/v1/admin/games/" + sampleVideoGame.getId())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -416,7 +416,7 @@ class AdminGameControllerTest {
             when(adminGameService.updateGame(eq(id), any(UpdateGameRequestDto.class)))
                     .thenThrow(new GameNotFoundException(id));
 
-            mockMvc.perform(put("/api/admin/games/" + id)
+            mockMvc.perform(put("/api/v1/admin/games/" + id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -424,7 +424,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/admin/games/{id}")
+    @DisplayName("DELETE /api/v1/admin/games/{id}")
     class DeleteGameTests {
 
         @Test
@@ -432,7 +432,7 @@ class AdminGameControllerTest {
         void shouldDeleteGame() throws Exception {
             UUID id = UUID.randomUUID();
 
-            mockMvc.perform(delete("/api/admin/games/" + id))
+            mockMvc.perform(delete("/api/v1/admin/games/" + id))
                     .andExpect(status().isNoContent());
 
             verify(adminGameService).deleteGame(id);
@@ -444,7 +444,7 @@ class AdminGameControllerTest {
             UUID id = UUID.randomUUID();
             doThrow(new GameNotFoundException(id)).when(adminGameService).deleteGame(id);
 
-            mockMvc.perform(delete("/api/admin/games/" + id))
+            mockMvc.perform(delete("/api/v1/admin/games/" + id))
                     .andExpect(status().isNotFound());
         }
 
@@ -455,7 +455,7 @@ class AdminGameControllerTest {
             doThrow(new GameReferencedException(id, Map.of("library", 3L, "reviews", 2L)))
                     .when(adminGameService).deleteGame(id);
 
-            mockMvc.perform(delete("/api/admin/games/" + id))
+            mockMvc.perform(delete("/api/v1/admin/games/" + id))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.error").value("Conflict"))
                     .andExpect(jsonPath("$.blockingReferences.library").value(3))
@@ -464,7 +464,7 @@ class AdminGameControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/admin/games/import/recent")
+    @DisplayName("POST /api/v1/admin/games/import/recent")
     class BulkImportRecentTests {
 
         @Test
@@ -473,7 +473,7 @@ class AdminGameControllerTest {
             ImportJobStatusDto job = pendingJob("RECENT", 20, 0);
             when(adminGameService.startRecentImport(20)).thenReturn(job);
 
-            mockMvc.perform(post("/api/admin/games/import/recent")
+            mockMvc.perform(post("/api/v1/admin/games/import/recent")
                             .param("limit", "20"))
                     .andExpect(status().isAccepted())
                     .andExpect(jsonPath("$.type").value("RECENT"))
@@ -488,7 +488,7 @@ class AdminGameControllerTest {
             when(adminGameService.startRecentImport(anyInt()))
                     .thenReturn(pendingJob("RECENT", 100, 0));
 
-            mockMvc.perform(post("/api/admin/games/import/recent"))
+            mockMvc.perform(post("/api/v1/admin/games/import/recent"))
                     .andExpect(status().isAccepted());
 
             verify(adminGameService).startRecentImport(100);
@@ -500,7 +500,7 @@ class AdminGameControllerTest {
             when(adminGameService.startRecentImport(anyInt()))
                     .thenReturn(pendingJob("RECENT", 500, 0));
 
-            mockMvc.perform(post("/api/admin/games/import/recent")
+            mockMvc.perform(post("/api/v1/admin/games/import/recent")
                             .param("limit", "9999"))
                     .andExpect(status().isAccepted());
 

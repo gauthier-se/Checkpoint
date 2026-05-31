@@ -57,7 +57,7 @@ class UserGameListControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/lists")
+    @DisplayName("POST /api/v1/me/lists")
     class CreateList {
 
         @Test
@@ -76,7 +76,7 @@ class UserGameListControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/lists")
+            mockMvc.perform(post("/api/v1/me/lists")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -96,7 +96,7 @@ class UserGameListControllerTest {
         @WithMockUser(username = "user@example.com")
         void createList_shouldReturn400WhenTitleBlank() throws Exception {
             // When / Then
-            mockMvc.perform(post("/api/me/lists")
+            mockMvc.perform(post("/api/v1/me/lists")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -109,7 +109,7 @@ class UserGameListControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/lists")
+    @DisplayName("GET /api/v1/me/lists")
     class GetMyLists {
 
         @Test
@@ -126,7 +126,7 @@ class UserGameListControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/lists"))
+            mockMvc.perform(get("/api/v1/me/lists"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("My List"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -134,7 +134,7 @@ class UserGameListControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/lists/{listId}")
+    @DisplayName("PUT /api/v1/me/lists/{listId}")
     class UpdateList {
 
         @Test
@@ -153,7 +153,7 @@ class UserGameListControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/lists/{listId}", listId)
+            mockMvc.perform(put("/api/v1/me/lists/{listId}", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -174,7 +174,7 @@ class UserGameListControllerTest {
                     .thenThrow(new UnauthorizedListAccessException(listId));
 
             // When / Then
-            mockMvc.perform(put("/api/me/lists/{listId}", listId)
+            mockMvc.perform(put("/api/v1/me/lists/{listId}", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -186,7 +186,7 @@ class UserGameListControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/lists/{listId}")
+    @DisplayName("DELETE /api/v1/me/lists/{listId}")
     class DeleteList {
 
         @Test
@@ -198,7 +198,7 @@ class UserGameListControllerTest {
             doNothing().when(gameListService).deleteList("user@example.com", listId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/lists/{listId}", listId))
+            mockMvc.perform(delete("/api/v1/me/lists/{listId}", listId))
                     .andExpect(status().isNoContent());
         }
 
@@ -212,13 +212,13 @@ class UserGameListControllerTest {
                     .when(gameListService).deleteList("user@example.com", listId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/lists/{listId}", listId))
+            mockMvc.perform(delete("/api/v1/me/lists/{listId}", listId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("POST /api/me/lists/{listId}/games")
+    @DisplayName("POST /api/v1/me/lists/{listId}/games")
     class AddGameToList {
 
         @Test
@@ -238,7 +238,7 @@ class UserGameListControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/lists/{listId}/games", listId)
+            mockMvc.perform(post("/api/v1/me/lists/{listId}/games", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(String.format("""
                                     {
@@ -261,7 +261,7 @@ class UserGameListControllerTest {
                     .thenThrow(new GameAlreadyInListException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/lists/{listId}/games", listId)
+            mockMvc.perform(post("/api/v1/me/lists/{listId}/games", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(String.format("""
                                     {
@@ -273,7 +273,7 @@ class UserGameListControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/lists/{listId}/games/{videoGameId}")
+    @DisplayName("DELETE /api/v1/me/lists/{listId}/games/{videoGameId}")
     class RemoveGameFromList {
 
         @Test
@@ -286,7 +286,7 @@ class UserGameListControllerTest {
             doNothing().when(gameListService).removeGameFromList("user@example.com", listId, videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/lists/{listId}/games/{videoGameId}", listId, videoGameId))
+            mockMvc.perform(delete("/api/v1/me/lists/{listId}/games/{videoGameId}", listId, videoGameId))
                     .andExpect(status().isNoContent());
         }
 
@@ -301,13 +301,13 @@ class UserGameListControllerTest {
                     .when(gameListService).removeGameFromList("user@example.com", listId, videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/lists/{listId}/games/{videoGameId}", listId, videoGameId))
+            mockMvc.perform(delete("/api/v1/me/lists/{listId}/games/{videoGameId}", listId, videoGameId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("PUT /api/me/lists/{listId}/games/reorder")
+    @DisplayName("PUT /api/v1/me/lists/{listId}/games/reorder")
     class ReorderGames {
 
         @Test
@@ -328,7 +328,7 @@ class UserGameListControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/lists/{listId}/games/reorder", listId)
+            mockMvc.perform(put("/api/v1/me/lists/{listId}/games/reorder", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(String.format("""
                                     {

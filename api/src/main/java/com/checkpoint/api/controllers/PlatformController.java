@@ -19,7 +19,7 @@ import com.checkpoint.api.services.PlatformCatalogService;
  */
 @Tag(name = "Games", description = "Gaming platforms catalog")
 @RestController
-@RequestMapping("/api/platforms")
+@RequestMapping("/platforms")
 public class PlatformController {
 
     private static final Logger log = LoggerFactory.getLogger(PlatformController.class);
@@ -37,7 +37,7 @@ public class PlatformController {
      */
     @GetMapping
     public ResponseEntity<List<PlatformCatalogDto>> getAllPlatforms() {
-        log.info("GET /api/platforms");
+        log.info("GET /api/v1/platforms");
 
         List<PlatformCatalogDto> platforms = platformCatalogService.getAllPlatforms();
         return ResponseEntity.ok(platforms);

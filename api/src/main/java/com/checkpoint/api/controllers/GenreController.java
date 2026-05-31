@@ -19,7 +19,7 @@ import com.checkpoint.api.services.GenreCatalogService;
  */
 @Tag(name = "Games", description = "Game genres catalog")
 @RestController
-@RequestMapping("/api/genres")
+@RequestMapping("/genres")
 public class GenreController {
 
     private static final Logger log = LoggerFactory.getLogger(GenreController.class);
@@ -37,7 +37,7 @@ public class GenreController {
      */
     @GetMapping
     public ResponseEntity<List<GenreCatalogDto>> getAllGenres() {
-        log.info("GET /api/genres");
+        log.info("GET /api/v1/genres");
 
         List<GenreCatalogDto> genres = genreCatalogService.getAllGenres();
         return ResponseEntity.ok(genres);

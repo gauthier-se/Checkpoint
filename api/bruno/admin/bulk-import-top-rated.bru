@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/admin/games/import/top-rated?limit=1000&minRatingCount=100
+  url: {{baseUrl}}/api/v1/admin/games/import/top-rated?limit=1000&minRatingCount=100
   body: none
   auth: bearer
 }
@@ -33,7 +33,7 @@ docs {
   well-known). Already-imported games are skipped (deduplication via `igdbId`).
 
   The endpoint returns immediately with **202 Accepted** and a job descriptor.
-  Poll `GET /api/admin/games/import/jobs/{jobId}` ("Get Import Job Status") to
+  Poll `GET /api/v1/admin/games/import/jobs/{jobId}` ("Get Import Job Status") to
   follow progress until the job reaches `COMPLETED` or `FAILED`. The IGDB
   results are paginated server-side, so far more than 500 games can be fetched.
 
@@ -42,7 +42,7 @@ docs {
 
   ## Authentication
 
-  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Bearer Token**: JWT token obtained from `/api/v1/auth/token`
   - **Required Role**: `ROLE_ADMIN`
 
   ## Query Parameters

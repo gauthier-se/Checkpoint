@@ -38,7 +38,7 @@ import com.checkpoint.api.services.NewsService;
  */
 @Tag(name = "Admin", description = "Admin: news management")
 @RestController
-@RequestMapping("/api/admin/news")
+@RequestMapping("/admin/news")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminNewsController {
 

@@ -2,7 +2,7 @@
 ### Requires an ADMIN account. Obtain a JWT via the login request below,
 ### then paste it into the @token variable.
 
-@baseUrl = http://localhost:8080/api
+@baseUrl = http://localhost:8080/api/v1
 @token = PASTE_YOUR_ADMIN_JWT_HERE
 
 ### Login to obtain a JWT (copy "accessToken" from the response into @token)

@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/oauth2/authorization/google
+  url: {{baseUrl}}/api/v1/oauth2/authorization/google
   body: none
   auth: none
 }
@@ -15,7 +15,7 @@ docs {
 
   Entry point of the Google OAuth2 login flow. Hitting this URL in a browser
   redirects the user to Google's consent screen. After consent, Google calls
-  back to `/api/login/oauth2/code/google` (handled automatically by Spring
+  back to `/api/v1/login/oauth2/code/google` (handled automatically by Spring
   Security), which then triggers `OAuth2AuthenticationSuccessHandler` and
   redirects the browser to `${app.frontend-url}/`.
 

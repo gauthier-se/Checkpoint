@@ -16,7 +16,7 @@ import com.seyzeriat.desktop.service.TokenManager;
 
 public abstract class BaseApiClient {
 
-    protected static final String BASE_URL = "http://localhost:8080/api";
+    protected static final String BASE_URL = "http://localhost:8080/api/v1";
     protected final HttpClient httpClient;
     protected final ObjectMapper objectMapper;
     private final AuthenticationService authService;

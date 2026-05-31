@@ -8,7 +8,7 @@ import com.checkpoint.api.dto.playlog.PlayLogDetailDto;
  * Service for the public read-only view of play logs.
  *
  * <p>Distinct from {@link GamePlayLogService} which owns the authenticated user's
- * own play logs (CRUD under {@code /api/me/plays}).</p>
+ * own play logs (CRUD under {@code /api/v1/me/plays}).</p>
  */
 public interface PlayLogService {
 

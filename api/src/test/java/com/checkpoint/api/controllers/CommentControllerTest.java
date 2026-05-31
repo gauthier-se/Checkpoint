@@ -75,7 +75,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/reviews/{reviewId}/comments")
+    @DisplayName("GET /api/v1/reviews/{reviewId}/comments")
     class GetReviewComments {
 
         @Test
@@ -89,7 +89,7 @@ class CommentControllerTest {
             when(commentService.getReviewComments(eq(reviewId), isNull(), any())).thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/reviews/{reviewId}/comments", reviewId))
+            mockMvc.perform(get("/api/v1/reviews/{reviewId}/comments", reviewId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great review!"))
                     .andExpect(jsonPath("$.content[0].user.pseudo").value("testuser"))
@@ -101,7 +101,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/reviews/{reviewId}/comments")
+    @DisplayName("POST /api/v1/reviews/{reviewId}/comments")
     class AddReviewComment {
 
         @Test
@@ -116,7 +116,7 @@ class CommentControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/comments", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/comments", reviewId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Great review!\"}"))
                     .andExpect(status().isCreated())
@@ -134,7 +134,7 @@ class CommentControllerTest {
                     .thenThrow(new ReviewNotFoundException("Review not found with ID: " + reviewId));
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/comments", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/comments", reviewId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Nice!\"}"))
                     .andExpect(status().isNotFound());
@@ -148,7 +148,7 @@ class CommentControllerTest {
             UUID reviewId = UUID.randomUUID();
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/comments", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/comments", reviewId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"\"}"))
                     .andExpect(status().isBadRequest());
@@ -156,7 +156,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/lists/{listId}/comments")
+    @DisplayName("GET /api/v1/lists/{listId}/comments")
     class GetListComments {
 
         @Test
@@ -170,7 +170,7 @@ class CommentControllerTest {
             when(commentService.getListComments(eq(listId), isNull(), any())).thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/lists/{listId}/comments", listId))
+            mockMvc.perform(get("/api/v1/lists/{listId}/comments", listId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great review!"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -178,7 +178,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/lists/{listId}/comments")
+    @DisplayName("POST /api/v1/lists/{listId}/comments")
     class AddListComment {
 
         @Test
@@ -193,7 +193,7 @@ class CommentControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/lists/{listId}/comments", listId)
+            mockMvc.perform(post("/api/v1/lists/{listId}/comments", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Nice list!\"}"))
                     .andExpect(status().isCreated());
@@ -210,7 +210,7 @@ class CommentControllerTest {
                     .thenThrow(new GameListNotFoundException(listId));
 
             // When / Then
-            mockMvc.perform(post("/api/lists/{listId}/comments", listId)
+            mockMvc.perform(post("/api/v1/lists/{listId}/comments", listId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Hello\"}"))
                     .andExpect(status().isNotFound());
@@ -218,7 +218,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/comments/{commentId}/replies")
+    @DisplayName("POST /api/v1/comments/{commentId}/replies")
     class AddReply {
 
         @Test
@@ -239,7 +239,7 @@ class CommentControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/comments/{commentId}/replies", parentId)
+            mockMvc.perform(post("/api/v1/comments/{commentId}/replies", parentId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"I agree!\"}"))
                     .andExpect(status().isCreated())
@@ -258,7 +258,7 @@ class CommentControllerTest {
                     .thenThrow(new CommentNotFoundException(commentId));
 
             // When / Then
-            mockMvc.perform(post("/api/comments/{commentId}/replies", commentId)
+            mockMvc.perform(post("/api/v1/comments/{commentId}/replies", commentId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Reply\"}"))
                     .andExpect(status().isNotFound());
@@ -266,7 +266,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/comments/{commentId}/replies")
+    @DisplayName("GET /api/v1/comments/{commentId}/replies")
     class GetReplies {
 
         @Test
@@ -285,7 +285,7 @@ class CommentControllerTest {
             when(commentService.getReplies(eq(parentId), isNull(), any())).thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/comments/{commentId}/replies", parentId))
+            mockMvc.perform(get("/api/v1/comments/{commentId}/replies", parentId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Nice point!"))
                     .andExpect(jsonPath("$.content[0].parentCommentId").value(parentId.toString()))
@@ -295,7 +295,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/comments/{commentId}")
+    @DisplayName("PUT /api/v1/comments/{commentId}")
     class UpdateComment {
 
         @Test
@@ -315,7 +315,7 @@ class CommentControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/comments/{commentId}", commentId)
+            mockMvc.perform(put("/api/v1/comments/{commentId}", commentId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Updated content\"}"))
                     .andExpect(status().isOk())
@@ -333,7 +333,7 @@ class CommentControllerTest {
                     .thenThrow(new CommentNotFoundException(commentId));
 
             // When / Then
-            mockMvc.perform(put("/api/comments/{commentId}", commentId)
+            mockMvc.perform(put("/api/v1/comments/{commentId}", commentId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Updated\"}"))
                     .andExpect(status().isNotFound());
@@ -350,7 +350,7 @@ class CommentControllerTest {
                     .thenThrow(new UnauthorizedCommentAccessException(commentId));
 
             // When / Then
-            mockMvc.perform(put("/api/comments/{commentId}", commentId)
+            mockMvc.perform(put("/api/v1/comments/{commentId}", commentId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"content\": \"Hacked\"}"))
                     .andExpect(status().isForbidden());
@@ -358,7 +358,7 @@ class CommentControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/comments/{commentId}")
+    @DisplayName("DELETE /api/v1/comments/{commentId}")
     class DeleteComment {
 
         @Test
@@ -371,7 +371,7 @@ class CommentControllerTest {
             doNothing().when(commentService).deleteComment("user@example.com", commentId);
 
             // When / Then
-            mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+            mockMvc.perform(delete("/api/v1/comments/{commentId}", commentId))
                     .andExpect(status().isNoContent());
         }
 
@@ -386,7 +386,7 @@ class CommentControllerTest {
                     .when(commentService).deleteComment("user@example.com", commentId);
 
             // When / Then
-            mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+            mockMvc.perform(delete("/api/v1/comments/{commentId}", commentId))
                     .andExpect(status().isNotFound());
         }
 
@@ -401,7 +401,7 @@ class CommentControllerTest {
                     .when(commentService).deleteComment("user@example.com", commentId);
 
             // When / Then
-            mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+            mockMvc.perform(delete("/api/v1/comments/{commentId}", commentId))
                     .andExpect(status().isForbidden());
         }
     }

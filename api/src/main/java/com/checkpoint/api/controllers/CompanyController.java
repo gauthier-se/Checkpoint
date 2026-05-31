@@ -18,7 +18,7 @@ import com.checkpoint.api.services.CompanyCatalogService;
  */
 @Tag(name = "Games", description = "Game companies catalog")
 @RestController
-@RequestMapping("/api/companies")
+@RequestMapping("/companies")
 public class CompanyController {
 
     private static final Logger log = LoggerFactory.getLogger(CompanyController.class);
@@ -34,7 +34,7 @@ public class CompanyController {
      */
     @GetMapping
     public ResponseEntity<List<CompanyCatalogDto>> getAllCompanies() {
-        log.info("GET /api/companies");
+        log.info("GET /api/v1/companies");
 
         List<CompanyCatalogDto> companies = companyCatalogService.getAllCompanies();
         return ResponseEntity.ok(companies);

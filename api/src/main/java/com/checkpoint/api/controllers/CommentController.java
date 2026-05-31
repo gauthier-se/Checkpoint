@@ -63,14 +63,14 @@ public class CommentController {
      * @param size        the page size
      * @return the paginated comments
      */
-    @GetMapping("/api/reviews/{reviewId}/comments")
+    @GetMapping("/reviews/{reviewId}/comments")
     public ResponseEntity<PagedResponseDto<CommentResponseDto>> getReviewComments(
             @PathVariable UUID reviewId,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/reviews/{}/comments - page: {}, size: {}", reviewId, page, size);
+        log.info("GET /api/v1/reviews/{}/comments - page: {}, size: {}", reviewId, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(page, size);
@@ -87,13 +87,13 @@ public class CommentController {
      * @param request     the comment request body
      * @return the created comment
      */
-    @PostMapping("/api/reviews/{reviewId}/comments")
+    @PostMapping("/reviews/{reviewId}/comments")
     public ResponseEntity<CommentResponseDto> addReviewComment(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID reviewId,
             @Valid @RequestBody CommentRequestDto request) {
 
-        log.info("POST /api/reviews/{}/comments - user: {}", reviewId, userDetails.getUsername());
+        log.info("POST /api/v1/reviews/{}/comments - user: {}", reviewId, userDetails.getUsername());
 
         CommentResponseDto response = commentService.addReviewComment(
                 userDetails.getUsername(), reviewId, request.content());
@@ -110,14 +110,14 @@ public class CommentController {
      * @param size        the page size
      * @return the paginated comments
      */
-    @GetMapping("/api/lists/{listId}/comments")
+    @GetMapping("/lists/{listId}/comments")
     public ResponseEntity<PagedResponseDto<CommentResponseDto>> getListComments(
             @PathVariable UUID listId,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/lists/{}/comments - page: {}, size: {}", listId, page, size);
+        log.info("GET /api/v1/lists/{}/comments - page: {}, size: {}", listId, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(page, size);
@@ -134,13 +134,13 @@ public class CommentController {
      * @param request     the comment request body
      * @return the created comment
      */
-    @PostMapping("/api/lists/{listId}/comments")
+    @PostMapping("/lists/{listId}/comments")
     public ResponseEntity<CommentResponseDto> addListComment(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID listId,
             @Valid @RequestBody CommentRequestDto request) {
 
-        log.info("POST /api/lists/{}/comments - user: {}", listId, userDetails.getUsername());
+        log.info("POST /api/v1/lists/{}/comments - user: {}", listId, userDetails.getUsername());
 
         CommentResponseDto response = commentService.addListComment(
                 userDetails.getUsername(), listId, request.content());
@@ -156,13 +156,13 @@ public class CommentController {
      * @param request     the comment request body
      * @return the created reply
      */
-    @PostMapping("/api/comments/{commentId}/replies")
+    @PostMapping("/comments/{commentId}/replies")
     public ResponseEntity<CommentResponseDto> addReply(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID commentId,
             @Valid @RequestBody CommentRequestDto request) {
 
-        log.info("POST /api/comments/{}/replies - user: {}", commentId, userDetails.getUsername());
+        log.info("POST /api/v1/comments/{}/replies - user: {}", commentId, userDetails.getUsername());
 
         CommentResponseDto response = commentService.addReply(
                 userDetails.getUsername(), commentId, request.content());
@@ -179,14 +179,14 @@ public class CommentController {
      * @param size        the page size
      * @return the paginated replies
      */
-    @GetMapping("/api/comments/{commentId}/replies")
+    @GetMapping("/comments/{commentId}/replies")
     public ResponseEntity<PagedResponseDto<CommentResponseDto>> getReplies(
             @PathVariable UUID commentId,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/comments/{}/replies - page: {}, size: {}", commentId, page, size);
+        log.info("GET /api/v1/comments/{}/replies - page: {}, size: {}", commentId, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = createPageable(page, size);
@@ -203,13 +203,13 @@ public class CommentController {
      * @param request     the comment request body with updated content
      * @return the updated comment
      */
-    @PutMapping("/api/comments/{commentId}")
+    @PutMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponseDto> updateComment(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID commentId,
             @Valid @RequestBody CommentRequestDto request) {
 
-        log.info("PUT /api/comments/{} - user: {}", commentId, userDetails.getUsername());
+        log.info("PUT /api/v1/comments/{} - user: {}", commentId, userDetails.getUsername());
 
         CommentResponseDto response = commentService.updateComment(
                 userDetails.getUsername(), commentId, request.content());
@@ -224,12 +224,12 @@ public class CommentController {
      * @param commentId   the comment ID
      * @return 204 No Content
      */
-    @DeleteMapping("/api/comments/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID commentId) {
 
-        log.info("DELETE /api/comments/{} - user: {}", commentId, userDetails.getUsername());
+        log.info("DELETE /api/v1/comments/{} - user: {}", commentId, userDetails.getUsername());
 
         commentService.deleteComment(userDetails.getUsername(), commentId);
 

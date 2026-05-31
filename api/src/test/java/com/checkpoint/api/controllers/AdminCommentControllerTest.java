@@ -38,21 +38,21 @@ class AdminCommentControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("DELETE /api/admin/comments/{id} should return 204 No Content")
+    @DisplayName("DELETE /api/v1/admin/comments/{id} should return 204 No Content")
     void deleteComment_shouldReturn204() throws Exception {
         // Given
         UUID commentId = UUID.randomUUID();
         doNothing().when(adminCommentService).deleteComment(commentId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/comments/{id}", commentId))
+        mockMvc.perform(delete("/api/v1/admin/comments/{id}", commentId))
                 .andExpect(status().isNoContent());
 
         verify(adminCommentService).deleteComment(commentId);
     }
 
     @Test
-    @DisplayName("DELETE /api/admin/comments/{id} should return 404 when comment does not exist")
+    @DisplayName("DELETE /api/v1/admin/comments/{id} should return 404 when comment does not exist")
     void deleteComment_shouldReturn404WhenCommentMissing() throws Exception {
         // Given
         UUID commentId = UUID.randomUUID();
@@ -60,7 +60,7 @@ class AdminCommentControllerTest {
                 .when(adminCommentService).deleteComment(commentId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/comments/{id}", commentId))
+        mockMvc.perform(delete("/api/v1/admin/comments/{id}", commentId))
                 .andExpect(status().isNotFound());
 
         verify(adminCommentService).deleteComment(commentId);

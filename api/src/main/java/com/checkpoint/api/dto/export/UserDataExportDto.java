@@ -7,7 +7,7 @@ import java.util.List;
  * GDPR Article 20 export payload: every personal data category we hold about
  * the authenticated user, in a self-contained machine-readable structure.
  *
- * <p>Returned by {@code GET /api/me/export} as the body of a downloadable JSON
+ * <p>Returned by {@code GET /api/v1/me/export} as the body of a downloadable JSON
  * file.</p>
  */
 public record UserDataExportDto(

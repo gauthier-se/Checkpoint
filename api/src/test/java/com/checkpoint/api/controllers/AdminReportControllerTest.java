@@ -50,7 +50,7 @@ class AdminReportControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/admin/reports should return paginated reports")
+    @DisplayName("GET /api/v1/admin/reports should return paginated reports")
     void getAllReports_shouldReturnPagedReports() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -61,7 +61,7 @@ class AdminReportControllerTest {
         when(adminReportService.getAllReports(any(Pageable.class), isNull())).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reports")
+        mockMvc.perform(get("/api/v1/admin/reports")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class AdminReportControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reports with type filter should return filtered reports")
+    @DisplayName("GET /api/v1/admin/reports with type filter should return filtered reports")
     void getAllReports_withTypeFilter_shouldReturnFilteredReports() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -86,7 +86,7 @@ class AdminReportControllerTest {
         when(adminReportService.getAllReports(any(Pageable.class), eq("comment"))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reports")
+        mockMvc.perform(get("/api/v1/admin/reports")
                         .param("page", "0")
                         .param("size", "20")
                         .param("type", "comment"))
@@ -98,7 +98,7 @@ class AdminReportControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reports/{id} should return report detail")
+    @DisplayName("GET /api/v1/admin/reports/{id} should return report detail")
     void getReportById_shouldReturnReportDetail() throws Exception {
         // Given
         UUID reportId = UUID.randomUUID();
@@ -109,7 +109,7 @@ class AdminReportControllerTest {
         when(adminReportService.getReportById(reportId)).thenReturn(detail);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reports/{id}", reportId))
+        mockMvc.perform(get("/api/v1/admin/reports/{id}", reportId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(reportId.toString()))
                 .andExpect(jsonPath("$.reporterUsername").value("reporter1"))
@@ -123,42 +123,42 @@ class AdminReportControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reports/{id} should return 404 when not found")
+    @DisplayName("GET /api/v1/admin/reports/{id} should return 404 when not found")
     void getReportById_shouldReturn404WhenNotFound() throws Exception {
         // Given
         UUID reportId = UUID.randomUUID();
         when(adminReportService.getReportById(reportId)).thenThrow(new ReportNotFoundException(reportId));
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reports/{id}", reportId))
+        mockMvc.perform(get("/api/v1/admin/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
 
         verify(adminReportService).getReportById(reportId);
     }
 
     @Test
-    @DisplayName("DELETE /api/admin/reports/{id} should return 204 No Content")
+    @DisplayName("DELETE /api/v1/admin/reports/{id} should return 204 No Content")
     void dismissReport_shouldReturn204() throws Exception {
         // Given
         UUID reportId = UUID.randomUUID();
         doNothing().when(adminReportService).dismissReport(reportId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/reports/{id}", reportId))
+        mockMvc.perform(delete("/api/v1/admin/reports/{id}", reportId))
                 .andExpect(status().isNoContent());
 
         verify(adminReportService).dismissReport(reportId);
     }
 
     @Test
-    @DisplayName("DELETE /api/admin/reports/{id} should return 404 when not found")
+    @DisplayName("DELETE /api/v1/admin/reports/{id} should return 404 when not found")
     void dismissReport_shouldReturn404WhenNotFound() throws Exception {
         // Given
         UUID reportId = UUID.randomUUID();
         doThrow(new ReportNotFoundException(reportId)).when(adminReportService).dismissReport(reportId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/reports/{id}", reportId))
+        mockMvc.perform(delete("/api/v1/admin/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
 
         verify(adminReportService).dismissReport(reportId);

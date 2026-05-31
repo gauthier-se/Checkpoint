@@ -50,7 +50,7 @@ class LeaderboardControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/leaderboard")
+    @DisplayName("GET /api/v1/leaderboard")
     class GetLeaderboard {
 
         @Test
@@ -59,7 +59,7 @@ class LeaderboardControllerTest {
             when(leaderboardService.getLeaderboard(LeaderboardSortBy.XP, 50))
                     .thenReturn(List.of(entry(1, "alpha", 10, 9000), entry(2, "bravo", 8, 7000)));
 
-            mockMvc.perform(get("/api/leaderboard"))
+            mockMvc.perform(get("/api/v1/leaderboard"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].rank").value(1))
@@ -76,7 +76,7 @@ class LeaderboardControllerTest {
             when(leaderboardService.getLeaderboard(LeaderboardSortBy.LEVEL, 50))
                     .thenReturn(List.of(entry(1, "alpha", 99, 100)));
 
-            mockMvc.perform(get("/api/leaderboard").param("sortBy", "level"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("sortBy", "level"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].level").value(99));
 
@@ -89,7 +89,7 @@ class LeaderboardControllerTest {
             when(leaderboardService.getLeaderboard(eq(LeaderboardSortBy.XP), eq(20)))
                     .thenReturn(List.of(entry(1, "alpha", 5, 500)));
 
-            mockMvc.perform(get("/api/leaderboard").param("limit", "20"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("limit", "20"))
                     .andExpect(status().isOk());
 
             verify(leaderboardService).getLeaderboard(LeaderboardSortBy.XP, 20);
@@ -101,7 +101,7 @@ class LeaderboardControllerTest {
             when(leaderboardService.getLeaderboard(LeaderboardSortBy.LEVEL, 50))
                     .thenReturn(List.of());
 
-            mockMvc.perform(get("/api/leaderboard").param("sortBy", "LEVEL"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("sortBy", "LEVEL"))
                     .andExpect(status().isOk());
 
             verify(leaderboardService).getLeaderboard(LeaderboardSortBy.LEVEL, 50);
@@ -110,7 +110,7 @@ class LeaderboardControllerTest {
         @Test
         @DisplayName("returns 400 when limit is below 1")
         void rejectsZeroLimit() throws Exception {
-            mockMvc.perform(get("/api/leaderboard").param("limit", "0"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("limit", "0"))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(leaderboardService);
@@ -119,7 +119,7 @@ class LeaderboardControllerTest {
         @Test
         @DisplayName("returns 400 when limit is above 100")
         void rejectsLimitAboveMax() throws Exception {
-            mockMvc.perform(get("/api/leaderboard").param("limit", "101"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("limit", "101"))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(leaderboardService);
@@ -128,7 +128,7 @@ class LeaderboardControllerTest {
         @Test
         @DisplayName("returns 400 when sortBy is invalid")
         void rejectsInvalidSortBy() throws Exception {
-            mockMvc.perform(get("/api/leaderboard").param("sortBy", "garbage"))
+            mockMvc.perform(get("/api/v1/leaderboard").param("sortBy", "garbage"))
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(leaderboardService);

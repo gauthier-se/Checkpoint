@@ -30,7 +30,7 @@ cd desktop
 mvn clean javafx:run
 ```
 
-The API base URL is currently hard-coded to `http://localhost:8080/api`
+The API base URL is currently hard-coded to `http://localhost:8080/api/v1`
 (`BaseApiClient.BASE_URL`). Make sure the API is up before logging in.
 
 To build a runnable artifact:

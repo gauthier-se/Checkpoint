@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/auth/2fa/login
+  url: {{baseUrl}}/api/v1/auth/2fa/login
   body: json
   auth: none
 }
@@ -26,7 +26,7 @@ docs {
 
   Completes the two-step login for Desktop clients.
 
-  Called after `POST /api/auth/login` (with `X-Client-Type: Desktop`) returns
+  Called after `POST /api/v1/auth/login` (with `X-Client-Type: Desktop`) returns
   `{ "twoFactorRequired": true, "intermediateToken": "..." }`.
 
   Send the `intermediateToken` from that response along with the TOTP code.

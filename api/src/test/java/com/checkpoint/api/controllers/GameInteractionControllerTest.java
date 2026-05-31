@@ -45,7 +45,7 @@ class GameInteractionControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/me/games/{videoGameId}/status should return 200 and status")
+    @DisplayName("GET /api/v1/me/games/{videoGameId}/status should return 200 and status")
     @WithMockUser(username = "user@example.com")
     void getGameInteractionStatus_shouldReturn200() throws Exception {
         // Given
@@ -59,7 +59,7 @@ class GameInteractionControllerTest {
                 .thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/games/{videoGameId}/status", videoGameId)
+        mockMvc.perform(get("/api/v1/me/games/{videoGameId}/status", videoGameId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.inWishlist").value(true))

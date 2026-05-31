@@ -60,7 +60,7 @@ class GameSocialControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/games/{gameId}/friends-activity")
+    @DisplayName("GET /api/v1/games/{gameId}/friends-activity")
     class GetFriendsActivity {
 
         @Test
@@ -77,7 +77,7 @@ class GameSocialControllerTest {
             when(gameSocialService.getFriendsActivity(eq(gameId), eq("viewer@example.com")))
                     .thenReturn(payload);
 
-            mockMvc.perform(get("/api/games/{gameId}/friends-activity", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/friends-activity", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalCount").value(1))
                     .andExpect(jsonPath("$.countsByPlayStatus.COMPLETED").value(1))
@@ -94,7 +94,7 @@ class GameSocialControllerTest {
             when(gameSocialService.getFriendsActivity(eq(gameId), eq(null)))
                     .thenReturn(new FriendGameActivityDto(0, Map.of(), List.of()));
 
-            mockMvc.perform(get("/api/games/{gameId}/friends-activity", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/friends-activity", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalCount").value(0))
                     .andExpect(jsonPath("$.friends").isEmpty());
@@ -107,13 +107,13 @@ class GameSocialControllerTest {
             when(gameSocialService.getFriendsActivity(eq(gameId), any()))
                     .thenThrow(new GameNotFoundException(gameId));
 
-            mockMvc.perform(get("/api/games/{gameId}/friends-activity", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/friends-activity", gameId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/games/{gameId}/friends-want-to-play")
+    @DisplayName("GET /api/v1/games/{gameId}/friends-want-to-play")
     class GetFriendsWantToPlay {
 
         @Test
@@ -127,7 +127,7 @@ class GameSocialControllerTest {
             when(gameSocialService.getFriendsWantToPlay(eq(gameId), eq("viewer@example.com")))
                     .thenReturn(payload);
 
-            mockMvc.perform(get("/api/games/{gameId}/friends-want-to-play", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/friends-want-to-play", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalCount").value(1))
                     .andExpect(jsonPath("$.wishlistCount").value(1))
@@ -142,7 +142,7 @@ class GameSocialControllerTest {
             when(gameSocialService.getFriendsWantToPlay(eq(gameId), eq(null)))
                     .thenReturn(new FriendWantToPlayDto(0, 0L, 0L, List.of()));
 
-            mockMvc.perform(get("/api/games/{gameId}/friends-want-to-play", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/friends-want-to-play", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalCount").value(0))
                     .andExpect(jsonPath("$.wishlistCount").value(0))

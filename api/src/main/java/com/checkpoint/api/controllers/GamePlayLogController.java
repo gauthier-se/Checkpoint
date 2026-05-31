@@ -36,7 +36,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Play Logs", description = "Current user play log entries")
 @RestController
-@RequestMapping("/api/me/plays")
+@RequestMapping("/me/plays")
 public class GamePlayLogController {
 
     private static final Logger log = LoggerFactory.getLogger(GamePlayLogController.class);
@@ -60,7 +60,7 @@ public class GamePlayLogController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody GamePlayLogRequestDto request) {
 
-        log.info("POST /api/me/plays - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/plays - user: {}", userDetails.getUsername());
 
         GamePlayLogResponseDto response = gamePlayLogService.logPlay(userDetails.getUsername(), request);
 
@@ -76,7 +76,7 @@ public class GamePlayLogController {
             @PathVariable UUID playId,
             @Valid @RequestBody GamePlayLogRequestDto request) {
 
-        log.info("PUT /api/me/plays/{} - user: {}", playId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/plays/{} - user: {}", playId, userDetails.getUsername());
 
         GamePlayLogResponseDto response = gamePlayLogService.updatePlayLog(userDetails.getUsername(), playId, request);
 
@@ -91,7 +91,7 @@ public class GamePlayLogController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID playId) {
 
-        log.info("DELETE /api/me/plays/{} - user: {}", playId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/plays/{} - user: {}", playId, userDetails.getUsername());
 
         gamePlayLogService.deletePlayLog(userDetails.getUsername(), playId);
 
@@ -108,7 +108,7 @@ public class GamePlayLogController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/me/plays - user: {}, page: {}, size: {}, sort: {}", userDetails.getUsername(), page, size, sort);
+        log.info("GET /api/v1/me/plays - user: {}, page: {}, size: {}, sort: {}", userDetails.getUsername(), page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -127,7 +127,7 @@ public class GamePlayLogController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("GET /api/me/plays/game/{} - user: {}", videoGameId, userDetails.getUsername());
+        log.info("GET /api/v1/me/plays/game/{} - user: {}", videoGameId, userDetails.getUsername());
 
         List<GamePlayLogResponseDto> history = gamePlayLogService.getGamePlayHistory(userDetails.getUsername(), videoGameId);
 

@@ -25,7 +25,7 @@ import com.checkpoint.api.services.FeedService;
  */
 @Tag(name = "Notifications and Feed", description = "Current user activity feed")
 @RestController
-@RequestMapping("/api/me")
+@RequestMapping("/me")
 public class FeedController {
 
     private static final Logger log = LoggerFactory.getLogger(FeedController.class);
@@ -53,7 +53,7 @@ public class FeedController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) FeedItemType type) {
 
-        log.info("GET /api/me/feed - user: {}, page: {}, size: {}, type: {}",
+        log.info("GET /api/v1/me/feed - user: {}, page: {}, size: {}, type: {}",
                 userDetails.getUsername(), page, size, type);
 
         PagedResponseDto<FeedItemDto> feed = feedService.getFeed(userDetails.getUsername(), page, size, type);
@@ -73,7 +73,7 @@ public class FeedController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "7") int size) {
 
-        log.info("GET /api/me/friends/trending-games - user: {}, size: {}", userDetails.getUsername(), size);
+        log.info("GET /api/v1/me/friends/trending-games - user: {}, size: {}", userDetails.getUsername(), size);
 
         List<GameCardDto> trending = feedService.getFriendsTrendingGames(userDetails.getUsername(), size);
         return ResponseEntity.ok(trending);
@@ -95,7 +95,7 @@ public class FeedController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "32") int size) {
 
-        log.info("GET /api/me/friends/popular-games - user: {}, page: {}, size: {}",
+        log.info("GET /api/v1/me/friends/popular-games - user: {}, page: {}, size: {}",
                 userDetails.getUsername(), page, size);
 
         PagedResponseDto<GameCardDto> popular = feedService.getFriendsPopularGames(

@@ -10,7 +10,7 @@ import com.checkpoint.api.enums.PlayStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * Full projection of a single play log, returned by {@code GET /api/plays/{id}}.
+ * Full projection of a single play log, returned by {@code GET /api/v1/plays/{id}}.
  * Optional fields are omitted from the response when null.
  *
  * @param id               the play log ID

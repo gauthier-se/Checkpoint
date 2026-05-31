@@ -5,8 +5,8 @@ import java.util.Optional;
 /**
  * Issues and verifies short-lived signed state tokens for the Steam OpenID 2.0 flow.
  *
- * <p>A state token is an HS256 JWT minted at {@code /api/auth/steam/openid/start} and
- * verified at {@code /api/auth/steam/openid/callback}. It binds the callback to the flow
+ * <p>A state token is an HS256 JWT minted at {@code /api/v1/auth/steam/openid/start} and
+ * verified at {@code /api/v1/auth/steam/openid/callback}. It binds the callback to the flow
  * we initiated by encoding:</p>
  *
  * <ul>

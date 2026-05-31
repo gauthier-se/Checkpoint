@@ -66,7 +66,7 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("PUT /api/me/games/{videoGameId}/rate should return 200 OK with the rating")
+    @DisplayName("PUT /api/v1/me/games/{videoGameId}/rate should return 200 OK with the rating")
     void rateGame_shouldReturnRating() throws Exception {
         // Given
         RateRequestDto request = new RateRequestDto(4);
@@ -74,7 +74,7 @@ class RateControllerTest {
                 .thenReturn(rateResponseDto);
 
         // When & Then
-        mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
+        mockMvc.perform(put("/api/v1/me/games/{videoGameId}/rate", videoGameId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -84,13 +84,13 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("PUT /api/me/games/{videoGameId}/rate should return 400 when score is missing")
+    @DisplayName("PUT /api/v1/me/games/{videoGameId}/rate should return 400 when score is missing")
     void rateGame_shouldReturn400WhenScoreMissing() throws Exception {
         // Given
         String requestBody = "{}";
 
         // When & Then
-        mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
+        mockMvc.perform(put("/api/v1/me/games/{videoGameId}/rate", videoGameId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -98,13 +98,13 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("PUT /api/me/games/{videoGameId}/rate should return 400 when score is out of range")
+    @DisplayName("PUT /api/v1/me/games/{videoGameId}/rate should return 400 when score is out of range")
     void rateGame_shouldReturn400WhenScoreOutOfRange() throws Exception {
         // Given
         RateRequestDto request = new RateRequestDto(11);
 
         // When & Then
-        mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
+        mockMvc.perform(put("/api/v1/me/games/{videoGameId}/rate", videoGameId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -112,7 +112,7 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("PUT /api/me/games/{videoGameId}/rate should accept half-star scores (1-10)")
+    @DisplayName("PUT /api/v1/me/games/{videoGameId}/rate should accept half-star scores (1-10)")
     void rateGame_shouldAcceptHalfStarScore() throws Exception {
         // Given — score 7 represents 3.5★
         RateRequestDto request = new RateRequestDto(7);
@@ -127,7 +127,7 @@ class RateControllerTest {
                 .thenReturn(halfStarResponse);
 
         // When & Then
-        mockMvc.perform(put("/api/me/games/{videoGameId}/rate", videoGameId)
+        mockMvc.perform(put("/api/v1/me/games/{videoGameId}/rate", videoGameId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -136,26 +136,26 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("DELETE /api/me/games/{videoGameId}/rate should return 204 No Content")
+    @DisplayName("DELETE /api/v1/me/games/{videoGameId}/rate should return 204 No Content")
     void removeRating_shouldReturn204() throws Exception {
         // Given
         doNothing().when(rateService).removeRating(eq("testuser"), eq(videoGameId));
 
         // When & Then
-        mockMvc.perform(delete("/api/me/games/{videoGameId}/rate", videoGameId))
+        mockMvc.perform(delete("/api/v1/me/games/{videoGameId}/rate", videoGameId))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /api/me/games/{videoGameId}/rate should return 200 OK when rating exists")
+    @DisplayName("GET /api/v1/me/games/{videoGameId}/rate should return 200 OK when rating exists")
     void getMyRating_shouldReturnRating() throws Exception {
         // Given
         when(rateService.getUserRating(eq("testuser"), eq(videoGameId)))
                 .thenReturn(rateResponseDto);
 
         // When & Then
-        mockMvc.perform(get("/api/me/games/{videoGameId}/rate", videoGameId))
+        mockMvc.perform(get("/api/v1/me/games/{videoGameId}/rate", videoGameId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.score").value(4))
                 .andExpect(jsonPath("$.videoGameId").value(videoGameId.toString()));
@@ -163,14 +163,14 @@ class RateControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /api/me/games/{videoGameId}/rate should return 404 when no rating exists")
+    @DisplayName("GET /api/v1/me/games/{videoGameId}/rate should return 404 when no rating exists")
     void getMyRating_shouldReturn404WhenNoRatingExists() throws Exception {
         // Given
         when(rateService.getUserRating(eq("testuser"), eq(videoGameId)))
                 .thenReturn(null);
 
         // When & Then
-        mockMvc.perform(get("/api/me/games/{videoGameId}/rate", videoGameId))
+        mockMvc.perform(get("/api/v1/me/games/{videoGameId}/rate", videoGameId))
                 .andExpect(status().isNotFound());
     }
 }

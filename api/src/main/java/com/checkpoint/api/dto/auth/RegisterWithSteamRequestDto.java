@@ -6,8 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Request body for {@code POST /api/auth/register/steam}. The {@code token} is a short-lived
- * Steam signup JWT issued by {@code /api/auth/steam/openid/callback} when no CheckPoint
+ * Request body for {@code POST /api/v1/auth/register/steam}. The {@code token} is a short-lived
+ * Steam signup JWT issued by {@code /api/v1/auth/steam/openid/callback} when no CheckPoint
  * account is linked to the verified SteamID. {@code password} is optional: a Steam-only
  * account is created when it is {@code null} or blank.
  *

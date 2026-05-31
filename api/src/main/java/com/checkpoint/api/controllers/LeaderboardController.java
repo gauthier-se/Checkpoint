@@ -24,7 +24,7 @@ import com.checkpoint.api.services.LeaderboardSortBy;
  */
 @Tag(name = "Gamification", description = "Leaderboards")
 @RestController
-@RequestMapping("/api/leaderboard")
+@RequestMapping("/leaderboard")
 public class LeaderboardController {
 
     private static final Logger log = LoggerFactory.getLogger(LeaderboardController.class);
@@ -51,7 +51,7 @@ public class LeaderboardController {
             @RequestParam(defaultValue = "xp") String sortBy,
             @RequestParam(defaultValue = "" + DEFAULT_LIMIT) int limit) {
 
-        log.info("GET /api/leaderboard - sortBy: {}, limit: {}", sortBy, limit);
+        log.info("GET /api/v1/leaderboard - sortBy: {}, limit: {}", sortBy, limit);
 
         LeaderboardSortBy parsed = parseSortBy(sortBy);
         if (limit < MIN_LIMIT || limit > MAX_LIMIT) {

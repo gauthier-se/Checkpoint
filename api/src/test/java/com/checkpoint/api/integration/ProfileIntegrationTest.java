@@ -223,13 +223,13 @@ class ProfileIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}")
+    @DisplayName("GET /api/v1/users/{username}")
     class GetUserProfile {
 
         @Test
         @DisplayName("should return full profile for anonymous viewer")
         void shouldReturnProfileForAnonymousViewer() throws Exception {
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("gamer123"))
                     .andExpect(jsonPath("$.bio").value("I love video games"))
@@ -248,7 +248,7 @@ class ProfileIntegrationTest {
         @DisplayName("should return isOwner true when viewer is profile owner")
         @WithMockUser(username = "gamer@example.com")
         void shouldReturnIsOwnerWhenViewerIsOwner() throws Exception {
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isOwner").value(true));
         }
@@ -257,7 +257,7 @@ class ProfileIntegrationTest {
         @DisplayName("should return isFollowing when authenticated viewer follows the user")
         @WithMockUser(username = "other@example.com")
         void shouldReturnIsFollowingWhenViewerFollows() throws Exception {
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isFollowing").value(true))
                     .andExpect(jsonPath("$.isOwner").value(false));
@@ -266,7 +266,7 @@ class ProfileIntegrationTest {
         @Test
         @DisplayName("should return 404 for non-existing user")
         void shouldReturn404ForNonExistingUser() throws Exception {
-            mockMvc.perform(get("/api/users/{username}", "nobody"))
+            mockMvc.perform(get("/api/v1/users/{username}", "nobody"))
                     .andExpect(status().isNotFound());
         }
 
@@ -275,7 +275,7 @@ class ProfileIntegrationTest {
         void shouldReturnRecentPlaysWithFlags() throws Exception {
             seedRecentActivity();
 
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.recentPlays.length()").value(3))
                     // Order: liked (newest), reviewed, replay (oldest).
@@ -306,7 +306,7 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isPrivate").value(true))
                     .andExpect(jsonPath("$.recentPlays.length()").value(0));
@@ -320,7 +320,7 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isOwner").value(true))
                     .andExpect(jsonPath("$.recentPlays.length()").value(3));
@@ -328,13 +328,13 @@ class ProfileIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/reviews")
+    @DisplayName("GET /api/v1/users/{username}/reviews")
     class GetUserReviews {
 
         @Test
         @DisplayName("should return empty reviews for user with no reviews")
         void shouldReturnEmptyReviews() throws Exception {
-            mockMvc.perform(get("/api/users/{username}/reviews", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/reviews", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content.length()").value(0))
@@ -347,7 +347,7 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}/reviews", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/reviews", "gamer123"))
                     .andExpect(status().isForbidden());
         }
 
@@ -358,19 +358,19 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}/reviews", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/reviews", "gamer123"))
                     .andExpect(status().isOk());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/wishlist")
+    @DisplayName("GET /api/v1/users/{username}/wishlist")
     class GetUserWishlist {
 
         @Test
         @DisplayName("should return wishlist for public profile")
         void shouldReturnWishlistForPublicProfile() throws Exception {
-            mockMvc.perform(get("/api/users/{username}/wishlist", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/wishlist", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"));
@@ -382,13 +382,13 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}/wishlist", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/wishlist", "gamer123"))
                     .andExpect(status().isForbidden());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/compare")
+    @DisplayName("GET /api/v1/users/{username}/compare")
     class CompareProfiles {
 
         /**
@@ -429,7 +429,7 @@ class ProfileIntegrationTest {
         void shouldReturnComparison() throws Exception {
             seedComparableLibraries();
 
-            mockMvc.perform(get("/api/users/{username}/compare", "otheruser"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "otheruser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.affinityScore").value(60))
                     .andExpect(jsonPath("$.commonGamesCount").value(2))
@@ -453,7 +453,7 @@ class ProfileIntegrationTest {
         @Test
         @DisplayName("should return 401 for an anonymous viewer")
         void shouldReturn401ForAnonymousViewer() throws Exception {
-            mockMvc.perform(get("/api/users/{username}/compare", "otheruser"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "otheruser"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -461,7 +461,7 @@ class ProfileIntegrationTest {
         @DisplayName("should return 400 when comparing with own profile")
         @WithMockUser(username = "gamer@example.com")
         void shouldReturn400ForSelfCompare() throws Exception {
-            mockMvc.perform(get("/api/users/{username}/compare", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "gamer123"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -473,7 +473,7 @@ class ProfileIntegrationTest {
             otherUser.setIsPrivate(true);
             userRepository.save(otherUser);
 
-            mockMvc.perform(get("/api/users/{username}/compare", "otheruser"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "otheruser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -485,7 +485,7 @@ class ProfileIntegrationTest {
             testUser.setIsPrivate(true);
             userRepository.save(testUser);
 
-            mockMvc.perform(get("/api/users/{username}/compare", "gamer123"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "gamer123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.affinityScore").exists());
         }

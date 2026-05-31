@@ -24,7 +24,7 @@ import com.checkpoint.api.services.NotificationPreferencesService;
  */
 @Tag(name = "Notifications and Feed", description = "Notification preferences")
 @RestController
-@RequestMapping("/api/me/notification-preferences")
+@RequestMapping("/me/notification-preferences")
 public class NotificationPreferencesController {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationPreferencesController.class);
@@ -46,7 +46,7 @@ public class NotificationPreferencesController {
     public ResponseEntity<NotificationPreferencesDto> getPreferences(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/me/notification-preferences - user: {}", userDetails.getUsername());
+        log.info("GET /api/v1/me/notification-preferences - user: {}", userDetails.getUsername());
 
         NotificationPreferencesDto response = preferencesService.getOrCreate(userDetails.getUsername());
 
@@ -66,7 +66,7 @@ public class NotificationPreferencesController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody UpdateNotificationPreferencesDto body) {
 
-        log.info("PUT /api/me/notification-preferences - user: {}", userDetails.getUsername());
+        log.info("PUT /api/v1/me/notification-preferences - user: {}", userDetails.getUsername());
 
         NotificationPreferencesDto response = preferencesService.update(userDetails.getUsername(), body);
 

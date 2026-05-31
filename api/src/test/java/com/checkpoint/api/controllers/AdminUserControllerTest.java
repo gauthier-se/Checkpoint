@@ -52,7 +52,7 @@ class AdminUserControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/admin/users")
+    @DisplayName("GET /api/v1/admin/users")
     class GetAllUsersTests {
 
         @Test
@@ -68,7 +68,7 @@ class AdminUserControllerTest {
             when(adminUserService.getAllUsers()).thenReturn(users);
 
             // When & Then
-            mockMvc.perform(get("/api/admin/users"))
+            mockMvc.perform(get("/api/v1/admin/users"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].id").value(id1.toString()))
@@ -86,7 +86,7 @@ class AdminUserControllerTest {
             when(adminUserService.getAllUsers()).thenReturn(List.of());
 
             // When & Then
-            mockMvc.perform(get("/api/admin/users"))
+            mockMvc.perform(get("/api/v1/admin/users"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
 
@@ -95,7 +95,7 @@ class AdminUserControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/users/{id}")
+    @DisplayName("GET /api/v1/admin/users/{id}")
     class GetUserByIdTests {
 
         @Test
@@ -111,7 +111,7 @@ class AdminUserControllerTest {
             when(adminUserService.getUserById(id)).thenReturn(detail);
 
             // When & Then
-            mockMvc.perform(get("/api/admin/users/{id}", id))
+            mockMvc.perform(get("/api/v1/admin/users/{id}", id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(id.toString()))
                     .andExpect(jsonPath("$.username").value("alice"))
@@ -134,13 +134,13 @@ class AdminUserControllerTest {
             when(adminUserService.getUserById(id)).thenThrow(new UserNotFoundException(id));
 
             // When & Then
-            mockMvc.perform(get("/api/admin/users/{id}", id))
+            mockMvc.perform(get("/api/v1/admin/users/{id}", id))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/users/{id}")
+    @DisplayName("PUT /api/v1/admin/users/{id}")
     class EditUserTests {
 
         @Test
@@ -156,7 +156,7 @@ class AdminUserControllerTest {
             when(adminUserService.editUser(eq(id), any())).thenReturn(updated);
 
             // When & Then
-            mockMvc.perform(put("/api/admin/users/{id}", id)
+            mockMvc.perform(put("/api/v1/admin/users/{id}", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"clearBio\": true, \"clearPicture\": true, \"isPrivate\": true}"))
                     .andExpect(status().isOk())
@@ -175,7 +175,7 @@ class AdminUserControllerTest {
             when(adminUserService.editUser(eq(id), any())).thenThrow(new UserNotFoundException(id));
 
             // When & Then
-            mockMvc.perform(put("/api/admin/users/{id}", id)
+            mockMvc.perform(put("/api/v1/admin/users/{id}", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"clearBio\": false, \"clearPicture\": false}"))
                     .andExpect(status().isNotFound());
@@ -183,7 +183,7 @@ class AdminUserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/admin/users/{id}/ban")
+    @DisplayName("POST /api/v1/admin/users/{id}/ban")
     class BanUserTests {
 
         @Test
@@ -193,7 +193,7 @@ class AdminUserControllerTest {
             UUID id = UUID.randomUUID();
 
             // When & Then
-            mockMvc.perform(post("/api/admin/users/{id}/ban", id))
+            mockMvc.perform(post("/api/v1/admin/users/{id}/ban", id))
                     .andExpect(status().isNoContent());
 
             verify(adminUserService).banUser(id);
@@ -207,13 +207,13 @@ class AdminUserControllerTest {
             doThrow(new UserNotFoundException(id)).when(adminUserService).banUser(id);
 
             // When & Then
-            mockMvc.perform(post("/api/admin/users/{id}/ban", id))
+            mockMvc.perform(post("/api/v1/admin/users/{id}/ban", id))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("POST /api/admin/users/{id}/unban")
+    @DisplayName("POST /api/v1/admin/users/{id}/unban")
     class UnbanUserTests {
 
         @Test
@@ -223,7 +223,7 @@ class AdminUserControllerTest {
             UUID id = UUID.randomUUID();
 
             // When & Then
-            mockMvc.perform(post("/api/admin/users/{id}/unban", id))
+            mockMvc.perform(post("/api/v1/admin/users/{id}/unban", id))
                     .andExpect(status().isNoContent());
 
             verify(adminUserService).unbanUser(id);
@@ -237,7 +237,7 @@ class AdminUserControllerTest {
             doThrow(new UserNotFoundException(id)).when(adminUserService).unbanUser(id);
 
             // When & Then
-            mockMvc.perform(post("/api/admin/users/{id}/unban", id))
+            mockMvc.perform(post("/api/v1/admin/users/{id}/unban", id))
                     .andExpect(status().isNotFound());
         }
     }

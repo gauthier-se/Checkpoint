@@ -15,7 +15,7 @@ import javafx.scene.control.TextField;
 /**
  * Controller for the Login view.
  *
- * <p>Sends credentials to {@code POST /api/auth/token}, expects a JSON response
+ * <p>Sends credentials to {@code POST /api/v1/auth/token}, expects a JSON response
  * containing a JWT, and stores it via {@link com.seyzeriat.desktop.service.TokenManager}.
  * On success, navigates to the main application view.</p>
  */

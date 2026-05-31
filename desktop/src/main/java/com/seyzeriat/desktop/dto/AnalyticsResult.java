@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * DTO mirroring the analytics payload returned by {@code GET /api/admin/analytics}.
+ * DTO mirroring the analytics payload returned by {@code GET /api/v1/admin/analytics}.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnalyticsResult {

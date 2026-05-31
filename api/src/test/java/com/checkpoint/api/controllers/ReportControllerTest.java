@@ -67,7 +67,7 @@ class ReportControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/reviews/{reviewId}/report")
+    @DisplayName("POST /api/v1/reviews/{reviewId}/report")
     class ReportReview {
 
         @Test
@@ -80,7 +80,7 @@ class ReportControllerTest {
                     .thenReturn(reportResponseDto);
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/report", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/report", reviewId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -98,7 +98,7 @@ class ReportControllerTest {
                     .thenThrow(new ReviewNotFoundException("Review not found with ID: " + reviewId));
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/report", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/report", reviewId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -114,7 +114,7 @@ class ReportControllerTest {
                     .thenThrow(new DuplicateReportException(reviewId));
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/report", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/report", reviewId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
@@ -128,7 +128,7 @@ class ReportControllerTest {
             ReportRequestDto request = new ReportRequestDto("");
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/report", reviewId)
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/report", reviewId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());

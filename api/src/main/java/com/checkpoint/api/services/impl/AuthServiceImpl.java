@@ -140,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
             String intermediateToken = twoFactorService.generateIntermediateToken(request.email());
-            ResponseCookie twoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, intermediateToken, TWO_FA_COOKIE_MAX_AGE_SECONDS, "/api/auth/2fa/login");
+            ResponseCookie twoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, intermediateToken, TWO_FA_COOKIE_MAX_AGE_SECONDS, "/api/v1/auth/2fa/login");
             servletResponse.addHeader(HttpHeaders.SET_COOKIE, twoFaCookie.toString());
             throw new TwoFactorRequiredException(null);
         }
@@ -148,12 +148,12 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
         String accessToken = jwtService.generateToken(userDetails);
 
-        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api/v1");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/v1/auth/refresh");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
@@ -166,11 +166,11 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         String accessToken = jwtService.generateToken(userDetails);
 
-        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api/v1");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/v1/auth/refresh");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
@@ -186,7 +186,7 @@ public class AuthServiceImpl implements AuthService {
 
         String intermediateToken = twoFactorService.generateIntermediateToken(email);
         ResponseCookie twoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, intermediateToken,
-                TWO_FA_COOKIE_MAX_AGE_SECONDS, "/api/auth/2fa/login");
+                TWO_FA_COOKIE_MAX_AGE_SECONDS, "/api/v1/auth/2fa/login");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, twoFaCookie.toString());
         return true;
     }
@@ -202,10 +202,10 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.revokeToken(refreshToken);
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
 
-        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, newAccessToken, jwtExpirationMs / 1000, "/api");
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, newAccessToken, jwtExpirationMs / 1000, "/api/v1");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, newRefreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, newRefreshToken.getToken(), refreshExpirationMs / 1000, "/api/v1/auth/refresh");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 
@@ -232,10 +232,10 @@ public class AuthServiceImpl implements AuthService {
                 log.warn("Failed to revoke refresh token on logout: {}", ex.getMessage());
             }
         }
-        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, "", 0, "/api");
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, "", 0, "/api/v1");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, "", 0, "/api/auth/refresh");
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, "", 0, "/api/v1/auth/refresh");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         SecurityContextHolder.clearContext();
@@ -396,13 +396,13 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(userDetails);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        ResponseCookie expiredTwoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, "", 0, "/api/auth/2fa/login");
+        ResponseCookie expiredTwoFaCookie = buildCookie(TWO_FA_COOKIE_NAME, "", 0, "/api/v1/auth/2fa/login");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, expiredTwoFaCookie.toString());
 
-        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api");
+        ResponseCookie accessCookie = buildCookie(COOKIE_NAME, accessToken, jwtExpirationMs / 1000, "/api/v1");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/auth/refresh");
+        ResponseCookie refreshCookie = buildCookie(REFRESH_COOKIE_NAME, refreshToken.getToken(), refreshExpirationMs / 1000, "/api/v1/auth/refresh");
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }
 

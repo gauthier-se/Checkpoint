@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Verifies that {@link NewsResult} deserializes the JSON shape returned by the
- * admin {@code /api/admin/news} endpoints. Acts as a contract test against the
+ * admin {@code /api/v1/admin/news} endpoints. Acts as a contract test against the
  * API's {@code NewsResponseDto}.
  */
 class NewsResultTest {

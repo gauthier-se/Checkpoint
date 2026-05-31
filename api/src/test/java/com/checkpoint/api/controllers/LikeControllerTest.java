@@ -56,7 +56,7 @@ class LikeControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/reviews/{reviewId}/like")
+    @DisplayName("POST /api/v1/reviews/{reviewId}/like")
     class ToggleReviewLike {
 
         @Test
@@ -71,7 +71,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId))
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/like", reviewId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(true))
                     .andExpect(jsonPath("$.likesCount").value(5));
@@ -89,7 +89,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId))
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/like", reviewId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(false))
                     .andExpect(jsonPath("$.likesCount").value(4));
@@ -106,14 +106,14 @@ class LikeControllerTest {
                     .thenThrow(new ReviewNotFoundException("Review not found with ID: " + reviewId));
 
             // When / Then
-            mockMvc.perform(post("/api/reviews/{reviewId}/like", reviewId))
+            mockMvc.perform(post("/api/v1/reviews/{reviewId}/like", reviewId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("POST /api/lists/{listId}/like")
+    @DisplayName("POST /api/v1/lists/{listId}/like")
     class ToggleListLike {
 
         @Test
@@ -128,7 +128,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/lists/{listId}/like", listId))
+            mockMvc.perform(post("/api/v1/lists/{listId}/like", listId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(true))
                     .andExpect(jsonPath("$.likesCount").value(10));
@@ -146,7 +146,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/lists/{listId}/like", listId))
+            mockMvc.perform(post("/api/v1/lists/{listId}/like", listId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(false))
                     .andExpect(jsonPath("$.likesCount").value(9));
@@ -163,14 +163,14 @@ class LikeControllerTest {
                     .thenThrow(new GameListNotFoundException(listId));
 
             // When / Then
-            mockMvc.perform(post("/api/lists/{listId}/like", listId))
+            mockMvc.perform(post("/api/v1/lists/{listId}/like", listId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("POST /api/comments/{commentId}/like")
+    @DisplayName("POST /api/v1/comments/{commentId}/like")
     class ToggleCommentLike {
 
         @Test
@@ -185,7 +185,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
+            mockMvc.perform(post("/api/v1/comments/{commentId}/like", commentId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(true))
                     .andExpect(jsonPath("$.likesCount").value(3));
@@ -203,7 +203,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
+            mockMvc.perform(post("/api/v1/comments/{commentId}/like", commentId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(false))
                     .andExpect(jsonPath("$.likesCount").value(2));
@@ -220,14 +220,14 @@ class LikeControllerTest {
                     .thenThrow(new CommentNotFoundException(commentId));
 
             // When / Then
-            mockMvc.perform(post("/api/comments/{commentId}/like", commentId))
+            mockMvc.perform(post("/api/v1/comments/{commentId}/like", commentId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("POST /api/me/games/{videoGameId}/like")
+    @DisplayName("POST /api/v1/me/games/{videoGameId}/like")
     class ToggleGameLike {
 
         @Test
@@ -242,7 +242,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/games/{videoGameId}/like", videoGameId))
+            mockMvc.perform(post("/api/v1/me/games/{videoGameId}/like", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(true))
                     .andExpect(jsonPath("$.likesCount").value(7));
@@ -260,7 +260,7 @@ class LikeControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/games/{videoGameId}/like", videoGameId))
+            mockMvc.perform(post("/api/v1/me/games/{videoGameId}/like", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.liked").value(false))
                     .andExpect(jsonPath("$.likesCount").value(6));
@@ -277,14 +277,14 @@ class LikeControllerTest {
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/games/{videoGameId}/like", videoGameId))
+            mockMvc.perform(post("/api/v1/me/games/{videoGameId}/like", videoGameId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/likes")
+    @DisplayName("GET /api/v1/me/likes")
     class GetLikedGames {
 
         @Test
@@ -301,7 +301,7 @@ class LikeControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/likes"))
+            mockMvc.perform(get("/api/v1/me/likes"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
@@ -317,7 +317,7 @@ class LikeControllerTest {
                     .thenReturn(new PageImpl<>(List.of()));
 
             // When / Then
-            mockMvc.perform(get("/api/me/likes")
+            mockMvc.perform(get("/api/v1/me/likes")
                             .param("page", "0")
                             .param("size", "20"))
                     .andExpect(status().isOk())

@@ -28,7 +28,7 @@ import com.checkpoint.api.services.EasterEggService;
  */
 @Tag(name = "Gamification", description = "Easter egg discovery")
 @RestController
-@RequestMapping("/api/me/easter-eggs")
+@RequestMapping("/me/easter-eggs")
 public class EasterEggController {
 
     private static final Logger log = LoggerFactory.getLogger(EasterEggController.class);
@@ -45,7 +45,7 @@ public class EasterEggController {
     @PostMapping("/konami")
     public ResponseEntity<Void> konami(@AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        log.info("POST /api/me/easter-eggs/konami - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/easter-eggs/konami - user: {}", userDetails.getUsername());
         easterEggService.recordKonami(userId);
         return ResponseEntity.noContent().build();
     }
@@ -53,7 +53,7 @@ public class EasterEggController {
     @PostMapping("/barrel-roll")
     public ResponseEntity<Void> barrelRoll(@AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        log.info("POST /api/me/easter-eggs/barrel-roll - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/easter-eggs/barrel-roll - user: {}", userDetails.getUsername());
         easterEggService.recordBarrelRoll(userId);
         return ResponseEntity.noContent().build();
     }
@@ -61,7 +61,7 @@ public class EasterEggController {
     @PostMapping("/rickroll")
     public ResponseEntity<Void> rickroll(@AuthenticationPrincipal UserDetails userDetails) {
         UUID userId = resolveUserId(userDetails);
-        log.info("POST /api/me/easter-eggs/rickroll - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/easter-eggs/rickroll - user: {}", userDetails.getUsername());
         easterEggService.recordRickroll(userId);
         return ResponseEntity.noContent().build();
     }

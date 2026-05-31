@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Verifies that {@link NewsRequestPayload} serializes to the JSON shape
- * expected by the admin {@code POST /api/admin/news} and
- * {@code PUT /api/admin/news/{id}} endpoints.
+ * expected by the admin {@code POST /api/v1/admin/news} and
+ * {@code PUT /api/v1/admin/news/{id}} endpoints.
  */
 class NewsRequestPayloadTest {
 

@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/me/onboarding
+  url: {{baseUrl}}/api/v1/me/onboarding
   body: json
   auth: bearer
 }
@@ -39,5 +39,5 @@ docs {
 
   ## Response (200 OK)
 
-  The updated onboarding snapshot (same shape as `GET /api/me/onboarding`).
+  The updated onboarding snapshot (same shape as `GET /api/v1/me/onboarding`).
 }

@@ -52,7 +52,7 @@ class FavoriteControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("PUT /api/me/favorites returns 200 with the ordered list")
+    @DisplayName("PUT /api/v1/me/favorites returns 200 with the ordered list")
     @WithMockUser(username = "alice@test.com")
     void replaceFavorites_shouldReturnOrderedList() throws Exception {
         UUID g1 = UUID.randomUUID();
@@ -66,7 +66,7 @@ class FavoriteControllerTest {
 
         when(favoriteService.replaceFavorites(eq("alice@test.com"), anyList())).thenReturn(response);
 
-        mockMvc.perform(put("/api/me/favorites")
+        mockMvc.perform(put("/api/v1/me/favorites")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -79,7 +79,7 @@ class FavoriteControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/me/favorites returns 400 when more than 5 ids are sent")
+    @DisplayName("PUT /api/v1/me/favorites returns 400 when more than 5 ids are sent")
     @WithMockUser(username = "alice@test.com")
     void replaceFavorites_shouldReturn400WhenMoreThanFive() throws Exception {
         List<UUID> ids = List.of(
@@ -87,14 +87,14 @@ class FavoriteControllerTest {
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         UpdateFavoritesDto request = new UpdateFavoritesDto(ids);
 
-        mockMvc.perform(put("/api/me/favorites")
+        mockMvc.perform(put("/api/v1/me/favorites")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("PUT /api/me/favorites returns 400 when service flags duplicate ids")
+    @DisplayName("PUT /api/v1/me/favorites returns 400 when service flags duplicate ids")
     @WithMockUser(username = "alice@test.com")
     void replaceFavorites_shouldReturn400WhenDuplicates() throws Exception {
         UUID g = UUID.randomUUID();
@@ -103,14 +103,14 @@ class FavoriteControllerTest {
         when(favoriteService.replaceFavorites(eq("alice@test.com"), anyList()))
                 .thenThrow(new InvalidFavoritesException("Duplicate gameIds are not allowed"));
 
-        mockMvc.perform(put("/api/me/favorites")
+        mockMvc.perform(put("/api/v1/me/favorites")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("PUT /api/me/favorites returns 400 when service flags unknown gameId")
+    @DisplayName("PUT /api/v1/me/favorites returns 400 when service flags unknown gameId")
     @WithMockUser(username = "alice@test.com")
     void replaceFavorites_shouldReturn400WhenUnknownGameId() throws Exception {
         UpdateFavoritesDto request = new UpdateFavoritesDto(List.of(UUID.randomUUID()));
@@ -118,7 +118,7 @@ class FavoriteControllerTest {
         when(favoriteService.replaceFavorites(eq("alice@test.com"), anyList()))
                 .thenThrow(new InvalidFavoritesException("One or more gameIds do not exist"));
 
-        mockMvc.perform(put("/api/me/favorites")
+        mockMvc.perform(put("/api/v1/me/favorites")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());

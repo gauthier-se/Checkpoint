@@ -5,7 +5,7 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/admin/news/{{newsId}}
+  url: {{baseUrl}}/api/v1/admin/news/{{newsId}}
   body: none
   auth: bearer
 }
@@ -25,7 +25,7 @@ docs {
 
   ## Authentication
 
-  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Bearer Token**: JWT token obtained from `/api/v1/auth/token`
   - **Required Role**: `ROLE_ADMIN`
 
   ## Response

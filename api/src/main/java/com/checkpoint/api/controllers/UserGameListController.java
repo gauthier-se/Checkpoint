@@ -40,7 +40,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Lists", description = "Current user custom game lists")
 @RestController
-@RequestMapping("/api/me/lists")
+@RequestMapping("/me/lists")
 public class UserGameListController {
 
     private static final Logger log = LoggerFactory.getLogger(UserGameListController.class);
@@ -72,7 +72,7 @@ public class UserGameListController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateGameListRequestDto request) {
 
-        log.info("POST /api/me/lists - user: {}, title: '{}'", userDetails.getUsername(), request.title());
+        log.info("POST /api/v1/me/lists - user: {}, title: '{}'", userDetails.getUsername(), request.title());
 
         GameListDetailDto created = gameListService.createList(userDetails.getUsername(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -92,7 +92,7 @@ public class UserGameListController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/me/lists - user: {}, page: {}, size: {}", userDetails.getUsername(), page, size);
+        log.info("GET /api/v1/me/lists - user: {}, page: {}, size: {}", userDetails.getUsername(), page, size);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -117,7 +117,7 @@ public class UserGameListController {
             @PathVariable UUID listId,
             @RequestBody UpdateGameListRequestDto request) {
 
-        log.info("PUT /api/me/lists/{} - user: {}", listId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/lists/{} - user: {}", listId, userDetails.getUsername());
 
         GameListDetailDto updated = gameListService.updateList(userDetails.getUsername(), listId, request);
         return ResponseEntity.ok(updated);
@@ -135,7 +135,7 @@ public class UserGameListController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID listId) {
 
-        log.info("DELETE /api/me/lists/{} - user: {}", listId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/lists/{} - user: {}", listId, userDetails.getUsername());
 
         gameListService.deleteList(userDetails.getUsername(), listId);
         return ResponseEntity.noContent().build();
@@ -155,7 +155,7 @@ public class UserGameListController {
             @PathVariable UUID listId,
             @Valid @RequestBody AddGameToListRequestDto request) {
 
-        log.info("POST /api/me/lists/{}/games - user: {}, gameId: {}",
+        log.info("POST /api/v1/me/lists/{}/games - user: {}, gameId: {}",
                 listId, userDetails.getUsername(), request.videoGameId());
 
         GameListDetailDto updated = gameListService.addGameToList(userDetails.getUsername(), listId, request);
@@ -176,7 +176,7 @@ public class UserGameListController {
             @PathVariable UUID listId,
             @PathVariable UUID videoGameId) {
 
-        log.info("DELETE /api/me/lists/{}/games/{} - user: {}", listId, videoGameId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/lists/{}/games/{} - user: {}", listId, videoGameId, userDetails.getUsername());
 
         gameListService.removeGameFromList(userDetails.getUsername(), listId, videoGameId);
         return ResponseEntity.noContent().build();
@@ -196,7 +196,7 @@ public class UserGameListController {
             @PathVariable UUID listId,
             @Valid @RequestBody ReorderGamesRequestDto request) {
 
-        log.info("PUT /api/me/lists/{}/games/reorder - user: {}", listId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/lists/{}/games/reorder - user: {}", listId, userDetails.getUsername());
 
         GameListDetailDto updated = gameListService.reorderGames(userDetails.getUsername(), listId, request);
         return ResponseEntity.ok(updated);

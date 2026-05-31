@@ -29,7 +29,7 @@ import com.checkpoint.api.services.AdminReviewService;
  */
 @Tag(name = "Admin", description = "Admin: review moderation")
 @RestController
-@RequestMapping("/api/admin/reviews")
+@RequestMapping("/admin/reviews")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminReviewController {
 

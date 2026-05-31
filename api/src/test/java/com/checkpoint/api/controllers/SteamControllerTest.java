@@ -56,7 +56,7 @@ class SteamControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/steam/link")
+    @DisplayName("POST /api/v1/me/steam/link")
     class Link {
 
         @Test
@@ -70,7 +70,7 @@ class SteamControllerTest {
             String body = objectMapper.writeValueAsString(
                     java.util.Map.of("steamId", STEAM_ID));
 
-            mockMvc.perform(post("/api/me/steam/link")
+            mockMvc.perform(post("/api/v1/me/steam/link")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isOk())
@@ -87,7 +87,7 @@ class SteamControllerTest {
             String body = objectMapper.writeValueAsString(
                     java.util.Map.of("steamId", "   "));
 
-            mockMvc.perform(post("/api/me/steam/link")
+            mockMvc.perform(post("/api/v1/me/steam/link")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isBadRequest());
@@ -100,7 +100,7 @@ class SteamControllerTest {
             String body = objectMapper.writeValueAsString(
                     java.util.Map.of("steamId", "a".repeat(257)));
 
-            mockMvc.perform(post("/api/me/steam/link")
+            mockMvc.perform(post("/api/v1/me/steam/link")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isBadRequest());
@@ -116,7 +116,7 @@ class SteamControllerTest {
             String body = objectMapper.writeValueAsString(
                     java.util.Map.of("steamId", STEAM_ID));
 
-            mockMvc.perform(post("/api/me/steam/link")
+            mockMvc.perform(post("/api/v1/me/steam/link")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isBadRequest());
@@ -124,7 +124,7 @@ class SteamControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/steam/unlink")
+    @DisplayName("DELETE /api/v1/me/steam/unlink")
     class Unlink {
 
         @Test
@@ -133,7 +133,7 @@ class SteamControllerTest {
         void unlink_success() throws Exception {
             doNothing().when(steamService).unlinkSteamAccount(EMAIL);
 
-            mockMvc.perform(delete("/api/me/steam/unlink"))
+            mockMvc.perform(delete("/api/v1/me/steam/unlink"))
                     .andExpect(status().isNoContent());
 
             verify(steamService).unlinkSteamAccount(EMAIL);
@@ -141,7 +141,7 @@ class SteamControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/me/steam/sync")
+    @DisplayName("POST /api/v1/me/steam/sync")
     class Sync {
 
         @Test
@@ -151,7 +151,7 @@ class SteamControllerTest {
             SteamSyncSummaryDto summary = new SteamSyncSummaryDto(10, 7, 2, 1);
             when(steamService.syncSteamLibrary(EMAIL)).thenReturn(summary);
 
-            mockMvc.perform(post("/api/me/steam/sync"))
+            mockMvc.perform(post("/api/v1/me/steam/sync"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.total").value(10))
                     .andExpect(jsonPath("$.imported").value(7))
@@ -168,7 +168,7 @@ class SteamControllerTest {
             when(steamService.syncSteamLibrary(EMAIL))
                     .thenThrow(new SteamAccountNotLinkedException("No Steam account linked."));
 
-            mockMvc.perform(post("/api/me/steam/sync"))
+            mockMvc.perform(post("/api/v1/me/steam/sync"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -179,7 +179,7 @@ class SteamControllerTest {
             when(steamService.syncSteamLibrary(EMAIL))
                     .thenThrow(new SteamLibraryPrivateException("Your Steam library is private."));
 
-            mockMvc.perform(post("/api/me/steam/sync"))
+            mockMvc.perform(post("/api/v1/me/steam/sync"))
                     .andExpect(status().isBadRequest());
         }
     }

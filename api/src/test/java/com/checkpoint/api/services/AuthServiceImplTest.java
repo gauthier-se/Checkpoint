@@ -203,9 +203,9 @@ class AuthServiceImplTest {
 
             java.util.List<String> cookieHeaders = headerValueCaptor.getAllValues();
             assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_token=jwt.token.here")
-                    && h.contains("HttpOnly") && h.contains("Path=/api"));
+                    && h.contains("HttpOnly") && h.contains("Path=/api/v1"));
             assertThat(cookieHeaders).anyMatch(h -> h.contains("checkpoint_refresh=refresh-uuid")
-                    && h.contains("HttpOnly") && h.contains("Path=/api/auth/refresh"));
+                    && h.contains("HttpOnly") && h.contains("Path=/api/v1/auth/refresh"));
         }
 
         @Test
@@ -255,7 +255,7 @@ class AuthServiceImplTest {
             String cookie = headerValueCaptor.getValue();
             assertThat(cookie).contains("checkpoint_2fa=intermediate.jwt")
                     .contains("HttpOnly")
-                    .contains("Path=/api/auth/2fa/login");
+                    .contains("Path=/api/v1/auth/2fa/login");
         }
 
         @Test

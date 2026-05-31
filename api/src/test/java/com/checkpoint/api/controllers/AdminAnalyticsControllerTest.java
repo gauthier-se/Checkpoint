@@ -61,7 +61,7 @@ class AdminAnalyticsControllerTest {
         when(adminAnalyticsService.getAnalytics()).thenReturn(analytics);
 
         // When & Then
-        mockMvc.perform(get("/api/admin/analytics"))
+        mockMvc.perform(get("/api/v1/admin/analytics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalUsers").value(42))
                 .andExpect(jsonPath("$.activeUsers").value(40))
@@ -90,7 +90,7 @@ class AdminAnalyticsControllerTest {
         when(adminAnalyticsService.getAnalytics()).thenReturn(analytics);
 
         // When & Then
-        mockMvc.perform(get("/api/admin/analytics"))
+        mockMvc.perform(get("/api/v1/admin/analytics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalUsers").value(0))
                 .andExpect(jsonPath("$.topReviewedGames.length()").value(0))

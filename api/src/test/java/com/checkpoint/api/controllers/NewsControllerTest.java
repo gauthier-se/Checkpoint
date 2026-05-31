@@ -65,7 +65,7 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news should delegate to NewsSearchService with empty criteria by default")
+    @DisplayName("GET /api/v1/news should delegate to NewsSearchService with empty criteria by default")
     void getPublishedNews_shouldDelegateWithDefaults() throws Exception {
         UUID newsId = UUID.randomUUID();
         Page<NewsResponseDto> page = new PageImpl<>(List.of(sampleDto(newsId)));
@@ -73,7 +73,7 @@ class NewsControllerTest {
         when(newsSearchService.search(any(NewsSearchCriteria.class), any(Pageable.class)))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/api/news")
+        mockMvc.perform(get("/api/v1/news")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -85,13 +85,13 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news should pass q, source, feedName, dates, sort to criteria")
+    @DisplayName("GET /api/v1/news should pass q, source, feedName, dates, sort to criteria")
     void getPublishedNews_shouldThreadCriteria() throws Exception {
         Page<NewsResponseDto> page = new PageImpl<>(List.of());
         when(newsSearchService.search(any(NewsSearchCriteria.class), any(Pageable.class)))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/api/news")
+        mockMvc.perform(get("/api/v1/news")
                         .param("q", "witcher")
                         .param("source", "RSS")
                         .param("feedName", "IGN")
@@ -111,22 +111,22 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news should return 400 when publishedFrom > publishedTo")
+    @DisplayName("GET /api/v1/news should return 400 when publishedFrom > publishedTo")
     void getPublishedNews_shouldRejectInvertedDateRange() throws Exception {
-        mockMvc.perform(get("/api/news")
+        mockMvc.perform(get("/api/v1/news")
                         .param("publishedFrom", "2026-04-01")
                         .param("publishedTo", "2026-01-01"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("GET /api/news/search should return fuzzy-matched results")
+    @DisplayName("GET /api/v1/news/search should return fuzzy-matched results")
     void quickSearch_shouldReturnResults() throws Exception {
         UUID newsId = UUID.randomUUID();
         when(newsSearchService.quickSearch(eq("elden"), anyInt()))
                 .thenReturn(List.of(sampleDto(newsId)));
 
-        mockMvc.perform(get("/api/news/search")
+        mockMvc.perform(get("/api/v1/news/search")
                         .param("q", "elden")
                         .param("limit", "3"))
                 .andExpect(status().isOk())
@@ -137,11 +137,11 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news/search should clamp limit to max 10")
+    @DisplayName("GET /api/v1/news/search should clamp limit to max 10")
     void quickSearch_shouldClampLimit() throws Exception {
         when(newsSearchService.quickSearch(eq("elden"), anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/news/search")
+        mockMvc.perform(get("/api/v1/news/search")
                         .param("q", "elden")
                         .param("limit", "99"))
                 .andExpect(status().isOk());
@@ -150,11 +150,11 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news/search should default limit to 5 when omitted")
+    @DisplayName("GET /api/v1/news/search should default limit to 5 when omitted")
     void quickSearch_shouldDefaultLimit() throws Exception {
         when(newsSearchService.quickSearch(eq("elden"), anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/news/search")
+        mockMvc.perform(get("/api/v1/news/search")
                         .param("q", "elden"))
                 .andExpect(status().isOk());
 
@@ -162,12 +162,12 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news/{newsId} should return a single published news")
+    @DisplayName("GET /api/v1/news/{newsId} should return a single published news")
     void getNewsById_shouldReturnNews() throws Exception {
         UUID newsId = UUID.randomUUID();
         when(newsService.getNewsById(newsId)).thenReturn(sampleDto(newsId));
 
-        mockMvc.perform(get("/api/news/{newsId}", newsId))
+        mockMvc.perform(get("/api/v1/news/{newsId}", newsId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(newsId.toString()))
                 .andExpect(jsonPath("$.title").value("Test News"));
@@ -176,12 +176,12 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/news/{newsId} should return 404 when news not found")
+    @DisplayName("GET /api/v1/news/{newsId} should return 404 when news not found")
     void getNewsById_shouldReturn404WhenNotFound() throws Exception {
         UUID newsId = UUID.randomUUID();
         when(newsService.getNewsById(newsId)).thenThrow(new NewsNotFoundException(newsId));
 
-        mockMvc.perform(get("/api/news/{newsId}", newsId))
+        mockMvc.perform(get("/api/v1/news/{newsId}", newsId))
                 .andExpect(status().isNotFound());
 
         verify(newsService).getNewsById(newsId);

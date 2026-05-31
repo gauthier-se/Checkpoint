@@ -61,7 +61,7 @@ class BacklogControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/backlog/{videoGameId}")
+    @DisplayName("POST /api/v1/me/backlog/{videoGameId}")
     class AddToBacklog {
 
         @Test
@@ -79,7 +79,7 @@ class BacklogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/backlog/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/backlog/{videoGameId}", videoGameId))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(backlogId.toString()))
                     .andExpect(jsonPath("$.videoGameId").value(videoGameId.toString()))
@@ -101,7 +101,7 @@ class BacklogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/backlog/{videoGameId}", videoGameId)
+            mockMvc.perform(post("/api/v1/me/backlog/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"HIGH\"}"))
                     .andExpect(status().isCreated())
@@ -119,7 +119,7 @@ class BacklogControllerTest {
                     .thenThrow(new GameAlreadyInBacklogException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/backlog/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/backlog/{videoGameId}", videoGameId))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.status").value(409))
                     .andExpect(jsonPath("$.error").value("Conflict"));
@@ -136,14 +136,14 @@ class BacklogControllerTest {
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/backlog/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/backlog/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/backlog/{videoGameId}")
+    @DisplayName("DELETE /api/v1/me/backlog/{videoGameId}")
     class RemoveFromBacklog {
 
         @Test
@@ -156,7 +156,7 @@ class BacklogControllerTest {
                     .removeFromBacklog("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/backlog/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/backlog/{videoGameId}", videoGameId))
                     .andExpect(status().isNoContent());
         }
 
@@ -171,13 +171,13 @@ class BacklogControllerTest {
                     .removeFromBacklog("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/backlog/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/backlog/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/backlog")
+    @DisplayName("GET /api/v1/me/backlog")
     class GetUserBacklog {
 
         @Test
@@ -197,7 +197,7 @@ class BacklogControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/backlog"))
+            mockMvc.perform(get("/api/v1/me/backlog"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
@@ -214,7 +214,7 @@ class BacklogControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/me/backlog")
+            mockMvc.perform(get("/api/v1/me/backlog")
                             .param("page", "1")
                             .param("size", "10")
                             .param("sort", "createdAt,asc"))
@@ -224,7 +224,7 @@ class BacklogControllerTest {
     }
 
     @Nested
-    @DisplayName("PATCH /api/me/backlog/{videoGameId}/priority")
+    @DisplayName("PATCH /api/v1/me/backlog/{videoGameId}/priority")
     class UpdatePriority {
 
         @Test
@@ -242,7 +242,7 @@ class BacklogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/backlog/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"HIGH\"}"))
                     .andExpect(status().isOk())
@@ -265,7 +265,7 @@ class BacklogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/backlog/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":null}"))
                     .andExpect(status().isOk())
@@ -283,7 +283,7 @@ class BacklogControllerTest {
                     .thenThrow(new GameNotInBacklogException(videoGameId));
 
             // When / Then
-            mockMvc.perform(patch("/api/me/backlog/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/backlog/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"MEDIUM\"}"))
                     .andExpect(status().isNotFound())
@@ -292,7 +292,7 @@ class BacklogControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/backlog/{videoGameId}/status")
+    @DisplayName("GET /api/v1/me/backlog/{videoGameId}/status")
     class IsInBacklog {
 
         @Test
@@ -305,7 +305,7 @@ class BacklogControllerTest {
                     .thenReturn(true);
 
             // When / Then
-            mockMvc.perform(get("/api/me/backlog/{videoGameId}/status", videoGameId))
+            mockMvc.perform(get("/api/v1/me/backlog/{videoGameId}/status", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.inBacklog").value(true));
         }
@@ -320,7 +320,7 @@ class BacklogControllerTest {
                     .thenReturn(false);
 
             // When / Then
-            mockMvc.perform(get("/api/me/backlog/{videoGameId}/status", videoGameId))
+            mockMvc.perform(get("/api/v1/me/backlog/{videoGameId}/status", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.inBacklog").value(false));
         }

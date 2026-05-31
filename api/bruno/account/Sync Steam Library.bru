@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/me/steam/sync
+  url: {{baseUrl}}/api/v1/me/steam/sync
   body: none
   auth: bearer
 }
@@ -30,7 +30,7 @@ docs {
   take 10–30 s; expect to hit the IGDB rate limiter (1 request/sec) once per
   batch of 500 appIds.
 
-  Requires a linked Steam account (see `POST /api/me/steam/link` or the
+  Requires a linked Steam account (see `POST /api/v1/me/steam/link` or the
   OpenID flow) **and** a publicly visible Steam profile — Steam's
   `GetOwnedGames` endpoint returns no data when `communityvisibilitystate`
   is anything other than `3` (public).

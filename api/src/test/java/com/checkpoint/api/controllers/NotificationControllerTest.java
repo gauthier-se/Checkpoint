@@ -66,7 +66,7 @@ class NotificationControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/me/notifications")
+    @DisplayName("GET /api/v1/me/notifications")
     class GetNotifications {
 
         @Test
@@ -97,7 +97,7 @@ class NotificationControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(get("/api/me/notifications"))
+            mockMvc.perform(get("/api/v1/me/notifications"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].senderPseudo").value("senderUser"))
@@ -122,7 +122,7 @@ class NotificationControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(get("/api/me/notifications")
+            mockMvc.perform(get("/api/v1/me/notifications")
                             .param("page", "1")
                             .param("size", "10"))
                     .andExpect(status().isOk())
@@ -146,7 +146,7 @@ class NotificationControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(get("/api/me/notifications").param("type", "LIKE_REVIEW"))
+            mockMvc.perform(get("/api/v1/me/notifications").param("type", "LIKE_REVIEW"))
                     .andExpect(status().isOk());
 
             verify(notificationService).getNotifications(
@@ -168,7 +168,7 @@ class NotificationControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(get("/api/me/notifications").param("isRead", "false"))
+            mockMvc.perform(get("/api/v1/me/notifications").param("isRead", "false"))
                     .andExpect(status().isOk());
 
             verify(notificationService).getNotifications(
@@ -177,7 +177,7 @@ class NotificationControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/notifications/unread-count")
+    @DisplayName("GET /api/v1/me/notifications/unread-count")
     class GetUnreadCount {
 
         @Test
@@ -189,14 +189,14 @@ class NotificationControllerTest {
                     .thenReturn(new UnreadCountDto(5));
 
             // When / Then
-            mockMvc.perform(get("/api/me/notifications/unread-count"))
+            mockMvc.perform(get("/api/v1/me/notifications/unread-count"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.count").value(5));
         }
     }
 
     @Nested
-    @DisplayName("PUT /api/me/notifications/{id}/read")
+    @DisplayName("PUT /api/v1/me/notifications/{id}/read")
     class MarkAsRead {
 
         @Test
@@ -208,7 +208,7 @@ class NotificationControllerTest {
             doNothing().when(notificationService).markAsRead(eq(notificationId), eq("user@example.com"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/{id}/read", notificationId))
+            mockMvc.perform(put("/api/v1/me/notifications/{id}/read", notificationId))
                     .andExpect(status().isNoContent());
         }
 
@@ -222,7 +222,7 @@ class NotificationControllerTest {
                     .when(notificationService).markAsRead(eq(notificationId), eq("user@example.com"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/{id}/read", notificationId))
+            mockMvc.perform(put("/api/v1/me/notifications/{id}/read", notificationId))
                     .andExpect(status().isNotFound());
         }
 
@@ -236,13 +236,13 @@ class NotificationControllerTest {
                     .when(notificationService).markAsRead(eq(notificationId), eq("user@example.com"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/{id}/read", notificationId))
+            mockMvc.perform(put("/api/v1/me/notifications/{id}/read", notificationId))
                     .andExpect(status().isForbidden());
         }
     }
 
     @Nested
-    @DisplayName("PUT /api/me/notifications/read-all")
+    @DisplayName("PUT /api/v1/me/notifications/read-all")
     class MarkAllAsRead {
 
         @Test
@@ -253,13 +253,13 @@ class NotificationControllerTest {
             doNothing().when(notificationService).markAllAsRead(eq("user@example.com"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/read-all"))
+            mockMvc.perform(put("/api/v1/me/notifications/read-all"))
                     .andExpect(status().isNoContent());
         }
     }
 
     @Nested
-    @DisplayName("PUT /api/me/notifications/mark-read")
+    @DisplayName("PUT /api/v1/me/notifications/mark-read")
     class MarkAsReadBulk {
 
         @Test
@@ -273,7 +273,7 @@ class NotificationControllerTest {
             when(notificationService.markAsReadBulk(anySet(), anyString())).thenReturn(2);
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/mark-read")
+            mockMvc.perform(put("/api/v1/me/notifications/mark-read")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isNoContent());
@@ -289,7 +289,7 @@ class NotificationControllerTest {
             BulkMarkAsReadDto body = new BulkMarkAsReadDto(Set.of());
 
             // When / Then
-            mockMvc.perform(put("/api/me/notifications/mark-read")
+            mockMvc.perform(put("/api/v1/me/notifications/mark-read")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isBadRequest());
