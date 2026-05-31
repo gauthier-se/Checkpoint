@@ -40,6 +40,8 @@ describe('feedQueryOptions', () => {
     await (options.queryFn as QueryFn)({})
 
     const [url] = fetchMock.mock.calls[0]
-    expect(url.toString().endsWith('/api/v1/me/feed?page=2&size=20&type=RATING')).toBe(true)
+    expect(
+      url.toString().endsWith('/api/v1/me/feed?page=2&size=20&type=RATING'),
+    ).toBe(true)
   })
 })
