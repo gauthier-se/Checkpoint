@@ -15,16 +15,16 @@ and earn XP and badges. It is built with [TanStack Start](https://tanstack.com/s
 
 ## Tech stack
 
-| Technology | Purpose |
-|------------|---------|
-| [TanStack Start](https://tanstack.com/start) | React meta-framework with SSR |
-| [TanStack Router](https://tanstack.com/router) | File-based routing & loaders |
-| [TanStack Query](https://tanstack.com/query) | Server-state fetching & caching |
-| [React 19](https://react.dev/) | UI library |
-| [Vite](https://vite.dev/) | Build tool & dev server |
-| [Tailwind CSS](https://tailwindcss.com/) | Styling |
-| [shadcn/ui](https://ui.shadcn.com/) | Component primitives |
-| [Vitest](https://vitest.dev/) | Testing |
+| Technology                                     | Purpose                         |
+| ---------------------------------------------- | ------------------------------- |
+| [TanStack Start](https://tanstack.com/start)   | React meta-framework with SSR   |
+| [TanStack Router](https://tanstack.com/router) | File-based routing & loaders    |
+| [TanStack Query](https://tanstack.com/query)   | Server-state fetching & caching |
+| [React 19](https://react.dev/)                 | UI library                      |
+| [Vite](https://vite.dev/)                      | Build tool & dev server         |
+| [Tailwind CSS](https://tailwindcss.com/)       | Styling                         |
+| [shadcn/ui](https://ui.shadcn.com/)            | Component primitives            |
+| [Vitest](https://vitest.dev/)                  | Testing                         |
 
 ## Prerequisites
 
@@ -46,15 +46,15 @@ pnpm dev
 
 ## Available scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start the Vite dev server on port 3000 |
-| `pnpm build` | Build for production |
-| `pnpm serve` | Preview the production build |
-| `pnpm start` | Run the built SSR server (`.output/server/index.mjs`) |
-| `pnpm test` | Run the Vitest test suite |
-| `pnpm coverage` | Run tests with coverage |
-| `pnpm check` | Auto-fix formatting (prettier) and lint (eslint) |
+| Script          | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `pnpm dev`      | Start the Vite dev server on port 3000                      |
+| `pnpm build`    | Build for production                                        |
+| `pnpm serve`    | Preview the production build                                |
+| `pnpm start`    | Run the built SSR server (`.output/server/index.mjs`)       |
+| `pnpm test`     | Run the Vitest test suite                                   |
+| `pnpm coverage` | Run tests with coverage                                     |
+| `pnpm check`    | Auto-fix formatting (prettier) and lint (eslint)            |
 | `pnpm check:ci` | Verify formatting and lint without writing — **runs in CI** |
 
 > CI runs `pnpm check:ci` and `pnpm test`. Run them locally before opening a PR.
