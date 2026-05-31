@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Request body for {@code POST /api/me/steam/link}.
+ * Request body for {@code POST /api/v1/me/steam/link}.
  *
  * <p>Accepts any of the following input shapes; format detection and vanity
  * resolution happen in the service layer:

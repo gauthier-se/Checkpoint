@@ -77,7 +77,7 @@ class GameControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/games should return paginated games")
+    @DisplayName("GET /api/v1/games should return paginated games")
     void getGames_shouldReturnPaginatedGames() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -91,7 +91,7 @@ class GameControllerTest {
                 .thenReturn(page);
 
         // When / Then
-        mockMvc.perform(get("/api/games"))
+        mockMvc.perform(get("/api/v1/games"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("The Witcher 3"))
@@ -101,7 +101,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games should accept pagination parameters")
+    @DisplayName("GET /api/v1/games should accept pagination parameters")
     void getGames_shouldAcceptPaginationParameters() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -110,7 +110,7 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("page", "2")
                         .param("size", "50")
                         .param("sort", "title,asc"))
@@ -119,7 +119,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{id} should return game details")
+    @DisplayName("GET /api/v1/games/{id} should return game details")
     void getGameById_shouldReturnGameDetails() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -145,7 +145,7 @@ class GameControllerTest {
         when(gameCatalogService.getGameDetails(gameId)).thenReturn(detail);
 
         // When / Then
-        mockMvc.perform(get("/api/games/{id}", gameId))
+        mockMvc.perform(get("/api/v1/games/{id}", gameId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(gameId.toString()))
                 .andExpect(jsonPath("$.title").value("The Witcher 3"))
@@ -160,14 +160,14 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{id} should return 404 when game not found")
+    @DisplayName("GET /api/v1/games/{id} should return 404 when game not found")
     void getGameById_shouldReturn404WhenNotFound() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
         when(gameCatalogService.getGameDetails(gameId)).thenThrow(new GameNotFoundException(gameId));
 
         // When / Then
-        mockMvc.perform(get("/api/games/{id}", gameId))
+        mockMvc.perform(get("/api/v1/games/{id}", gameId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
@@ -175,7 +175,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games should limit page size to max 100")
+    @DisplayName("GET /api/v1/games should limit page size to max 100")
     void getGames_shouldLimitPageSizeToMax() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -184,13 +184,13 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then - requesting size 500 should be capped
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("size", "500"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("GET /api/games?genre=RPG should pass genre filter to service")
+    @DisplayName("GET /api/v1/games?genre=RPG should pass genre filter to service")
     void getGames_shouldPassGenreFilter() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -199,7 +199,7 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("genre", "RPG"))
                 .andExpect(status().isOk());
 
@@ -208,7 +208,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games?platform=PC should pass platform filter to service")
+    @DisplayName("GET /api/v1/games?platform=PC should pass platform filter to service")
     void getGames_shouldPassPlatformFilter() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -217,7 +217,7 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("platform", "PC"))
                 .andExpect(status().isOk());
 
@@ -226,7 +226,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games?yearMin=2020&yearMax=2023 should pass year range filters to service")
+    @DisplayName("GET /api/v1/games?yearMin=2020&yearMax=2023 should pass year range filters to service")
     void getGames_shouldPassYearRangeFilters() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -235,7 +235,7 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("yearMin", "2020")
                         .param("yearMax", "2023"))
                 .andExpect(status().isOk());
@@ -245,7 +245,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games?ratingMin=4.0&ratingMax=5.0 should pass rating range filters to service")
+    @DisplayName("GET /api/v1/games?ratingMin=4.0&ratingMax=5.0 should pass rating range filters to service")
     void getGames_shouldPassRatingRangeFilters() throws Exception {
         // Given
         Page<GameCardDto> emptyPage = new PageImpl<>(List.of());
@@ -254,7 +254,7 @@ class GameControllerTest {
                 .thenReturn(emptyPage);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("ratingMin", "4.0")
                         .param("ratingMax", "5.0"))
                 .andExpect(status().isOk());
@@ -264,7 +264,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games should support combining multiple filters")
+    @DisplayName("GET /api/v1/games should support combining multiple filters")
     void getGames_shouldSupportCombinedFilters() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -278,7 +278,7 @@ class GameControllerTest {
                 .thenReturn(page);
 
         // When / Then
-        mockMvc.perform(get("/api/games")
+        mockMvc.perform(get("/api/v1/games")
                         .param("genre", "RPG")
                         .param("platform", "PC")
                         .param("yearMin", "2020")
@@ -289,7 +289,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/search should return search results")
+    @DisplayName("GET /api/v1/games/search should return search results")
     void searchGames_shouldReturnResults() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -300,7 +300,7 @@ class GameControllerTest {
         when(gameSearchService.searchGames(eq("Witchr"), isNull(), isNull())).thenReturn(results);
 
         // When / Then
-        mockMvc.perform(get("/api/games/search")
+        mockMvc.perform(get("/api/v1/games/search")
                         .param("q", "Witchr"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -309,7 +309,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/search should support genre and platform filters")
+    @DisplayName("GET /api/v1/games/search should support genre and platform filters")
     void searchGames_shouldSupportFilters() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -320,7 +320,7 @@ class GameControllerTest {
         when(gameSearchService.searchGames(eq("Witcher"), eq("RPG"), eq("PC"))).thenReturn(results);
 
         // When / Then
-        mockMvc.perform(get("/api/games/search")
+        mockMvc.perform(get("/api/v1/games/search")
                         .param("q", "Witcher")
                         .param("genre", "RPG")
                         .param("platform", "PC"))
@@ -330,13 +330,13 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/search should return empty list when no matches")
+    @DisplayName("GET /api/v1/games/search should return empty list when no matches")
     void searchGames_shouldReturnEmptyListWhenNoMatches() throws Exception {
         // Given
         when(gameSearchService.searchGames(eq("nonexistent"), isNull(), isNull())).thenReturn(List.of());
 
         // When / Then
-        mockMvc.perform(get("/api/games/search")
+        mockMvc.perform(get("/api/v1/games/search")
                         .param("q", "nonexistent"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -344,15 +344,15 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/search should return 400 when query parameter is missing")
+    @DisplayName("GET /api/v1/games/search should return 400 when query parameter is missing")
     void searchGames_shouldReturn400WhenQueryMissing() throws Exception {
         // When / Then
-        mockMvc.perform(get("/api/games/search"))
+        mockMvc.perform(get("/api/v1/games/search"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("GET /api/games/trending should return trending games")
+    @DisplayName("GET /api/v1/games/trending should return trending games")
     void getTrendingGames_shouldReturnTrendingGames() throws Exception {
         // Given
         UUID gameId = UUID.randomUUID();
@@ -363,7 +363,7 @@ class GameControllerTest {
         when(gameTrendingService.getTrendingGames(7)).thenReturn(trending);
 
         // When / Then
-        mockMvc.perform(get("/api/games/trending"))
+        mockMvc.perform(get("/api/v1/games/trending"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].title").value("Elden Ring"))
@@ -372,13 +372,13 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/trending should cap size to maximum 20")
+    @DisplayName("GET /api/v1/games/trending should cap size to maximum 20")
     void getTrendingGames_shouldCapSizeToMaximum() throws Exception {
         // Given
         when(gameTrendingService.getTrendingGames(anyInt())).thenReturn(List.of());
 
         // When / Then
-        mockMvc.perform(get("/api/games/trending")
+        mockMvc.perform(get("/api/v1/games/trending")
                         .param("size", "50"))
                 .andExpect(status().isOk());
 
@@ -386,13 +386,13 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/trending should accept custom size parameter")
+    @DisplayName("GET /api/v1/games/trending should accept custom size parameter")
     void getTrendingGames_shouldAcceptCustomSize() throws Exception {
         // Given
         when(gameTrendingService.getTrendingGames(anyInt())).thenReturn(List.of());
 
         // When / Then
-        mockMvc.perform(get("/api/games/trending")
+        mockMvc.perform(get("/api/v1/games/trending")
                         .param("size", "3"))
                 .andExpect(status().isOk());
 
@@ -400,7 +400,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/most-backlogged should return games ordered by backlog count")
+    @DisplayName("GET /api/v1/games/most-backlogged should return games ordered by backlog count")
     void getMostBackloggedGames_shouldReturnGames() throws Exception {
         UUID gameId = UUID.randomUUID();
         List<GameCardDto> games = List.of(
@@ -408,7 +408,7 @@ class GameControllerTest {
         );
         when(gameCatalogService.getMostBackloggedGames(7)).thenReturn(games);
 
-        mockMvc.perform(get("/api/games/most-backlogged"))
+        mockMvc.perform(get("/api/v1/games/most-backlogged"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].title").value("Persona 5"))
@@ -416,40 +416,40 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/most-backlogged should return empty list when no games")
+    @DisplayName("GET /api/v1/games/most-backlogged should return empty list when no games")
     void getMostBackloggedGames_shouldReturnEmptyListWhenNone() throws Exception {
         when(gameCatalogService.getMostBackloggedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-backlogged"))
+        mockMvc.perform(get("/api/v1/games/most-backlogged"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
-    @DisplayName("GET /api/games/most-backlogged should accept custom size parameter")
+    @DisplayName("GET /api/v1/games/most-backlogged should accept custom size parameter")
     void getMostBackloggedGames_shouldAcceptCustomSize() throws Exception {
         when(gameCatalogService.getMostBackloggedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-backlogged").param("size", "5"))
+        mockMvc.perform(get("/api/v1/games/most-backlogged").param("size", "5"))
                 .andExpect(status().isOk());
 
         verify(gameCatalogService).getMostBackloggedGames(5);
     }
 
     @Test
-    @DisplayName("GET /api/games/most-backlogged should cap size to maximum 20")
+    @DisplayName("GET /api/v1/games/most-backlogged should cap size to maximum 20")
     void getMostBackloggedGames_shouldCapSizeToMaximum() throws Exception {
         when(gameCatalogService.getMostBackloggedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-backlogged").param("size", "100"))
+        mockMvc.perform(get("/api/v1/games/most-backlogged").param("size", "100"))
                 .andExpect(status().isOk());
 
         verify(gameCatalogService).getMostBackloggedGames(20);
     }
 
     @Test
-    @DisplayName("GET /api/games/most-wishlisted should return games ordered by wishlist count")
+    @DisplayName("GET /api/v1/games/most-wishlisted should return games ordered by wishlist count")
     void getMostWishlistedGames_shouldReturnGames() throws Exception {
         UUID gameId = UUID.randomUUID();
         List<GameCardDto> games = List.of(
@@ -457,47 +457,47 @@ class GameControllerTest {
         );
         when(gameCatalogService.getMostWishlistedGames(7)).thenReturn(games);
 
-        mockMvc.perform(get("/api/games/most-wishlisted"))
+        mockMvc.perform(get("/api/v1/games/most-wishlisted"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].title").value("Silksong"));
     }
 
     @Test
-    @DisplayName("GET /api/games/most-wishlisted should return empty list when no games")
+    @DisplayName("GET /api/v1/games/most-wishlisted should return empty list when no games")
     void getMostWishlistedGames_shouldReturnEmptyListWhenNone() throws Exception {
         when(gameCatalogService.getMostWishlistedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-wishlisted"))
+        mockMvc.perform(get("/api/v1/games/most-wishlisted"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
-    @DisplayName("GET /api/games/most-wishlisted should accept custom size parameter")
+    @DisplayName("GET /api/v1/games/most-wishlisted should accept custom size parameter")
     void getMostWishlistedGames_shouldAcceptCustomSize() throws Exception {
         when(gameCatalogService.getMostWishlistedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-wishlisted").param("size", "10"))
+        mockMvc.perform(get("/api/v1/games/most-wishlisted").param("size", "10"))
                 .andExpect(status().isOk());
 
         verify(gameCatalogService).getMostWishlistedGames(10);
     }
 
     @Test
-    @DisplayName("GET /api/games/most-wishlisted should cap size to maximum 20")
+    @DisplayName("GET /api/v1/games/most-wishlisted should cap size to maximum 20")
     void getMostWishlistedGames_shouldCapSizeToMaximum() throws Exception {
         when(gameCatalogService.getMostWishlistedGames(anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/most-wishlisted").param("size", "50"))
+        mockMvc.perform(get("/api/v1/games/most-wishlisted").param("size", "50"))
                 .andExpect(status().isOk());
 
         verify(gameCatalogService).getMostWishlistedGames(20);
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/lists should return paginated lists containing the game")
+    @DisplayName("GET /api/v1/games/{gameId}/lists should return paginated lists containing the game")
     void getListsContainingGame_shouldReturnPaginatedLists() throws Exception {
         UUID gameId = UUID.randomUUID();
         GameListCardDto card = new GameListCardDto(
@@ -509,7 +509,7 @@ class GameControllerTest {
         when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/lists", gameId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Best Indies"))
                 .andExpect(jsonPath("$.content[0].likesCount").value(42))
@@ -517,40 +517,40 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/lists should pass null viewerEmail when anonymous")
+    @DisplayName("GET /api/v1/games/{gameId}/lists should pass null viewerEmail when anonymous")
     void getListsContainingGame_shouldPassNullViewerEmailWhenAnonymous() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
 
-        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/lists", gameId))
                 .andExpect(status().isOk());
 
         verify(gameListService).findListsContainingGame(eq(gameId), isNull(), any(Pageable.class));
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/lists should pass viewer email when authenticated")
+    @DisplayName("GET /api/v1/games/{gameId}/lists should pass viewer email when authenticated")
     @WithMockUser(username = "user@example.com")
     void getListsContainingGame_shouldPassViewerEmailWhenAuthenticated() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameListService.findListsContainingGame(eq(gameId), eq("user@example.com"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
 
-        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/lists", gameId))
                 .andExpect(status().isOk());
 
         verify(gameListService).findListsContainingGame(eq(gameId), eq("user@example.com"), any(Pageable.class));
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/lists should clamp size to maximum 50")
+    @DisplayName("GET /api/v1/games/{gameId}/lists should clamp size to maximum 50")
     void getListsContainingGame_shouldClampSizeToMaximum() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
 
-        mockMvc.perform(get("/api/games/{gameId}/lists", gameId).param("size", "999"))
+        mockMvc.perform(get("/api/v1/games/{gameId}/lists", gameId).param("size", "999"))
                 .andExpect(status().isOk());
 
         verify(gameListService).findListsContainingGame(
@@ -560,13 +560,13 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/lists should default to size=6")
+    @DisplayName("GET /api/v1/games/{gameId}/lists should default to size=6")
     void getListsContainingGame_shouldDefaultToSize6() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameListService.findListsContainingGame(eq(gameId), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 6), 0));
 
-        mockMvc.perform(get("/api/games/{gameId}/lists", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/lists", gameId))
                 .andExpect(status().isOk());
 
         verify(gameListService).findListsContainingGame(
@@ -576,7 +576,7 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/similar should return similar games")
+    @DisplayName("GET /api/v1/games/{gameId}/similar should return similar games")
     void getSimilarGames_shouldReturnSimilarGames() throws Exception {
         UUID gameId = UUID.randomUUID();
         UUID similarId = UUID.randomUUID();
@@ -585,7 +585,7 @@ class GameControllerTest {
         );
         when(gameSimilarityService.getSimilarGames(eq(gameId), isNull(), anyInt())).thenReturn(similar);
 
-        mockMvc.perform(get("/api/games/{gameId}/similar", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/similar", gameId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value(similarId.toString()))
@@ -593,38 +593,38 @@ class GameControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/similar should pass null viewerEmail when anonymous")
+    @DisplayName("GET /api/v1/games/{gameId}/similar should pass null viewerEmail when anonymous")
     void getSimilarGames_shouldPassNullViewerEmailWhenAnonymous() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameSimilarityService.getSimilarGames(eq(gameId), isNull(), anyInt())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/{gameId}/similar", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/similar", gameId))
                 .andExpect(status().isOk());
 
         verify(gameSimilarityService).getSimilarGames(eq(gameId), isNull(), anyInt());
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/similar should pass viewer email when authenticated")
+    @DisplayName("GET /api/v1/games/{gameId}/similar should pass viewer email when authenticated")
     @WithMockUser(username = "user@example.com")
     void getSimilarGames_shouldPassViewerEmailWhenAuthenticated() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameSimilarityService.getSimilarGames(eq(gameId), eq("user@example.com"), anyInt()))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/{gameId}/similar", gameId))
+        mockMvc.perform(get("/api/v1/games/{gameId}/similar", gameId))
                 .andExpect(status().isOk());
 
         verify(gameSimilarityService).getSimilarGames(eq(gameId), eq("user@example.com"), anyInt());
     }
 
     @Test
-    @DisplayName("GET /api/games/{gameId}/similar should clamp size to maximum 30")
+    @DisplayName("GET /api/v1/games/{gameId}/similar should clamp size to maximum 30")
     void getSimilarGames_shouldClampSizeToMaximum() throws Exception {
         UUID gameId = UUID.randomUUID();
         when(gameSimilarityService.getSimilarGames(eq(gameId), isNull(), eq(30))).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/games/{gameId}/similar", gameId).param("size", "999"))
+        mockMvc.perform(get("/api/v1/games/{gameId}/similar", gameId).param("size", "999"))
                 .andExpect(status().isOk());
 
         verify(gameSimilarityService).getSimilarGames(eq(gameId), isNull(), eq(30));

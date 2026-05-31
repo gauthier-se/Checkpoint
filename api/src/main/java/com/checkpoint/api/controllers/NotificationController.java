@@ -33,7 +33,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Notifications and Feed", description = "Current user notifications")
 @RestController
-@RequestMapping("/api/me/notifications")
+@RequestMapping("/me/notifications")
 public class NotificationController {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
@@ -67,7 +67,7 @@ public class NotificationController {
             @RequestParam(required = false) NotificationType type,
             @RequestParam(required = false) Boolean isRead) {
 
-        log.info("GET /api/me/notifications - user: {}, page: {}, size: {}, type: {}, isRead: {}",
+        log.info("GET /api/v1/me/notifications - user: {}, page: {}, size: {}, type: {}, isRead: {}",
                 userDetails.getUsername(), page, size, type, isRead);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -89,7 +89,7 @@ public class NotificationController {
     public ResponseEntity<UnreadCountDto> getUnreadCount(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/me/notifications/unread-count - user: {}", userDetails.getUsername());
+        log.info("GET /api/v1/me/notifications/unread-count - user: {}", userDetails.getUsername());
 
         UnreadCountDto response = notificationService.getUnreadCount(userDetails.getUsername());
 
@@ -109,7 +109,7 @@ public class NotificationController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID notificationId) {
 
-        log.info("PUT /api/me/notifications/{}/read - user: {}", notificationId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/notifications/{}/read - user: {}", notificationId, userDetails.getUsername());
 
         notificationService.markAsRead(notificationId, userDetails.getUsername());
 
@@ -126,7 +126,7 @@ public class NotificationController {
     public ResponseEntity<Void> markAllAsRead(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("PUT /api/me/notifications/read-all - user: {}", userDetails.getUsername());
+        log.info("PUT /api/v1/me/notifications/read-all - user: {}", userDetails.getUsername());
 
         notificationService.markAllAsRead(userDetails.getUsername());
 
@@ -146,7 +146,7 @@ public class NotificationController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody BulkMarkAsReadDto body) {
 
-        log.info("PUT /api/me/notifications/mark-read - user: {}, count: {}",
+        log.info("PUT /api/v1/me/notifications/mark-read - user: {}, count: {}",
                 userDetails.getUsername(), body.ids().size());
 
         notificationService.markAsReadBulk(body.ids(), userDetails.getUsername());

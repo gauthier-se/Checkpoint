@@ -54,7 +54,7 @@ class GameListControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/lists")
+    @DisplayName("GET /api/v1/lists")
     class GetLists {
 
         @Test
@@ -68,7 +68,7 @@ class GameListControllerTest {
 
             when(listSearchService.search(any(), any(), eq(null))).thenReturn(page);
 
-            mockMvc.perform(get("/api/lists"))
+            mockMvc.perform(get("/api/v1/lists"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Top RPGs"))
                     .andExpect(jsonPath("$.content[0].likesCount").value(42))
@@ -90,7 +90,7 @@ class GameListControllerTest {
                     eq(null)
             )).thenReturn(empty);
 
-            mockMvc.perform(get("/api/lists")
+            mockMvc.perform(get("/api/v1/lists")
                             .param("q", "beste")
                             .param("sort", "popular")
                             .param("author", "alice")
@@ -101,7 +101,7 @@ class GameListControllerTest {
         @Test
         @DisplayName("should return 401 when visibility=mine is requested anonymously")
         void getLists_shouldReturn401WhenMineAndAnonymous() throws Exception {
-            mockMvc.perform(get("/api/lists").param("visibility", "mine"))
+            mockMvc.perform(get("/api/v1/lists").param("visibility", "mine"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -117,13 +117,13 @@ class GameListControllerTest {
                     eq("user@example.com")
             )).thenReturn(empty);
 
-            mockMvc.perform(get("/api/lists").param("visibility", "mine"))
+            mockMvc.perform(get("/api/v1/lists").param("visibility", "mine"))
                     .andExpect(status().isOk());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/lists/popular")
+    @DisplayName("GET /api/v1/lists/popular")
     class GetPopularLists {
 
         @Test
@@ -136,7 +136,7 @@ class GameListControllerTest {
 
             when(gameListService.getPopularPublicLists(any())).thenReturn(page);
 
-            mockMvc.perform(get("/api/lists/popular"))
+            mockMvc.perform(get("/api/v1/lists/popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Most Liked"))
                     .andExpect(jsonPath("$.content[0].likesCount").value(100));
@@ -144,7 +144,7 @@ class GameListControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/lists/{listId}")
+    @DisplayName("GET /api/v1/lists/{listId}")
     class GetListDetail {
 
         @Test
@@ -159,7 +159,7 @@ class GameListControllerTest {
 
             when(gameListService.getListDetail(eq(listId), eq(null))).thenReturn(detail);
 
-            mockMvc.perform(get("/api/lists/{listId}", listId))
+            mockMvc.perform(get("/api/v1/lists/{listId}", listId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.title").value("Top RPGs"))
                     .andExpect(jsonPath("$.isOwner").value(false))
@@ -179,7 +179,7 @@ class GameListControllerTest {
 
             when(gameListService.getListDetail(eq(listId), eq("user@example.com"))).thenReturn(detail);
 
-            mockMvc.perform(get("/api/lists/{listId}", listId))
+            mockMvc.perform(get("/api/v1/lists/{listId}", listId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isOwner").value(true));
         }
@@ -191,7 +191,7 @@ class GameListControllerTest {
             when(gameListService.getListDetail(eq(listId), eq(null)))
                     .thenThrow(new GameListNotFoundException(listId));
 
-            mockMvc.perform(get("/api/lists/{listId}", listId))
+            mockMvc.perform(get("/api/v1/lists/{listId}", listId))
                     .andExpect(status().isNotFound());
         }
 
@@ -202,7 +202,7 @@ class GameListControllerTest {
             when(gameListService.getListDetail(eq(listId), eq(null)))
                     .thenThrow(new UnauthorizedListAccessException(listId));
 
-            mockMvc.perform(get("/api/lists/{listId}", listId))
+            mockMvc.perform(get("/api/v1/lists/{listId}", listId))
                     .andExpect(status().isForbidden());
         }
     }

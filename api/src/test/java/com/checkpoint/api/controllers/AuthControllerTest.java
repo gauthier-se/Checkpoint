@@ -92,7 +92,7 @@ class AuthControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/auth/login")
+    @DisplayName("POST /api/v1/auth/login")
     class LoginTests {
 
         @Test
@@ -103,7 +103,7 @@ class AuthControllerTest {
                     .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "Desktop")
                             .content("""
@@ -125,7 +125,7 @@ class AuthControllerTest {
                     any(LoginRequestDto.class), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com", "password": "password123"}
@@ -146,7 +146,7 @@ class AuthControllerTest {
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "Desktop")
                             .content("""
@@ -164,7 +164,7 @@ class AuthControllerTest {
                             any(LoginRequestDto.class), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com", "password": "wrong"}
@@ -175,7 +175,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for missing email")
         void shouldReturn400ForMissingEmail() throws Exception {
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"password": "password123"}
@@ -186,7 +186,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for invalid email format")
         void shouldReturn400ForInvalidEmail() throws Exception {
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "not-an-email", "password": "password123"}
@@ -197,7 +197,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for missing password")
         void shouldReturn400ForMissingPassword() throws Exception {
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com"}
@@ -208,7 +208,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for empty body")
         void shouldReturn400ForEmptyBody() throws Exception {
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isBadRequest());
@@ -222,7 +222,7 @@ class AuthControllerTest {
                     .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "desktop")
                             .content("""
@@ -234,7 +234,7 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/token")
+    @DisplayName("POST /api/v1/auth/token")
     class TokenTests {
 
         @Test
@@ -245,7 +245,7 @@ class AuthControllerTest {
                     .thenReturn(new TokenPairDto("access.token.here", "refresh-token-uuid"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/token")
+            mockMvc.perform(post("/api/v1/auth/token")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com", "password": "password123"}
@@ -263,7 +263,7 @@ class AuthControllerTest {
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/token")
+            mockMvc.perform(post("/api/v1/auth/token")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com", "password": "wrong"}
@@ -274,7 +274,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for missing fields")
         void shouldReturn400ForMissingFields() throws Exception {
-            mockMvc.perform(post("/api/auth/token")
+            mockMvc.perform(post("/api/v1/auth/token")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isBadRequest());
@@ -282,7 +282,7 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/register")
+    @DisplayName("POST /api/v1/auth/register")
     class RegisterTests {
 
         @Test
@@ -290,7 +290,7 @@ class AuthControllerTest {
         void shouldReturn201OnSuccess() throws Exception {
             doNothing().when(authService).register(any(RegisterRequestDto.class));
 
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "newuser", "email": "newuser@test.com", "password": "password123", "confirmPassword": "password123"}
@@ -303,7 +303,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for missing fields")
         void shouldReturn400ForMissingFields() throws Exception {
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"email": "user@test.com"}
@@ -314,7 +314,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for invalid email")
         void shouldReturn400ForInvalidEmail() throws Exception {
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "user", "email": "invalid", "password": "password123", "confirmPassword": "password123"}
@@ -325,7 +325,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for short password")
         void shouldReturn400ForShortPassword() throws Exception {
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "user", "email": "user@test.com", "password": "short", "confirmPassword": "short"}
@@ -336,7 +336,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("Should return 400 for missing confirmPassword")
         void shouldReturn400ForMissingConfirmPassword() throws Exception {
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "user", "email": "user@test.com", "password": "password123"}
@@ -354,7 +354,7 @@ class AuthControllerTest {
                     .when(authService).register(any(RegisterRequestDto.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "user", "email": "user@test.com", "password": "password123", "confirmPassword": "different123"}
@@ -371,7 +371,7 @@ class AuthControllerTest {
                     .when(authService).register(any(RegisterRequestDto.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "newuser", "email": "existing@test.com", "password": "password123", "confirmPassword": "password123"}
@@ -388,7 +388,7 @@ class AuthControllerTest {
                     .when(authService).register(any(RegisterRequestDto.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/register")
+            mockMvc.perform(post("/api/v1/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {"pseudo": "existinguser", "email": "new@test.com", "password": "password123", "confirmPassword": "password123"}
@@ -399,7 +399,7 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/logout")
+    @DisplayName("POST /api/v1/auth/logout")
     class LogoutTests {
 
         @Test
@@ -409,7 +409,7 @@ class AuthControllerTest {
             doNothing().when(authService).clearAuthCookie(any(), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/logout"))
+            mockMvc.perform(post("/api/v1/auth/logout"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Logout successful"));
 
@@ -418,7 +418,7 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/refresh")
+    @DisplayName("POST /api/v1/auth/refresh")
     class RefreshTests {
 
         @Test
@@ -428,7 +428,7 @@ class AuthControllerTest {
             doNothing().when(authService).refreshTokenAndSetCookie(any(), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/refresh")
+            mockMvc.perform(post("/api/v1/auth/refresh")
                             .cookie(new jakarta.servlet.http.Cookie("checkpoint_refresh", "valid-refresh-token")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Token refreshed"));
@@ -444,7 +444,7 @@ class AuthControllerTest {
                     .thenReturn(new TokenPairDto("new.access.token", "new-refresh-token-uuid"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/refresh")
+            mockMvc.perform(post("/api/v1/auth/refresh")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "Desktop")
                             .content("""
@@ -465,7 +465,7 @@ class AuthControllerTest {
                     .when(authService).refreshTokenAndSetCookie(any(), any(HttpServletResponse.class));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/refresh")
+            mockMvc.perform(post("/api/v1/auth/refresh")
                             .cookie(new jakarta.servlet.http.Cookie("checkpoint_refresh", "expired-token")))
                     .andExpect(status().isUnauthorized());
         }
@@ -478,7 +478,7 @@ class AuthControllerTest {
                     .thenThrow(new InvalidRefreshTokenException("Refresh token has been revoked"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/refresh")
+            mockMvc.perform(post("/api/v1/auth/refresh")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "Desktop")
                             .content("""
@@ -495,7 +495,7 @@ class AuthControllerTest {
                     .thenThrow(new InvalidRefreshTokenException("Refresh token is required"));
 
             // When / Then
-            mockMvc.perform(post("/api/auth/refresh")
+            mockMvc.perform(post("/api/v1/auth/refresh")
                             .contentType(MediaType.APPLICATION_JSON)
                             .header("X-Client-Type", "Desktop"))
                     .andExpect(status().isUnauthorized());
@@ -503,7 +503,7 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/auth/me")
+    @DisplayName("GET /api/v1/auth/me")
     class MeTests {
 
         @Test
@@ -517,7 +517,7 @@ class AuthControllerTest {
             when(authService.getCurrentUser("alice@test.com")).thenReturn(userMeDto);
 
             // When / Then
-            mockMvc.perform(get("/api/auth/me"))
+            mockMvc.perform(get("/api/v1/auth/me"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(userId.toString()))
                     .andExpect(jsonPath("$.username").value("alice"))
@@ -538,7 +538,7 @@ class AuthControllerTest {
             when(authService.getCurrentUser("bob@test.com")).thenReturn(userMeDto);
 
             // When / Then
-            mockMvc.perform(get("/api/auth/me"))
+            mockMvc.perform(get("/api/v1/auth/me"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.role").value("USER"));
         }
@@ -552,7 +552,7 @@ class AuthControllerTest {
                     .thenThrow(new UsernameNotFoundException("User not found with email: unknown@test.com"));
 
             // When / Then
-            mockMvc.perform(get("/api/auth/me"))
+            mockMvc.perform(get("/api/v1/auth/me"))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -567,7 +567,7 @@ class AuthControllerTest {
             ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("user@test.com");
             doNothing().when(authService).forgotPassword(any(ForgotPasswordRequestDto.class));
 
-            mockMvc.perform(post("/api/auth/forgot-password")
+            mockMvc.perform(post("/api/v1/auth/forgot-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -579,7 +579,7 @@ class AuthControllerTest {
         void shouldReturn400IfEmailEmpty() throws Exception {
             ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("");
 
-            mockMvc.perform(post("/api/auth/forgot-password")
+            mockMvc.perform(post("/api/v1/auth/forgot-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
@@ -591,7 +591,7 @@ class AuthControllerTest {
         void shouldReturn400IfEmailInvalid() throws Exception {
             ForgotPasswordRequestDto request = new ForgotPasswordRequestDto("invalid-email");
 
-            mockMvc.perform(post("/api/auth/forgot-password")
+            mockMvc.perform(post("/api/v1/auth/forgot-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
@@ -609,7 +609,7 @@ class AuthControllerTest {
             ResetPasswordRequestDto request = new ResetPasswordRequestDto("valid-token", "new-password123");
             doNothing().when(authService).resetPassword(any(ResetPasswordRequestDto.class));
 
-            mockMvc.perform(post("/api/auth/reset-password")
+            mockMvc.perform(post("/api/v1/auth/reset-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -621,7 +621,7 @@ class AuthControllerTest {
         void shouldReturn400IfTokenEmpty() throws Exception {
             ResetPasswordRequestDto request = new ResetPasswordRequestDto("", "new-password123");
 
-            mockMvc.perform(post("/api/auth/reset-password")
+            mockMvc.perform(post("/api/v1/auth/reset-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
@@ -633,7 +633,7 @@ class AuthControllerTest {
         void shouldReturn400IfPasswordTooShort() throws Exception {
             ResetPasswordRequestDto request = new ResetPasswordRequestDto("valid-token", "short");
 
-            mockMvc.perform(post("/api/auth/reset-password")
+            mockMvc.perform(post("/api/v1/auth/reset-password")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
@@ -671,7 +671,7 @@ class AuthControllerTest {
                     org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn("https://steamcommunity.com/openid/login?openid.mode=checkid_setup");
 
-            mockMvc.perform(get("/api/auth/steam/openid/start").param("action", "link"))
+            mockMvc.perform(get("/api/v1/auth/steam/openid/start").param("action", "link"))
                     .andExpect(status().isOk())
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                             .content().string(org.hamcrest.Matchers.containsString(
@@ -691,7 +691,7 @@ class AuthControllerTest {
                     org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn("https://steamcommunity.com/openid/login");
 
-            mockMvc.perform(get("/api/auth/steam/openid/start").param("action", "link"))
+            mockMvc.perform(get("/api/v1/auth/steam/openid/start").param("action", "link"))
                     .andExpect(status().isOk());
 
             String returnUrl = returnUrlCaptor.getValue();
@@ -715,7 +715,7 @@ class AuthControllerTest {
                     .establishWebSession(org.mockito.ArgumentMatchers.eq("alice@test.com"),
                             any(HttpServletResponse.class));
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res")
@@ -745,7 +745,7 @@ class AuthControllerTest {
                     any(HttpServletResponse.class)))
                     .thenReturn(true);
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res")
@@ -778,7 +778,7 @@ class AuthControllerTest {
                     org.mockito.ArgumentMatchers.eq("https://steamcommunity.com/id/persona")))
                     .thenReturn("issued.signup.jwt");
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res"))
@@ -807,7 +807,7 @@ class AuthControllerTest {
                     org.mockito.ArgumentMatchers.isNull()))
                     .thenReturn("fallback.signup.jwt");
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res"))
@@ -832,7 +832,7 @@ class AuthControllerTest {
                     .establishWebSession(org.mockito.ArgumentMatchers.eq("alice@test.com"),
                             any(HttpServletResponse.class));
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "signup")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res"))
@@ -857,7 +857,7 @@ class AuthControllerTest {
                     org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn("https://steamcommunity.com/openid/login");
 
-            mockMvc.perform(get("/api/auth/steam/openid/start").param("action", "signup"))
+            mockMvc.perform(get("/api/v1/auth/steam/openid/start").param("action", "signup"))
                     .andExpect(status().isOk());
 
             String returnUrl = returnUrlCaptor.getValue();
@@ -872,7 +872,7 @@ class AuthControllerTest {
             stubValidLinkState("alice@test.com");
             when(steamOpenIdClient.verifyAndExtractSteamId(any())).thenReturn(STEAM_ID);
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "link")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res")
@@ -895,7 +895,7 @@ class AuthControllerTest {
             when(steamOpenIdClient.verifyAndExtractSteamId(any()))
                     .thenThrow(new com.checkpoint.api.exceptions.SteamOpenIdException("bad"));
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res"))
@@ -911,7 +911,7 @@ class AuthControllerTest {
             when(steamOpenIdStateService.verify(org.mockito.ArgumentMatchers.nullable(String.class)))
                     .thenReturn(java.util.Optional.empty());
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("openid.mode", "id_res"))
                     .andExpect(status().isOk())
@@ -928,7 +928,7 @@ class AuthControllerTest {
             when(steamOpenIdStateService.verify(org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn(java.util.Optional.empty());
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", "tampered.jwt.value")
                             .param("openid.mode", "id_res"))
@@ -946,7 +946,7 @@ class AuthControllerTest {
             // State minted for link, but the callback claims action=login.
             stubValidLinkState("alice@test.com");
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "login")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res"))
@@ -965,7 +965,7 @@ class AuthControllerTest {
             // State was minted for bob, but alice is the one driving the callback.
             stubValidLinkState("bob@test.com");
 
-            mockMvc.perform(get("/api/auth/steam/openid/callback")
+            mockMvc.perform(get("/api/v1/auth/steam/openid/callback")
                             .param("action", "link")
                             .param("state", STATE_TOKEN)
                             .param("openid.mode", "id_res")
@@ -990,14 +990,14 @@ class AuthControllerTest {
         private static final String STEAM_ID = "76561198000000000";
 
         @Test
-        @DisplayName("GET /api/auth/steam/signup-prefill returns the claims for a valid token")
+        @DisplayName("GET /api/v1/auth/steam/signup-prefill returns the claims for a valid token")
         void prefill_returnsClaimsForValidToken() throws Exception {
             when(steamSignupTokenService.verify("valid.jwt"))
                     .thenReturn(java.util.Optional.of(new SteamSignupTokenService.Claims(
                             STEAM_ID, "Persona", "https://cdn/av.jpg",
                             "https://steamcommunity.com/id/persona")));
 
-            mockMvc.perform(get("/api/auth/steam/signup-prefill").param("token", "valid.jwt"))
+            mockMvc.perform(get("/api/v1/auth/steam/signup-prefill").param("token", "valid.jwt"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.steamId").value(STEAM_ID))
                     .andExpect(jsonPath("$.steamDisplayName").value("Persona"))
@@ -1007,24 +1007,24 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("GET /api/auth/steam/signup-prefill returns 400 for an invalid token")
+        @DisplayName("GET /api/v1/auth/steam/signup-prefill returns 400 for an invalid token")
         void prefill_returns400ForInvalidToken() throws Exception {
             when(steamSignupTokenService.verify("bad.jwt"))
                     .thenReturn(java.util.Optional.empty());
 
-            mockMvc.perform(get("/api/auth/steam/signup-prefill").param("token", "bad.jwt"))
+            mockMvc.perform(get("/api/v1/auth/steam/signup-prefill").param("token", "bad.jwt"))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("POST /api/auth/register/steam returns 201 and delegates to the auth service")
+        @DisplayName("POST /api/v1/auth/register/steam returns 201 and delegates to the auth service")
         void registerSteam_happyPath() throws Exception {
             RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
                     "valid.jwt", "alice@test.com", "alice", true, "password123");
             doNothing().when(authService).registerWithSteam(
                     any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
 
-            mockMvc.perform(post("/api/auth/register/steam")
+            mockMvc.perform(post("/api/v1/auth/register/steam")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isCreated())
@@ -1035,26 +1035,26 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("POST /api/auth/register/steam accepts a request with no password")
+        @DisplayName("POST /api/v1/auth/register/steam accepts a request with no password")
         void registerSteam_acceptsMissingPassword() throws Exception {
             RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
                     "valid.jwt", "alice@test.com", "alice", true, null);
             doNothing().when(authService).registerWithSteam(
                     any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
 
-            mockMvc.perform(post("/api/auth/register/steam")
+            mockMvc.perform(post("/api/v1/auth/register/steam")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isCreated());
         }
 
         @Test
-        @DisplayName("POST /api/auth/register/steam returns 400 when acceptTerms is false")
+        @DisplayName("POST /api/v1/auth/register/steam returns 400 when acceptTerms is false")
         void registerSteam_requiresAcceptTerms() throws Exception {
             RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
                     "valid.jwt", "alice@test.com", "alice", false, "password123");
 
-            mockMvc.perform(post("/api/auth/register/steam")
+            mockMvc.perform(post("/api/v1/auth/register/steam")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isBadRequest());
@@ -1064,7 +1064,7 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("POST /api/auth/register/steam returns 400 when the service rejects the token")
+        @DisplayName("POST /api/v1/auth/register/steam returns 400 when the service rejects the token")
         void registerSteam_returns400OnInvalidToken() throws Exception {
             RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
                     "bad.jwt", "alice@test.com", "alice", true, null);
@@ -1072,14 +1072,14 @@ class AuthControllerTest {
                     .when(authService).registerWithSteam(
                             any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
 
-            mockMvc.perform(post("/api/auth/register/steam")
+            mockMvc.perform(post("/api/v1/auth/register/steam")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("POST /api/auth/register/steam returns 409 when the email/pseudo/steamId conflicts")
+        @DisplayName("POST /api/v1/auth/register/steam returns 409 when the email/pseudo/steamId conflicts")
         void registerSteam_returns409OnConflict() throws Exception {
             RegisterWithSteamRequestDto body = new RegisterWithSteamRequestDto(
                     "valid.jwt", "alice@test.com", "alice", true, null);
@@ -1087,7 +1087,7 @@ class AuthControllerTest {
                     .when(authService).registerWithSteam(
                             any(RegisterWithSteamRequestDto.class), any(HttpServletResponse.class));
 
-            mockMvc.perform(post("/api/auth/register/steam")
+            mockMvc.perform(post("/api/v1/auth/register/steam")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isConflict());

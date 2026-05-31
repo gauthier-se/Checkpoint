@@ -38,7 +38,7 @@ import com.checkpoint.api.services.WishlistService;
  */
 @Tag(name = "Library and Collection", description = "Current user wishlist")
 @RestController
-@RequestMapping("/api/me/wishlist")
+@RequestMapping("/me/wishlist")
 public class WishlistController {
 
     private static final Logger log = LoggerFactory.getLogger(WishlistController.class);
@@ -68,7 +68,7 @@ public class WishlistController {
             @RequestBody(required = false) UpdatePriorityRequestDto request) {
 
         Priority priority = request != null ? request.priority() : null;
-        log.info("POST /api/me/wishlist/{} - user: {}, priority: {}",
+        log.info("POST /api/v1/me/wishlist/{} - user: {}, priority: {}",
                 videoGameId, userDetails.getUsername(), priority);
 
         WishResponseDto response = wishlistService.addToWishlist(
@@ -89,7 +89,7 @@ public class WishlistController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("DELETE /api/me/wishlist/{} - user: {}", videoGameId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/wishlist/{} - user: {}", videoGameId, userDetails.getUsername());
 
         wishlistService.removeFromWishlist(userDetails.getUsername(), videoGameId);
 
@@ -112,7 +112,7 @@ public class WishlistController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/me/wishlist - user: {}, page: {}, size: {}, sort: {}",
+        log.info("GET /api/v1/me/wishlist - user: {}, page: {}, size: {}, sort: {}",
                 userDetails.getUsername(), page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -139,7 +139,7 @@ public class WishlistController {
             @PathVariable UUID videoGameId,
             @RequestBody UpdatePriorityRequestDto request) {
 
-        log.info("PATCH /api/me/wishlist/{}/priority - user: {}, priority: {}",
+        log.info("PATCH /api/v1/me/wishlist/{}/priority - user: {}, priority: {}",
                 videoGameId, userDetails.getUsername(), request.priority());
 
         WishResponseDto response = wishlistService.updatePriority(
@@ -160,7 +160,7 @@ public class WishlistController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("GET /api/me/wishlist/{}/status - user: {}", videoGameId, userDetails.getUsername());
+        log.info("GET /api/v1/me/wishlist/{}/status - user: {}", videoGameId, userDetails.getUsername());
 
         boolean inWishlist = wishlistService.isInWishlist(
                 userDetails.getUsername(), videoGameId);

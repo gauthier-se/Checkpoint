@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Library and Collection", description = "Rate games")
 @RestController
-@RequestMapping("/api/me/games/{videoGameId}/rate")
+@RequestMapping("/me/games/{videoGameId}/rate")
 public class RateController {
 
     private static final Logger log = LoggerFactory.getLogger(RateController.class);
@@ -55,7 +55,7 @@ public class RateController {
             @PathVariable UUID videoGameId,
             @Valid @RequestBody RateRequestDto request) {
 
-        log.info("PUT /api/me/games/{}/rate - user: {}, score: {}", videoGameId, userDetails.getUsername(), request.score());
+        log.info("PUT /api/v1/me/games/{}/rate - user: {}, score: {}", videoGameId, userDetails.getUsername(), request.score());
 
         RateResponseDto response = rateService.rateGame(userDetails.getUsername(), videoGameId, request.score());
         return ResponseEntity.ok(response);
@@ -73,7 +73,7 @@ public class RateController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("DELETE /api/me/games/{}/rate - user: {}", videoGameId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/games/{}/rate - user: {}", videoGameId, userDetails.getUsername());
 
         rateService.removeRating(userDetails.getUsername(), videoGameId);
         return ResponseEntity.noContent().build();
@@ -91,7 +91,7 @@ public class RateController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("GET /api/me/games/{}/rate - user: {}", videoGameId, userDetails.getUsername());
+        log.info("GET /api/v1/me/games/{}/rate - user: {}", videoGameId, userDetails.getUsername());
 
         RateResponseDto response = rateService.getUserRating(userDetails.getUsername(), videoGameId);
 

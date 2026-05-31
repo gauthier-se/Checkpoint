@@ -4,13 +4,13 @@ import java.util.Optional;
 
 /**
  * Issues and verifies short-lived signed tokens that carry a Steam identity from the
- * {@code /api/auth/steam/openid/callback} redirect to the {@code /register} signup form.
+ * {@code /api/v1/auth/steam/openid/callback} redirect to the {@code /register} signup form.
  *
  * <p>A token is an HS256 JWT minted when a user authenticates via Steam OpenID but has
  * no CheckPoint account linked yet. The token is delivered to the browser as the
  * {@code ?steam_token=} query parameter on the redirect, then exchanged for a prefill
- * payload at {@code /api/auth/steam/signup-prefill} and finally presented at
- * {@code /api/auth/register/steam} to create the account.</p>
+ * payload at {@code /api/v1/auth/steam/signup-prefill} and finally presented at
+ * {@code /api/v1/auth/register/steam} to create the account.</p>
  *
  * <p>The token must carry the verified SteamID plus any Steam profile fields that were
  * available at issuance time. Email is deliberately <em>not</em> part of the token —

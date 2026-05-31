@@ -33,7 +33,7 @@ import jakarta.validation.Valid;
 
 /**
  * REST controller for user-scoped tag management.
- * Handles both authenticated (/api/me/tags) and public (/api/users/{username}/tags) endpoints.
+ * Handles both authenticated (/api/v1/me/tags) and public (/api/v1/users/{username}/tags) endpoints.
  */
 @Tag(name = "Gamification", description = "Game tags")
 @RestController
@@ -59,12 +59,12 @@ public class TagController {
      * @param request     the tag creation request
      * @return the created tag
      */
-    @PostMapping("/api/me/tags")
+    @PostMapping("/me/tags")
     public ResponseEntity<TagResponseDto> createTag(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody TagRequestDto request) {
 
-        log.info("POST /api/me/tags - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/tags - user: {}", userDetails.getUsername());
         TagResponseDto response = tagService.createTag(userDetails.getUsername(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -75,11 +75,11 @@ public class TagController {
      * @param userDetails the authenticated user
      * @return list of tags
      */
-    @GetMapping("/api/me/tags")
+    @GetMapping("/me/tags")
     public ResponseEntity<List<TagResponseDto>> getUserTags(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/me/tags - user: {}", userDetails.getUsername());
+        log.info("GET /api/v1/me/tags - user: {}", userDetails.getUsername());
         List<TagResponseDto> tags = tagService.getUserTags(userDetails.getUsername());
         return ResponseEntity.ok(tags);
     }
@@ -92,13 +92,13 @@ public class TagController {
      * @param request     the rename request
      * @return the updated tag
      */
-    @PutMapping("/api/me/tags/{tagId}")
+    @PutMapping("/me/tags/{tagId}")
     public ResponseEntity<TagResponseDto> updateTag(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID tagId,
             @Valid @RequestBody TagRequestDto request) {
 
-        log.info("PUT /api/me/tags/{} - user: {}", tagId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/tags/{} - user: {}", tagId, userDetails.getUsername());
         TagResponseDto response = tagService.updateTag(userDetails.getUsername(), tagId, request);
         return ResponseEntity.ok(response);
     }
@@ -110,12 +110,12 @@ public class TagController {
      * @param tagId       the tag ID to delete
      * @return 204 No Content
      */
-    @DeleteMapping("/api/me/tags/{tagId}")
+    @DeleteMapping("/me/tags/{tagId}")
     public ResponseEntity<Void> deleteTag(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID tagId) {
 
-        log.info("DELETE /api/me/tags/{} - user: {}", tagId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/tags/{} - user: {}", tagId, userDetails.getUsername());
         tagService.deleteTag(userDetails.getUsername(), tagId);
         return ResponseEntity.noContent().build();
     }
@@ -130,7 +130,7 @@ public class TagController {
      * @param sort        the sort field and direction
      * @return paginated play logs
      */
-    @GetMapping("/api/me/tags/{tagId}/plays")
+    @GetMapping("/me/tags/{tagId}/plays")
     public ResponseEntity<PagedResponseDto<GamePlayLogResponseDto>> getPlayLogsByTag(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID tagId,
@@ -138,7 +138,7 @@ public class TagController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "updatedAt,desc") String sort) {
 
-        log.info("GET /api/me/tags/{}/plays - user: {}", tagId, userDetails.getUsername());
+        log.info("GET /api/v1/me/tags/{}/plays - user: {}", tagId, userDetails.getUsername());
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -155,11 +155,11 @@ public class TagController {
      * @param username the target user's username
      * @return list of tags with counts
      */
-    @GetMapping("/api/users/{username}/tags")
+    @GetMapping("/users/{username}/tags")
     public ResponseEntity<List<TagResponseDto>> getPublicUserTags(
             @PathVariable String username) {
 
-        log.info("GET /api/users/{}/tags", username);
+        log.info("GET /api/v1/users/{}/tags", username);
         List<TagResponseDto> tags = tagService.getPublicUserTags(username);
         return ResponseEntity.ok(tags);
     }
@@ -174,7 +174,7 @@ public class TagController {
      * @param sort     the sort field and direction
      * @return paginated play logs
      */
-    @GetMapping("/api/users/{username}/tags/{tagName}/games")
+    @GetMapping("/users/{username}/tags/{tagName}/games")
     public ResponseEntity<PagedResponseDto<GamePlayLogResponseDto>> getPublicPlayLogsByTag(
             @PathVariable String username,
             @PathVariable String tagName,
@@ -182,7 +182,7 @@ public class TagController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "updatedAt,desc") String sort) {
 
-        log.info("GET /api/users/{}/tags/{}/games", username, tagName);
+        log.info("GET /api/v1/users/{}/tags/{}/games", username, tagName);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);

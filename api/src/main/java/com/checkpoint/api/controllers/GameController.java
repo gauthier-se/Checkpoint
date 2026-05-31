@@ -35,7 +35,7 @@ import com.checkpoint.api.services.GameTrendingService;
  */
 @Tag(name = "Games", description = "Game catalog: search, detail, trending and discovery")
 @RestController
-@RequestMapping("/api/games")
+@RequestMapping("/games")
 public class GameController {
 
     private static final Logger log = LoggerFactory.getLogger(GameController.class);
@@ -97,7 +97,7 @@ public class GameController {
             @RequestParam(required = false) Double ratingMin,
             @RequestParam(required = false) Double ratingMax) {
 
-        log.info("GET /api/games - page: {}, size: {}, sort: {}, genre: {}, platform: {}, "
+        log.info("GET /api/v1/games - page: {}, size: {}, sort: {}, genre: {}, platform: {}, "
                 + "yearMin: {}, yearMax: {}, ratingMin: {}, ratingMax: {}",
                 page, size, sort, genre, platform, yearMin, yearMax, ratingMin, ratingMax);
 
@@ -127,7 +127,7 @@ public class GameController {
             @RequestParam(required = false) String genre,
             @RequestParam(required = false) String platform) {
 
-        log.info("GET /api/games/search - q: '{}', genre: '{}', platform: '{}'", q, genre, platform);
+        log.info("GET /api/v1/games/search - q: '{}', genre: '{}', platform: '{}'", q, genre, platform);
 
         List<GameCardDto> results = gameSearchService.searchGames(q, genre, platform);
         return ResponseEntity.ok(results);
@@ -146,7 +146,7 @@ public class GameController {
             @RequestParam(defaultValue = "" + DEFAULT_TRENDING_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_TRENDING_SIZE);
-        log.info("GET /api/games/trending - size: {}", validatedSize);
+        log.info("GET /api/v1/games/trending - size: {}", validatedSize);
 
         List<GameCardDto> trending = gameTrendingService.getTrendingGames(validatedSize);
         return ResponseEntity.ok(trending);
@@ -163,7 +163,7 @@ public class GameController {
             @RequestParam(defaultValue = "" + DEFAULT_DISCOVERY_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_DISCOVERY_SIZE);
-        log.info("GET /api/games/most-backlogged - size: {}", validatedSize);
+        log.info("GET /api/v1/games/most-backlogged - size: {}", validatedSize);
 
         return ResponseEntity.ok(gameCatalogService.getMostBackloggedGames(validatedSize));
     }
@@ -179,7 +179,7 @@ public class GameController {
             @RequestParam(defaultValue = "" + DEFAULT_DISCOVERY_SIZE) int size) {
 
         int validatedSize = Math.min(Math.max(1, size), MAX_DISCOVERY_SIZE);
-        log.info("GET /api/games/most-wishlisted - size: {}", validatedSize);
+        log.info("GET /api/v1/games/most-wishlisted - size: {}", validatedSize);
 
         return ResponseEntity.ok(gameCatalogService.getMostWishlistedGames(validatedSize));
     }
@@ -192,7 +192,7 @@ public class GameController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<GameDetailDto> getGameById(@PathVariable UUID id) {
-        log.info("GET /api/games/{}", id);
+        log.info("GET /api/v1/games/{}", id);
 
         GameDetailDto game = gameCatalogService.getGameDetails(id);
         return ResponseEntity.ok(game);
@@ -218,7 +218,7 @@ public class GameController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/games/{}/lists - page: {}, size: {}, viewer: {}",
+        log.info("GET /api/v1/games/{}/lists - page: {}, size: {}, viewer: {}",
                 gameId, page, size, viewerEmail != null ? viewerEmail : "anonymous");
 
         int validatedSize = Math.min(Math.max(1, size), MAX_LISTS_SIZE);
@@ -247,7 +247,7 @@ public class GameController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/games/{}/similar - size: {}, viewer: {}",
+        log.info("GET /api/v1/games/{}/similar - size: {}, viewer: {}",
                 gameId, size, viewerEmail != null ? viewerEmail : "anonymous");
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIMILAR_SIZE);

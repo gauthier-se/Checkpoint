@@ -35,7 +35,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Play Logs", description = "Reviews attached to a play log entry")
 @RestController
-@RequestMapping("/api/me/plays/{playId}/review")
+@RequestMapping("/me/plays/{playId}/review")
 public class PlayLogReviewController {
 
     private static final Logger log = LoggerFactory.getLogger(PlayLogReviewController.class);
@@ -65,7 +65,7 @@ public class PlayLogReviewController {
             @PathVariable UUID playId,
             @Valid @RequestBody ReviewRequestDto request) {
 
-        log.info("POST /api/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
+        log.info("POST /api/v1/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
 
         ReviewResponseDto response = reviewService.createPlayLogReview(
                 userDetails.getUsername(), playId, request);
@@ -87,7 +87,7 @@ public class PlayLogReviewController {
             @PathVariable UUID playId,
             @Valid @RequestBody ReviewRequestDto request) {
 
-        log.info("PUT /api/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
+        log.info("PUT /api/v1/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
 
         ReviewResponseDto response = reviewService.updatePlayLogReview(
                 userDetails.getUsername(), playId, request);
@@ -107,7 +107,7 @@ public class PlayLogReviewController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID playId) {
 
-        log.info("DELETE /api/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
 
         reviewService.deletePlayLogReview(userDetails.getUsername(), playId);
 
@@ -126,7 +126,7 @@ public class PlayLogReviewController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID playId) {
 
-        log.info("GET /api/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
+        log.info("GET /api/v1/me/plays/{}/review - user: {}", playId, userDetails.getUsername());
 
         ReviewResponseDto response = reviewService.getPlayLogReview(
                 userDetails.getUsername(), playId);

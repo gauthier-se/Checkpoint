@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/admin/users/{{userId}}
+  url: {{baseUrl}}/api/v1/admin/users/{{userId}}
   body: none
   auth: bearer
 }
@@ -25,7 +25,7 @@ docs {
 
   ## Authentication
 
-  - **Bearer Token**: JWT token obtained from `/api/auth/token`
+  - **Bearer Token**: JWT token obtained from `/api/v1/auth/token`
   - **Required Role**: `ROLE_ADMIN`
 
   ## Path Parameters

@@ -23,11 +23,11 @@ import jakarta.validation.Valid;
  * REST controller for the authenticated user's Steam account link.
  *
  * <p>This endpoint covers the <em>manual</em> link path where the user types their SteamID64.
- * The OpenID 2.0 flow lives on {@code /api/auth/steam/openid/**} in {@link AuthController}.</p>
+ * The OpenID 2.0 flow lives on {@code /api/v1/auth/steam/openid/**} in {@link AuthController}.</p>
  */
 @Tag(name = "Steam", description = "Steam account linking and library import")
 @RestController
-@RequestMapping("/api/me/steam")
+@RequestMapping("/me/steam")
 public class SteamController {
 
     private static final Logger log = LoggerFactory.getLogger(SteamController.class);
@@ -51,7 +51,7 @@ public class SteamController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody LinkSteamRequestDto request) {
 
-        log.info("POST /api/me/steam/link - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/steam/link - user: {}", userDetails.getUsername());
         SteamAccountDto dto = steamService.linkSteamAccount(userDetails.getUsername(), request.steamId());
         return ResponseEntity.ok(dto);
     }
@@ -64,7 +64,7 @@ public class SteamController {
      */
     @DeleteMapping("/unlink")
     public ResponseEntity<Void> unlink(@AuthenticationPrincipal UserDetails userDetails) {
-        log.info("DELETE /api/me/steam/unlink - user: {}", userDetails.getUsername());
+        log.info("DELETE /api/v1/me/steam/unlink - user: {}", userDetails.getUsername());
         steamService.unlinkSteamAccount(userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
@@ -78,7 +78,7 @@ public class SteamController {
      */
     @PostMapping("/sync")
     public ResponseEntity<SteamSyncSummaryDto> sync(@AuthenticationPrincipal UserDetails userDetails) {
-        log.info("POST /api/me/steam/sync - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/steam/sync - user: {}", userDetails.getUsername());
         SteamSyncSummaryDto summary = steamService.syncSteamLibrary(userDetails.getUsername());
         return ResponseEntity.ok(summary);
     }

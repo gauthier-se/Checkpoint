@@ -52,7 +52,7 @@ class MemberControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/members/popular")
+    @DisplayName("GET /api/v1/members/popular")
     class GetPopularMembers {
 
         @Test
@@ -67,7 +67,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/popular"))
+            mockMvc.perform(get("/api/v1/members/popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].pseudo").value("popular1"))
@@ -86,7 +86,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/popular").param("size", "5"))
+            mockMvc.perform(get("/api/v1/members/popular").param("size", "5"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1));
         }
@@ -103,14 +103,14 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/popular"))
+            mockMvc.perform(get("/api/v1/members/popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].isFollowing").value(true));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members/top-reviewers")
+    @DisplayName("GET /api/v1/members/top-reviewers")
     class GetTopReviewers {
 
         @Test
@@ -125,7 +125,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/top-reviewers"))
+            mockMvc.perform(get("/api/v1/members/top-reviewers"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].pseudo").value("reviewer1"))
@@ -144,14 +144,14 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/top-reviewers"))
+            mockMvc.perform(get("/api/v1/members/top-reviewers"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].isFollowing").value(false));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members/suggested")
+    @DisplayName("GET /api/v1/members/suggested")
     class GetSuggestedMembers {
 
         @Test
@@ -166,7 +166,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/suggested"))
+            mockMvc.perform(get("/api/v1/members/suggested"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].pseudo").value("suggestion1"))
@@ -177,13 +177,13 @@ class MemberControllerTest {
         @DisplayName("should return 401 when not authenticated")
         void getSuggestedMembers_shouldReturn401WhenNotAuthenticated() throws Exception {
             // When / Then
-            mockMvc.perform(get("/api/members/suggested"))
+            mockMvc.perform(get("/api/v1/members/suggested"))
                     .andExpect(status().isUnauthorized());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members/recent")
+    @DisplayName("GET /api/v1/members/recent")
     class GetRecentMembers {
 
         @Test
@@ -198,7 +198,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/recent"))
+            mockMvc.perform(get("/api/v1/members/recent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].pseudo").value("newcomer1"))
@@ -216,7 +216,7 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/recent").param("size", "5"))
+            mockMvc.perform(get("/api/v1/members/recent").param("size", "5"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1));
         }
@@ -233,14 +233,14 @@ class MemberControllerTest {
                     .thenReturn(members);
 
             // When / Then
-            mockMvc.perform(get("/api/members/recent"))
+            mockMvc.perform(get("/api/v1/members/recent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].isFollowing").value(false));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members")
+    @DisplayName("GET /api/v1/members")
     class SearchMembers {
 
         @Test
@@ -256,7 +256,7 @@ class MemberControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/members"))
+            mockMvc.perform(get("/api/v1/members"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(2))
                     .andExpect(jsonPath("$.content[0].pseudo").value("alice"))
@@ -275,7 +275,7 @@ class MemberControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/members").param("search", "ali"))
+            mockMvc.perform(get("/api/v1/members").param("search", "ali"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].pseudo").value("alice"));
@@ -291,7 +291,7 @@ class MemberControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("page", "1")
                             .param("size", "5"))
                     .andExpect(status().isOk())
@@ -311,7 +311,7 @@ class MemberControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/members"))
+            mockMvc.perform(get("/api/v1/members"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].isFollowing").value(true));
         }

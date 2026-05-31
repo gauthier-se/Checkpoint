@@ -33,7 +33,7 @@ import com.checkpoint.api.services.ListSearchService;
  */
 @Tag(name = "Lists", description = "Public game lists")
 @RestController
-@RequestMapping("/api/lists")
+@RequestMapping("/lists")
 public class GameListController {
 
     private static final Logger log = LoggerFactory.getLogger(GameListController.class);
@@ -75,7 +75,7 @@ public class GameListController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/lists - page: {}, size: {}, q: '{}', sort: {}, visibility: {}, author: '{}', minGames: {}, viewer: {}",
+        log.info("GET /api/v1/lists - page: {}, size: {}, q: '{}', sort: {}, visibility: {}, author: '{}', minGames: {}, viewer: {}",
                 page, size, q, sort, visibility, author, minGames,
                 viewerEmail != null ? viewerEmail : "anonymous");
 
@@ -105,7 +105,7 @@ public class GameListController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/lists/popular - page: {}, size: {}", page, size);
+        log.info("GET /api/v1/lists/popular - page: {}, size: {}", page, size);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -129,7 +129,7 @@ public class GameListController {
             @PathVariable UUID listId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/lists/{} - viewer: {}", listId,
+        log.info("GET /api/v1/lists/{} - viewer: {}", listId,
                 userDetails != null ? userDetails.getUsername() : "anonymous");
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;

@@ -62,10 +62,10 @@ class AccountControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("DELETE /api/me - deletes the account and clears auth cookies")
+    @DisplayName("DELETE /api/v1/me - deletes the account and clears auth cookies")
     @WithMockUser(username = "alice@test.com")
     void deleteAccount_returns204AndClearsCookies() throws Exception {
-        mockMvc.perform(delete("/api/me")
+        mockMvc.perform(delete("/api/v1/me")
                         .cookie(new Cookie("checkpoint_refresh", "refresh-token-value")))
                 .andExpect(status().isNoContent());
 
@@ -74,10 +74,10 @@ class AccountControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/me - still clears cookies when no refresh cookie is sent")
+    @DisplayName("DELETE /api/v1/me - still clears cookies when no refresh cookie is sent")
     @WithMockUser(username = "alice@test.com")
     void deleteAccount_handlesMissingRefreshCookie() throws Exception {
-        mockMvc.perform(delete("/api/me"))
+        mockMvc.perform(delete("/api/v1/me"))
                 .andExpect(status().isNoContent());
 
         verify(accountService).deleteCurrentUser("alice@test.com");
@@ -85,7 +85,7 @@ class AccountControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/me/export - returns the export as a JSON attachment")
+    @DisplayName("GET /api/v1/me/export - returns the export as a JSON attachment")
     @WithMockUser(username = "alice@test.com")
     void exportData_returnsJsonAttachment() throws Exception {
         UserDataExportDto export = new UserDataExportDto(
@@ -96,7 +96,7 @@ class AccountControllerTest {
                 LocalDateTime.now());
         when(dataExportService.exportForUser("alice@test.com")).thenReturn(export);
 
-        mockMvc.perform(get("/api/me/export"))
+        mockMvc.perform(get("/api/v1/me/export"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(header().string("Content-Disposition",

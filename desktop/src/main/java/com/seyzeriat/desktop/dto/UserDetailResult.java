@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * DTO representing a detailed user profile returned by the admin API.
- * Maps the JSON response from {@code GET /api/admin/users/{id}}.
+ * Maps the JSON response from {@code GET /api/v1/admin/users/{id}}.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDetailResult {

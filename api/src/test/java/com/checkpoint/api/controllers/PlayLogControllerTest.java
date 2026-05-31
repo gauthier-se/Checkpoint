@@ -90,7 +90,7 @@ class PlayLogControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/plays/{playId}")
+    @DisplayName("GET /api/v1/plays/{playId}")
     class GetPlayLogDetail {
 
         @Test
@@ -103,7 +103,7 @@ class PlayLogControllerTest {
             when(playLogService.getPlayLogDetail(eq(playId), eq(null)))
                     .thenReturn(buildDetail(playId, gameId, userId, true));
 
-            mockMvc.perform(get("/api/plays/{playId}", playId))
+            mockMvc.perform(get("/api/v1/plays/{playId}", playId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(playId.toString()))
                     .andExpect(jsonPath("$.title").value("The Witcher 3"))
@@ -122,7 +122,7 @@ class PlayLogControllerTest {
             when(playLogService.getPlayLogDetail(eq(playId), eq(null)))
                     .thenReturn(buildDetail(playId, UUID.randomUUID(), UUID.randomUUID(), false));
 
-            mockMvc.perform(get("/api/plays/{playId}", playId))
+            mockMvc.perform(get("/api/v1/plays/{playId}", playId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.review").doesNotExist());
         }
@@ -136,7 +136,7 @@ class PlayLogControllerTest {
             when(playLogService.getPlayLogDetail(eq(playId), eq("viewer@example.com")))
                     .thenReturn(buildDetail(playId, UUID.randomUUID(), UUID.randomUUID(), false));
 
-            mockMvc.perform(get("/api/plays/{playId}", playId))
+            mockMvc.perform(get("/api/v1/plays/{playId}", playId))
                     .andExpect(status().isOk());
         }
 
@@ -148,7 +148,7 @@ class PlayLogControllerTest {
             when(playLogService.getPlayLogDetail(eq(playId), eq(null)))
                     .thenThrow(new PlayLogNotFoundException("Play log not found with ID: " + playId));
 
-            mockMvc.perform(get("/api/plays/{playId}", playId))
+            mockMvc.perform(get("/api/v1/plays/{playId}", playId))
                     .andExpect(status().isNotFound());
         }
 
@@ -160,7 +160,7 @@ class PlayLogControllerTest {
             when(playLogService.getPlayLogDetail(eq(playId), eq(null)))
                     .thenThrow(new ProfilePrivateException("geralt"));
 
-            mockMvc.perform(get("/api/plays/{playId}", playId))
+            mockMvc.perform(get("/api/v1/plays/{playId}", playId))
                     .andExpect(status().isForbidden());
         }
     }

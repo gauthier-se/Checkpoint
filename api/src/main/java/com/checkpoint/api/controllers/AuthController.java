@@ -70,14 +70,14 @@ import jakarta.validation.Valid;
  *
  * <ul>
  *   <li><strong>Desktop</strong> ({@code X-Client-Type: Desktop} header or
- *       {@code POST /api/auth/token}): returns a JWT access token and a refresh token in the response body.</li>
+ *       {@code POST /api/v1/auth/token}): returns a JWT access token and a refresh token in the response body.</li>
  *   <li><strong>Web</strong> (default): sets {@code checkpoint_token} (access) and
  *       {@code checkpoint_refresh} (refresh) HttpOnly cookies.</li>
  * </ul>
  */
 @Tag(name = "Authentication", description = "Login, registration, token refresh, password reset, OAuth2 and Steam sign-in")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -94,7 +94,7 @@ public class AuthController {
     private final SteamSignupTokenService steamSignupTokenService;
     private final SteamApiClient steamApiClient;
 
-    @Value("${steam.openid.return-url:http://localhost:8080/api/auth/steam/openid/callback}")
+    @Value("${steam.openid.return-url:http://localhost:8080/api/v1/auth/steam/openid/callback}")
     private String steamReturnUrl;
 
     @Value("${steam.openid.realm:http://localhost:8080}")
@@ -380,7 +380,7 @@ public class AuthController {
 
     /**
      * Initiates the Steam OpenID 2.0 flow. The user is redirected to Steam to authenticate;
-     * Steam then redirects back to {@code /api/auth/steam/openid/callback} with the {@code action}
+     * Steam then redirects back to {@code /api/v1/auth/steam/openid/callback} with the {@code action}
      * preserved in the query string.
      *
      * @param action {@code login} (issue a session for an existing linked account),

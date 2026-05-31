@@ -57,7 +57,7 @@ class FeedControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/me/feed should return paginated feed")
+    @DisplayName("GET /api/v1/me/feed should return paginated feed")
     @WithMockUser(username = "user@test.com")
     void getFeed_shouldReturnPaginatedFeed() throws Exception {
         // Given
@@ -75,7 +75,7 @@ class FeedControllerTest {
         when(feedService.getFeed(eq("user@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/feed"))
+        mockMvc.perform(get("/api/v1/me/feed"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].type").value("RATING"))
@@ -86,7 +86,7 @@ class FeedControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/me/feed should return empty when user follows nobody")
+    @DisplayName("GET /api/v1/me/feed should return empty when user follows nobody")
     @WithMockUser(username = "lonely@test.com")
     void getFeed_shouldReturnEmptyWhenNoFollowing() throws Exception {
         // Given
@@ -96,7 +96,7 @@ class FeedControllerTest {
         when(feedService.getFeed(eq("lonely@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/feed"))
+        mockMvc.perform(get("/api/v1/me/feed"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isEmpty())
@@ -104,7 +104,7 @@ class FeedControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/me/feed should pass the type filter to the service")
+    @DisplayName("GET /api/v1/me/feed should pass the type filter to the service")
     @WithMockUser(username = "user@test.com")
     void getFeed_shouldPassTypeFilterToService() throws Exception {
         // Given
@@ -114,14 +114,14 @@ class FeedControllerTest {
         when(feedService.getFeed(eq("user@test.com"), anyInt(), anyInt(), any())).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/feed").param("type", "RATING"))
+        mockMvc.perform(get("/api/v1/me/feed").param("type", "RATING"))
                 .andExpect(status().isOk());
 
         verify(feedService).getFeed(eq("user@test.com"), anyInt(), anyInt(), eq(FeedItemType.RATING));
     }
 
     @Test
-    @DisplayName("GET /api/me/friends/trending-games should return games")
+    @DisplayName("GET /api/v1/me/friends/trending-games should return games")
     @WithMockUser(username = "user@test.com")
     void getFriendsTrendingGames_shouldReturnGames() throws Exception {
         // Given
@@ -134,7 +134,7 @@ class FeedControllerTest {
                 .thenReturn(List.of(game));
 
         // When / Then
-        mockMvc.perform(get("/api/me/friends/trending-games"))
+        mockMvc.perform(get("/api/v1/me/friends/trending-games"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].title").value("Elden Ring"))
@@ -142,7 +142,7 @@ class FeedControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/me/friends/trending-games should return empty when user follows nobody")
+    @DisplayName("GET /api/v1/me/friends/trending-games should return empty when user follows nobody")
     @WithMockUser(username = "lonely@test.com")
     void getFriendsTrendingGames_shouldReturnEmptyWhenNoFollowing() throws Exception {
         // Given
@@ -150,14 +150,14 @@ class FeedControllerTest {
                 .thenReturn(Collections.emptyList());
 
         // When / Then
-        mockMvc.perform(get("/api/me/friends/trending-games"))
+        mockMvc.perform(get("/api/v1/me/friends/trending-games"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
-    @DisplayName("GET /api/me/friends/popular-games should return paginated games")
+    @DisplayName("GET /api/v1/me/friends/popular-games should return paginated games")
     @WithMockUser(username = "user@test.com")
     void getFriendsPopularGames_shouldReturnPaginatedGames() throws Exception {
         // Given
@@ -172,7 +172,7 @@ class FeedControllerTest {
                 .thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/friends/popular-games"))
+        mockMvc.perform(get("/api/v1/me/friends/popular-games"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
@@ -181,7 +181,7 @@ class FeedControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/me/friends/popular-games should return empty when user follows nobody")
+    @DisplayName("GET /api/v1/me/friends/popular-games should return empty when user follows nobody")
     @WithMockUser(username = "lonely@test.com")
     void getFriendsPopularGames_shouldReturnEmptyWhenNoFollowing() throws Exception {
         // Given
@@ -192,7 +192,7 @@ class FeedControllerTest {
                 .thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/me/friends/popular-games"))
+        mockMvc.perform(get("/api/v1/me/friends/popular-games"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content").isEmpty())

@@ -32,7 +32,7 @@ import com.checkpoint.api.repositories.UserRepository;
 import com.checkpoint.api.repositories.VideoGameRepository;
 
 /**
- * Integration tests for the public {@code GET /api/plays/{id}} endpoint.
+ * Integration tests for the public {@code GET /api/v1/plays/{id}} endpoint.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -115,7 +115,7 @@ class PlayLogIntegrationTest {
     void shouldReturnPlayLogDetailForPublicProfile() throws Exception {
         UserGamePlay play = savePlay(true);
 
-        mockMvc.perform(get("/api/plays/{id}", play.getId()))
+        mockMvc.perform(get("/api/v1/plays/{id}", play.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(play.getId().toString()))
                 .andExpect(jsonPath("$.title").value("The Witcher 3"))
@@ -130,14 +130,14 @@ class PlayLogIntegrationTest {
     void shouldOmitReviewBlockWhenAbsent() throws Exception {
         UserGamePlay play = savePlay(false);
 
-        mockMvc.perform(get("/api/plays/{id}", play.getId()))
+        mockMvc.perform(get("/api/v1/plays/{id}", play.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.review").doesNotExist());
     }
 
     @Test
     void shouldReturn404WhenPlayLogDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/plays/{id}", UUID.randomUUID()))
+        mockMvc.perform(get("/api/v1/plays/{id}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
     }
 
@@ -147,7 +147,7 @@ class PlayLogIntegrationTest {
         userRepository.save(author);
         UserGamePlay play = savePlay(false);
 
-        mockMvc.perform(get("/api/plays/{id}", play.getId()))
+        mockMvc.perform(get("/api/v1/plays/{id}", play.getId()))
                 .andExpect(status().isForbidden());
     }
 
@@ -158,7 +158,7 @@ class PlayLogIntegrationTest {
         userRepository.save(author);
         UserGamePlay play = savePlay(false);
 
-        mockMvc.perform(get("/api/plays/{id}", play.getId()))
+        mockMvc.perform(get("/api/v1/plays/{id}", play.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isOwner").value(true));
     }
@@ -169,7 +169,7 @@ class PlayLogIntegrationTest {
         UserGamePlay play = savePlay(false);
         likeRepository.save(Like.forVideoGame(author, game));
 
-        mockMvc.perform(get("/api/plays/{id}", play.getId()))
+        mockMvc.perform(get("/api/v1/plays/{id}", play.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isLikedByViewer").value(true));
     }

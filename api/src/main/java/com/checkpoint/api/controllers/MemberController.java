@@ -28,7 +28,7 @@ import com.checkpoint.api.services.MemberService;
  */
 @Tag(name = "Account and Profile", description = "Community member directory")
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping("/members")
 public class MemberController {
 
     private static final Logger log = LoggerFactory.getLogger(MemberController.class);
@@ -58,7 +58,7 @@ public class MemberController {
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
 
-        log.info("GET /api/members/popular - size: {}, viewer: {}", validatedSize, viewerEmail);
+        log.info("GET /api/v1/members/popular - size: {}, viewer: {}", validatedSize, viewerEmail);
 
         Pageable pageable = PageRequest.of(0, validatedSize);
         List<MemberCardDto> members = memberService.getPopularMembers(pageable, viewerEmail);
@@ -81,7 +81,7 @@ public class MemberController {
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
 
-        log.info("GET /api/members/top-reviewers - size: {}, viewer: {}", validatedSize, viewerEmail);
+        log.info("GET /api/v1/members/top-reviewers - size: {}, viewer: {}", validatedSize, viewerEmail);
 
         Pageable pageable = PageRequest.of(0, validatedSize);
         List<MemberCardDto> members = memberService.getTopReviewers(pageable, viewerEmail);
@@ -109,7 +109,7 @@ public class MemberController {
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         String viewerEmail = userDetails.getUsername();
 
-        log.info("GET /api/members/suggested - size: {}, viewer: {}", validatedSize, viewerEmail);
+        log.info("GET /api/v1/members/suggested - size: {}, viewer: {}", validatedSize, viewerEmail);
 
         Pageable pageable = PageRequest.of(0, validatedSize);
         List<MemberCardDto> members = memberService.getSuggestedMembers(pageable, viewerEmail);
@@ -132,7 +132,7 @@ public class MemberController {
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
 
-        log.info("GET /api/members/recent - size: {}, viewer: {}", validatedSize, viewerEmail);
+        log.info("GET /api/v1/members/recent - size: {}, viewer: {}", validatedSize, viewerEmail);
 
         Pageable pageable = PageRequest.of(0, validatedSize);
         List<MemberCardDto> members = memberService.getRecentMembers(pageable, viewerEmail);
@@ -160,7 +160,7 @@ public class MemberController {
         int validatedPage = Math.max(0, page);
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
 
-        log.info("GET /api/members - search: {}, page: {}, size: {}, viewer: {}",
+        log.info("GET /api/v1/members - search: {}, page: {}, size: {}, viewer: {}",
                 search, validatedPage, validatedSize, viewerEmail);
 
         Pageable pageable = PageRequest.of(validatedPage, validatedSize, Sort.by(Sort.Direction.ASC, "pseudo"));

@@ -33,7 +33,7 @@ import com.checkpoint.api.services.FollowService;
  */
 @Tag(name = "Account and Profile", description = "Following and followers")
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class FollowController {
 
     private static final Logger log = LoggerFactory.getLogger(FollowController.class);
@@ -62,7 +62,7 @@ public class FollowController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID userId) {
 
-        log.info("POST /api/users/{}/follow - user: {}", userId, userDetails.getUsername());
+        log.info("POST /api/v1/users/{}/follow - user: {}", userId, userDetails.getUsername());
 
         FollowResponseDto response = followService.toggleFollow(
                 userDetails.getUsername(), userId);
@@ -86,7 +86,7 @@ public class FollowController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/followers - page: {}, size: {}, sort: {}", userId, page, size, sort);
+        log.info("GET /api/v1/users/{}/followers - page: {}, size: {}, sort: {}", userId, page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -113,7 +113,7 @@ public class FollowController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/following - page: {}, size: {}, sort: {}", userId, page, size, sort);
+        log.info("GET /api/v1/users/{}/following - page: {}, size: {}, sort: {}", userId, page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -138,7 +138,7 @@ public class FollowController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID followerId) {
 
-        log.info("DELETE /api/users/me/followers/{} - user: {}", followerId, userDetails.getUsername());
+        log.info("DELETE /api/v1/users/me/followers/{} - user: {}", followerId, userDetails.getUsername());
 
         followService.removeFollower(userDetails.getUsername(), followerId);
 

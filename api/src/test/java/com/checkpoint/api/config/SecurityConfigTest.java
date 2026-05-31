@@ -96,55 +96,55 @@ class SecurityConfigTest {
     class ApiFilterChainTests {
 
         @Test
-        @DisplayName("GET /api/games should be publicly accessible")
+        @DisplayName("GET /api/v1/games should be publicly accessible")
         void publicGamesList_shouldBeAccessible() throws Exception {
-            mockMvc.perform(get("/api/games"))
+            mockMvc.perform(get("/api/v1/games"))
                     .andExpect(status().isOk());
         }
 
         @Test
-        @DisplayName("GET /api/games/{id} should be publicly accessible (returns 404 for missing game)")
+        @DisplayName("GET /api/v1/games/{id} should be publicly accessible (returns 404 for missing game)")
         void publicGameDetails_shouldBeAccessible() throws Exception {
-            mockMvc.perform(get("/api/games/00000000-0000-0000-0000-000000000001"))
+            mockMvc.perform(get("/api/v1/games/00000000-0000-0000-0000-000000000001"))
                     .andExpect(status().isNotFound());
         }
 
         @Test
-        @DisplayName("GET /api/admin/external-games/search should require authentication")
+        @DisplayName("GET /api/v1/admin/external-games/search should require authentication")
         void protectedAdminEndpoint_shouldRequireAuth() throws Exception {
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("POST /api/admin/games/import/{id} should require authentication")
+        @DisplayName("POST /api/v1/admin/games/import/{id} should require authentication")
         void protectedAdminImport_shouldRequireAuth() throws Exception {
-            mockMvc.perform(post("/api/admin/games/import/12345"))
+            mockMvc.perform(post("/api/v1/admin/games/import/12345"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("GET /api/auth/** should be publicly accessible (not return 401)")
+        @DisplayName("GET /api/v1/auth/** should be publicly accessible (not return 401)")
         void authEndpoints_shouldBePublic() throws Exception {
             // Auth endpoints don't exist yet, but the security chain should NOT block them
-            mockMvc.perform(get("/api/auth/test"))
+            mockMvc.perform(get("/api/v1/auth/test"))
                     .andExpect(result -> {
                         int status = result.getResponse().getStatus();
-                        assert status != 401 : "Expected /api/auth/** to NOT return 401, got " + status;
-                        assert status != 403 : "Expected /api/auth/** to NOT return 403, got " + status;
+                        assert status != 401 : "Expected /api/v1/auth/** to NOT return 401, got " + status;
+                        assert status != 403 : "Expected /api/v1/auth/** to NOT return 403, got " + status;
                     });
         }
 
         @Test
-        @DisplayName("GET /api/auth/me should require authentication")
+        @DisplayName("GET /api/v1/auth/me should require authentication")
         void meEndpoint_shouldRequireAuth() throws Exception {
-            mockMvc.perform(get("/api/auth/me"))
+            mockMvc.perform(get("/api/v1/auth/me"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("GET /api/auth/me should be accessible with valid JWT")
+        @DisplayName("GET /api/v1/auth/me should be accessible with valid JWT")
         void meEndpoint_withValidJwt_shouldBeAccessible() throws Exception {
             // Given
             UserDetails userDetails = User.builder()
@@ -156,7 +156,7 @@ class SecurityConfigTest {
             String token = jwtService.generateToken(Map.of(), userDetails);
 
             // When / Then
-            mockMvc.perform(get("/api/auth/me")
+            mockMvc.perform(get("/api/v1/auth/me")
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk());
         }
@@ -175,7 +175,7 @@ class SecurityConfigTest {
 
             // When / Then — assert authentication passes (not 401/403),
             // regardless of downstream service availability
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda")
                             .header("Authorization", "Bearer " + token))
                     .andExpect(result -> {
@@ -188,7 +188,7 @@ class SecurityConfigTest {
         @Test
         @DisplayName("Protected endpoint should reject invalid JWT")
         void protectedEndpoint_withInvalidJwt_shouldReject() throws Exception {
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda")
                             .header("Authorization", "Bearer invalid.jwt.token"))
                     .andExpect(status().isUnauthorized());
@@ -231,7 +231,7 @@ class SecurityConfigTest {
         @DisplayName("API chain should return 401 for unauthenticated requests, not redirect")
         void apiChain_shouldReturn401NotRedirect() throws Exception {
             // API requests without credentials should return 401, not redirect to login
-            mockMvc.perform(get("/api/admin/external-games/search")
+            mockMvc.perform(get("/api/v1/admin/external-games/search")
                             .param("query", "zelda"))
                     .andExpect(status().isUnauthorized());
         }

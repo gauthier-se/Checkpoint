@@ -56,7 +56,7 @@ class FollowControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/users/{userId}/follow")
+    @DisplayName("POST /api/v1/users/{userId}/follow")
     class ToggleFollow {
 
         @Test
@@ -71,7 +71,7 @@ class FollowControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/users/{userId}/follow", targetUserId))
+            mockMvc.perform(post("/api/v1/users/{userId}/follow", targetUserId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.following").value(true))
                     .andExpect(jsonPath("$.message").value("Successfully followed TestUser"));
@@ -89,7 +89,7 @@ class FollowControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/users/{userId}/follow", targetUserId))
+            mockMvc.perform(post("/api/v1/users/{userId}/follow", targetUserId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.following").value(false))
                     .andExpect(jsonPath("$.message").value("Successfully unfollowed TestUser"));
@@ -106,7 +106,7 @@ class FollowControllerTest {
                     .thenThrow(new SelfFollowException());
 
             // When / Then
-            mockMvc.perform(post("/api/users/{userId}/follow", targetUserId))
+            mockMvc.perform(post("/api/v1/users/{userId}/follow", targetUserId))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
                     .andExpect(jsonPath("$.error").value("Bad Request"));
@@ -123,14 +123,14 @@ class FollowControllerTest {
                     .thenThrow(new UserNotFoundException(targetUserId));
 
             // When / Then
-            mockMvc.perform(post("/api/users/{userId}/follow", targetUserId))
+            mockMvc.perform(post("/api/v1/users/{userId}/follow", targetUserId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{userId}/followers")
+    @DisplayName("GET /api/v1/users/{userId}/followers")
     class GetFollowers {
 
         @Test
@@ -148,7 +148,7 @@ class FollowControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{userId}/followers", userId))
+            mockMvc.perform(get("/api/v1/users/{userId}/followers", userId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content.length()").value(2))
@@ -167,7 +167,7 @@ class FollowControllerTest {
                     .thenThrow(new UserNotFoundException(userId));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{userId}/followers", userId))
+            mockMvc.perform(get("/api/v1/users/{userId}/followers", userId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
@@ -183,7 +183,7 @@ class FollowControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{userId}/followers", userId)
+            mockMvc.perform(get("/api/v1/users/{userId}/followers", userId)
                             .param("page", "1")
                             .param("size", "10")
                             .param("sort", "pseudo,asc"))
@@ -193,7 +193,7 @@ class FollowControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/users/{userId}/following")
+    @DisplayName("GET /api/v1/users/{userId}/following")
     class GetFollowing {
 
         @Test
@@ -210,7 +210,7 @@ class FollowControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{userId}/following", userId))
+            mockMvc.perform(get("/api/v1/users/{userId}/following", userId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content.length()").value(1))
@@ -228,14 +228,14 @@ class FollowControllerTest {
                     .thenThrow(new UserNotFoundException(userId));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{userId}/following", userId))
+            mockMvc.perform(get("/api/v1/users/{userId}/following", userId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("DELETE /api/users/me/followers/{followerId}")
+    @DisplayName("DELETE /api/v1/users/me/followers/{followerId}")
     class RemoveFollower {
 
         @Test
@@ -247,7 +247,7 @@ class FollowControllerTest {
             doNothing().when(followService).removeFollower(eq("user@example.com"), eq(followerId));
 
             // When / Then
-            mockMvc.perform(delete("/api/users/me/followers/{followerId}", followerId))
+            mockMvc.perform(delete("/api/v1/users/me/followers/{followerId}", followerId))
                     .andExpect(status().isNoContent());
 
             verify(followService).removeFollower(eq("user@example.com"), eq(followerId));
@@ -263,7 +263,7 @@ class FollowControllerTest {
                     .when(followService).removeFollower(eq("user@example.com"), eq(followerId));
 
             // When / Then
-            mockMvc.perform(delete("/api/users/me/followers/{followerId}", followerId))
+            mockMvc.perform(delete("/api/v1/users/me/followers/{followerId}", followerId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }

@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Account and Profile", description = "Current user profile editing")
 @RestController
-@RequestMapping("/api/me")
+@RequestMapping("/me")
 public class MyProfileController {
 
     private static final Logger log = LoggerFactory.getLogger(MyProfileController.class);
@@ -59,7 +59,7 @@ public class MyProfileController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateProfileDto request) {
 
-        log.info("PUT /api/me/profile - user: {}", userDetails.getUsername());
+        log.info("PUT /api/v1/me/profile - user: {}", userDetails.getUsername());
 
         ProfileUpdatedDto updated = profileService.updateProfile(userDetails.getUsername(), request);
         return ResponseEntity.ok(updated);
@@ -77,7 +77,7 @@ public class MyProfileController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file) {
 
-        log.info("POST /api/me/picture - user: {}", userDetails.getUsername());
+        log.info("POST /api/v1/me/picture - user: {}", userDetails.getUsername());
 
         String pictureUrl = profileService.updatePicture(userDetails.getUsername(), file);
         return ResponseEntity.ok(Map.of("picture", pictureUrl));
@@ -93,7 +93,7 @@ public class MyProfileController {
     public ResponseEntity<Void> deletePicture(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("DELETE /api/me/picture - user: {}", userDetails.getUsername());
+        log.info("DELETE /api/v1/me/picture - user: {}", userDetails.getUsername());
 
         profileService.deletePicture(userDetails.getUsername());
         return ResponseEntity.noContent().build();

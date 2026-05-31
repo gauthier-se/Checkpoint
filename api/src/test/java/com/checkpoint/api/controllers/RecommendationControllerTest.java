@@ -42,7 +42,7 @@ class RecommendationControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /api/me/games/recommended returns 200 with recommendation list")
+    @DisplayName("GET /api/v1/me/games/recommended returns 200 with recommendation list")
     void getRecommended_shouldReturnRecommendations() throws Exception {
         UUID gameId = UUID.randomUUID();
         RecommendedGameDto dto = new RecommendedGameDto(
@@ -51,7 +51,7 @@ class RecommendationControllerTest {
         when(recommendationService.getRecommendationsFor(eq("testuser"), eq(10)))
                 .thenReturn(List.of(dto));
 
-        mockMvc.perform(get("/api/me/games/recommended"))
+        mockMvc.perform(get("/api/v1/me/games/recommended"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(gameId.toString()))
                 .andExpect(jsonPath("$[0].title").value("Cool RPG"))
@@ -62,23 +62,23 @@ class RecommendationControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /api/me/games/recommended forwards the size query parameter")
+    @DisplayName("GET /api/v1/me/games/recommended forwards the size query parameter")
     void getRecommended_shouldForwardSize() throws Exception {
         when(recommendationService.getRecommendationsFor(eq("testuser"), eq(6)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/me/games/recommended").param("size", "6"))
+        mockMvc.perform(get("/api/v1/me/games/recommended").param("size", "6"))
                 .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /api/me/games/recommended returns empty array when service returns empty")
+    @DisplayName("GET /api/v1/me/games/recommended returns empty array when service returns empty")
     void getRecommended_shouldReturnEmptyArray() throws Exception {
         when(recommendationService.getRecommendationsFor(eq("testuser"), eq(10)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/me/games/recommended"))
+        mockMvc.perform(get("/api/v1/me/games/recommended"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());

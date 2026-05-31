@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * DTO for the /api/auth/me endpoint response.
+ * DTO for the /api/v1/auth/me endpoint response.
  * Returns basic profile information of the currently authenticated user.
  *
  * @param id                     the user's UUID

@@ -65,7 +65,7 @@ class UserGameCollectionControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/library")
+    @DisplayName("POST /api/v1/me/library")
     class AddGameToLibrary {
 
         @Test
@@ -85,7 +85,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/library")
+            mockMvc.perform(post("/api/v1/me/library")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -113,7 +113,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/library")
+            mockMvc.perform(post("/api/v1/me/library")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -132,7 +132,7 @@ class UserGameCollectionControllerTest {
                     .thenThrow(new GameAlreadyInLibraryException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/library")
+            mockMvc.perform(post("/api/v1/me/library")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict())
@@ -152,7 +152,7 @@ class UserGameCollectionControllerTest {
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/library")
+            mockMvc.perform(post("/api/v1/me/library")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())
@@ -167,7 +167,7 @@ class UserGameCollectionControllerTest {
             String invalidJson = "{}";
 
             // When / Then
-            mockMvc.perform(post("/api/me/library")
+            mockMvc.perform(post("/api/v1/me/library")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(invalidJson))
                     .andExpect(status().isBadRequest());
@@ -175,7 +175,7 @@ class UserGameCollectionControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/library/{videoGameId}")
+    @DisplayName("PUT /api/v1/me/library/{videoGameId}")
     class UpdateGameStatus {
 
         @Test
@@ -195,7 +195,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/library/{videoGameId}", videoGameId)
+            mockMvc.perform(put("/api/v1/me/library/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -220,7 +220,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/library/{videoGameId}", videoGameId)
+            mockMvc.perform(put("/api/v1/me/library/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -237,7 +237,7 @@ class UserGameCollectionControllerTest {
             UserGameRequestDto request = new UserGameRequestDto(videoGameId, PlayStatus.ARE_PLAYING, tooLong);
 
             // When / Then
-            mockMvc.perform(put("/api/me/library/{videoGameId}", videoGameId)
+            mockMvc.perform(put("/api/v1/me/library/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -255,7 +255,7 @@ class UserGameCollectionControllerTest {
                     .thenThrow(new GameNotInLibraryException(videoGameId));
 
             // When / Then
-            mockMvc.perform(put("/api/me/library/{videoGameId}", videoGameId)
+            mockMvc.perform(put("/api/v1/me/library/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())
@@ -264,7 +264,7 @@ class UserGameCollectionControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/library")
+    @DisplayName("GET /api/v1/me/library")
     class GetUserLibrary {
 
         @Test
@@ -285,7 +285,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/library"))
+            mockMvc.perform(get("/api/v1/me/library"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
@@ -304,7 +304,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/me/library")
+            mockMvc.perform(get("/api/v1/me/library")
                             .param("page", "1")
                             .param("size", "10")
                             .param("sort", "status,asc"))
@@ -322,7 +322,7 @@ class UserGameCollectionControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/me/library").param("status", "ARE_PLAYING"))
+            mockMvc.perform(get("/api/v1/me/library").param("status", "ARE_PLAYING"))
                     .andExpect(status().isOk());
         }
 
@@ -336,13 +336,13 @@ class UserGameCollectionControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/me/library").param("sort", "rating,desc"))
+            mockMvc.perform(get("/api/v1/me/library").param("sort", "rating,desc"))
                     .andExpect(status().isOk());
         }
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/library/{videoGameId}")
+    @DisplayName("DELETE /api/v1/me/library/{videoGameId}")
     class RemoveGameFromLibrary {
 
         @Test
@@ -355,7 +355,7 @@ class UserGameCollectionControllerTest {
                     .removeGameFromLibrary("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/library/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/library/{videoGameId}", videoGameId))
                     .andExpect(status().isNoContent());
         }
 
@@ -370,7 +370,7 @@ class UserGameCollectionControllerTest {
                     .removeGameFromLibrary("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/library/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/library/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound());
         }
     }

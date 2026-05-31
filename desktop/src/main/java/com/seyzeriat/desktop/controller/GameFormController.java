@@ -30,7 +30,7 @@ import javafx.scene.control.TextField;
  * Controller for the admin game form, reused for both create and edit modes.
  *
  * <p>{@link #setGameId(String)} drives the mode: {@code null} for create,
- * non-null for edit (pre-fills fields from {@code GET /api/games/{id}}).</p>
+ * non-null for edit (pre-fills fields from {@code GET /api/v1/games/{id}}).</p>
  */
 public class GameFormController {
 

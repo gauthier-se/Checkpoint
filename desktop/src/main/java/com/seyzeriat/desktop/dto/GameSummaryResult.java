@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * DTO for a game card returned by {@code GET /api/games}.
+ * DTO for a game card returned by {@code GET /api/v1/games}.
  * Only the fields the manage-games table needs are kept.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)

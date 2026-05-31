@@ -55,7 +55,7 @@ class MyProfileControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("PUT /api/me/profile")
+    @DisplayName("PUT /api/v1/me/profile")
     class UpdateProfile {
 
         @Test
@@ -70,7 +70,7 @@ class MyProfileControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/profile")
+            mockMvc.perform(put("/api/v1/me/profile")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -89,7 +89,7 @@ class MyProfileControllerTest {
             UpdateProfileDto request = new UpdateProfileDto("", "bio", false);
 
             // When / Then
-            mockMvc.perform(put("/api/me/profile")
+            mockMvc.perform(put("/api/v1/me/profile")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -106,7 +106,7 @@ class MyProfileControllerTest {
                     .thenThrow(new PseudoAlreadyExistsException("takenpseudo"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/profile")
+            mockMvc.perform(put("/api/v1/me/profile")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
@@ -114,7 +114,7 @@ class MyProfileControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/me/picture")
+    @DisplayName("POST /api/v1/me/picture")
     class UpdatePicture {
 
         @Test
@@ -129,7 +129,7 @@ class MyProfileControllerTest {
                     .thenReturn("/uploads/profiles/uuid.jpg");
 
             // When / Then
-            mockMvc.perform(multipart("/api/me/picture").file(file))
+            mockMvc.perform(multipart("/api/v1/me/picture").file(file))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.picture").value("/uploads/profiles/uuid.jpg"));
 
@@ -138,7 +138,7 @@ class MyProfileControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/picture")
+    @DisplayName("DELETE /api/v1/me/picture")
     class DeletePicture {
 
         @Test
@@ -149,7 +149,7 @@ class MyProfileControllerTest {
             doNothing().when(profileService).deletePicture("alice@test.com");
 
             // When / Then
-            mockMvc.perform(delete("/api/me/picture"))
+            mockMvc.perform(delete("/api/v1/me/picture"))
                     .andExpect(status().isNoContent());
 
             verify(profileService).deletePicture("alice@test.com");

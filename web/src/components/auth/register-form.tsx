@@ -3,6 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import type { SteamSignupPrefill } from '@/types/auth'
+import { API_PREFIX } from '@/services/api-config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,12 +30,12 @@ const API_URL = import.meta.env.VITE_API_URL ?? ''
 
 function startOAuthLogin(provider: 'google' | 'twitch') {
   // OAuth must go directly to the API origin (see login-form.tsx for context).
-  window.location.href = `${API_URL}/api/oauth2/authorization/${provider}`
+  window.location.href = `${API_URL}${API_PREFIX}/oauth2/authorization/${provider}`
 }
 
 function startSteamSignup() {
   // Steam OpenID is stateless; route through Nitro to keep cookies on the web origin.
-  window.location.href = '/api/auth/steam/openid/start?action=signup'
+  window.location.href = `${API_PREFIX}/auth/steam/openid/start?action=signup`
 }
 
 const standardSchema = z

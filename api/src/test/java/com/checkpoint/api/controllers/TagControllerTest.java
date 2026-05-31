@@ -59,7 +59,7 @@ class TagControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/tags")
+    @DisplayName("POST /api/v1/me/tags")
     class CreateTag {
 
         @Test
@@ -72,7 +72,7 @@ class TagControllerTest {
                     .thenReturn(response);
 
             // When & Then
-            mockMvc.perform(post("/api/me/tags")
+            mockMvc.perform(post("/api/v1/me/tags")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\": \"Cozy\"}"))
                     .andExpect(status().isCreated())
@@ -89,7 +89,7 @@ class TagControllerTest {
                     .thenThrow(new DuplicateTagException("Tag with name 'cozy' already exists"));
 
             // When & Then
-            mockMvc.perform(post("/api/me/tags")
+            mockMvc.perform(post("/api/v1/me/tags")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\": \"Cozy\"}"))
                     .andExpect(status().isConflict());
@@ -100,7 +100,7 @@ class TagControllerTest {
         @WithMockUser(username = "user@example.com")
         void createTag_shouldReturn400WhenNameBlank() throws Exception {
             // When & Then
-            mockMvc.perform(post("/api/me/tags")
+            mockMvc.perform(post("/api/v1/me/tags")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\": \"\"}"))
                     .andExpect(status().isBadRequest());
@@ -108,7 +108,7 @@ class TagControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/tags")
+    @DisplayName("GET /api/v1/me/tags")
     class GetUserTags {
 
         @Test
@@ -123,7 +123,7 @@ class TagControllerTest {
             when(tagService.getUserTags("user@example.com")).thenReturn(tags);
 
             // When & Then
-            mockMvc.perform(get("/api/me/tags"))
+            mockMvc.perform(get("/api/v1/me/tags"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].name").value("cozy"))
@@ -132,7 +132,7 @@ class TagControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/tags/{tagId}")
+    @DisplayName("PUT /api/v1/me/tags/{tagId}")
     class UpdateTag {
 
         @Test
@@ -146,7 +146,7 @@ class TagControllerTest {
                     .thenReturn(response);
 
             // When & Then
-            mockMvc.perform(put("/api/me/tags/{tagId}", tagId)
+            mockMvc.perform(put("/api/v1/me/tags/{tagId}", tagId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\": \"Relaxing\"}"))
                     .andExpect(status().isOk())
@@ -163,7 +163,7 @@ class TagControllerTest {
                     .thenThrow(new TagNotFoundException("Tag not found with ID: " + tagId));
 
             // When & Then
-            mockMvc.perform(put("/api/me/tags/{tagId}", tagId)
+            mockMvc.perform(put("/api/v1/me/tags/{tagId}", tagId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\": \"Relaxing\"}"))
                     .andExpect(status().isNotFound());
@@ -171,7 +171,7 @@ class TagControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/tags/{tagId}")
+    @DisplayName("DELETE /api/v1/me/tags/{tagId}")
     class DeleteTag {
 
         @Test
@@ -183,7 +183,7 @@ class TagControllerTest {
             doNothing().when(tagService).deleteTag("user@example.com", tagId);
 
             // When & Then
-            mockMvc.perform(delete("/api/me/tags/{tagId}", tagId))
+            mockMvc.perform(delete("/api/v1/me/tags/{tagId}", tagId))
                     .andExpect(status().isNoContent());
         }
 
@@ -197,13 +197,13 @@ class TagControllerTest {
                     .when(tagService).deleteTag("user@example.com", tagId);
 
             // When & Then
-            mockMvc.perform(delete("/api/me/tags/{tagId}", tagId))
+            mockMvc.perform(delete("/api/v1/me/tags/{tagId}", tagId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/tags/{tagId}/plays")
+    @DisplayName("GET /api/v1/me/tags/{tagId}/plays")
     class GetPlayLogsByTag {
 
         @Test
@@ -224,7 +224,7 @@ class TagControllerTest {
                     .thenReturn(page);
 
             // When & Then
-            mockMvc.perform(get("/api/me/tags/{tagId}/plays", tagId))
+            mockMvc.perform(get("/api/v1/me/tags/{tagId}/plays", tagId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].title").value("Zelda"));
@@ -232,7 +232,7 @@ class TagControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/tags")
+    @DisplayName("GET /api/v1/users/{username}/tags")
     class GetPublicUserTags {
 
         @Test
@@ -245,7 +245,7 @@ class TagControllerTest {
             when(tagService.getPublicUserTags("testuser")).thenReturn(tags);
 
             // When & Then
-            mockMvc.perform(get("/api/users/{username}/tags", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/tags", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].name").value("platine"));
@@ -253,7 +253,7 @@ class TagControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/tags/{tagName}/games")
+    @DisplayName("GET /api/v1/users/{username}/tags/{tagName}/games")
     class GetPublicPlayLogsByTag {
 
         @Test
@@ -272,7 +272,7 @@ class TagControllerTest {
                     .thenReturn(page);
 
             // When & Then
-            mockMvc.perform(get("/api/users/{username}/tags/{tagName}/games", "testuser", "platine"))
+            mockMvc.perform(get("/api/v1/users/{username}/tags/{tagName}/games", "testuser", "platine"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"));

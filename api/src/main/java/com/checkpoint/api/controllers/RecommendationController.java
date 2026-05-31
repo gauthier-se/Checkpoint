@@ -20,11 +20,11 @@ import com.checkpoint.api.services.GameRecommendationService;
  * REST controller for personalised game recommendations.
  *
  * <p>Authentication is enforced upstream by the JWT filter — endpoints under
- * {@code /api/me/**} are unreachable for anonymous callers.</p>
+ * {@code /api/v1/me/**} are unreachable for anonymous callers.</p>
  */
 @Tag(name = "Gamification", description = "Personalized game recommendations")
 @RestController
-@RequestMapping("/api/me/games")
+@RequestMapping("/me/games")
 public class RecommendationController {
 
     private static final Logger log = LoggerFactory.getLogger(RecommendationController.class);
@@ -46,7 +46,7 @@ public class RecommendationController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/me/games/recommended - user: {}, size: {}", userDetails.getUsername(), size);
+        log.info("GET /api/v1/me/games/recommended - user: {}, size: {}", userDetails.getUsername(), size);
 
         List<RecommendedGameDto> recommendations =
                 recommendationService.getRecommendationsFor(userDetails.getUsername(), size);

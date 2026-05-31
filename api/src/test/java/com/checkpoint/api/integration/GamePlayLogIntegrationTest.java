@@ -94,7 +94,7 @@ class GamePlayLogIntegrationTest {
                 LocalDate.now().minusDays(5), LocalDate.now(), 3000, "owned", false, null, null
         );
 
-        mockMvc.perform(post("/api/me/plays")
+        mockMvc.perform(post("/api/v1/me/plays")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -105,7 +105,7 @@ class GamePlayLogIntegrationTest {
         assertThat(userGamePlayRepository.count()).isEqualTo(1);
 
         // 3. Retrieve through GET
-        mockMvc.perform(get("/api/me/plays"))
+        mockMvc.perform(get("/api/v1/me/plays"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("The Legend of Zelda"))
                 .andExpect(jsonPath("$.metadata.totalElements").value(1));

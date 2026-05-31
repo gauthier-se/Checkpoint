@@ -41,7 +41,7 @@ class PlatformControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/platforms should return list of platforms sorted by name")
+    @DisplayName("GET /api/v1/platforms should return list of platforms sorted by name")
     void getAllPlatforms_shouldReturnPlatformList() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -54,7 +54,7 @@ class PlatformControllerTest {
         when(platformCatalogService.getAllPlatforms()).thenReturn(platforms);
 
         // When / Then
-        mockMvc.perform(get("/api/platforms"))
+        mockMvc.perform(get("/api/v1/platforms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -66,13 +66,13 @@ class PlatformControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/platforms should return empty list when no platforms exist")
+    @DisplayName("GET /api/v1/platforms should return empty list when no platforms exist")
     void getAllPlatforms_shouldReturnEmptyList() throws Exception {
         // Given
         when(platformCatalogService.getAllPlatforms()).thenReturn(List.of());
 
         // When / Then
-        mockMvc.perform(get("/api/platforms"))
+        mockMvc.perform(get("/api/v1/platforms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));

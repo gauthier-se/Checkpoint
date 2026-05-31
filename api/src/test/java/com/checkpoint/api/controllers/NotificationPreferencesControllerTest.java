@@ -51,7 +51,7 @@ class NotificationPreferencesControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/me/notification-preferences")
+    @DisplayName("GET /api/v1/me/notification-preferences")
     class GetPreferences {
 
         @Test
@@ -64,7 +64,7 @@ class NotificationPreferencesControllerTest {
             when(preferencesService.getOrCreate(eq("user@example.com"))).thenReturn(dto);
 
             // When / Then
-            mockMvc.perform(get("/api/me/notification-preferences"))
+            mockMvc.perform(get("/api/v1/me/notification-preferences"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.followEnabled").value(true))
                     .andExpect(jsonPath("$.likeReviewEnabled").value(true))
@@ -75,7 +75,7 @@ class NotificationPreferencesControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/notification-preferences")
+    @DisplayName("PUT /api/v1/me/notification-preferences")
     class UpdatePreferences {
 
         @Test
@@ -92,7 +92,7 @@ class NotificationPreferencesControllerTest {
                     .thenReturn(updated);
 
             // When / Then
-            mockMvc.perform(put("/api/me/notification-preferences")
+            mockMvc.perform(put("/api/v1/me/notification-preferences")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isOk())
@@ -116,7 +116,7 @@ class NotificationPreferencesControllerTest {
                     .thenReturn(updated);
 
             // When / Then
-            mockMvc.perform(put("/api/me/notification-preferences")
+            mockMvc.perform(put("/api/v1/me/notification-preferences")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isOk())

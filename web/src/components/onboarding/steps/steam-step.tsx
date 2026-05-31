@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { authQueryOptions, useAuth } from '@/hooks/use-auth'
 import { updateOnboardingStep } from '@/queries/onboarding'
 import { apiFetch, isApiError } from '@/services/api'
+import { API_PREFIX } from '@/services/api-config'
 
 interface SteamStepProps {
   onNext: () => void
@@ -48,7 +49,7 @@ export function SteamStep({ onNext }: SteamStepProps) {
 
   const handleLink = () => {
     setReturnToStep('steam')
-    window.location.href = '/api/auth/steam/openid/start?action=link'
+    window.location.href = `${API_PREFIX}/auth/steam/openid/start?action=link`
   }
 
   const handleSkip = () => {

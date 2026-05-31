@@ -31,7 +31,7 @@ import com.checkpoint.api.services.NewsService;
  */
 @Tag(name = "News", description = "Game news feed")
 @RestController
-@RequestMapping("/api/news")
+@RequestMapping("/news")
 public class NewsController {
 
     private static final Logger log = LoggerFactory.getLogger(NewsController.class);
@@ -77,7 +77,7 @@ public class NewsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishedFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate publishedTo) {
 
-        log.info("GET /api/news - page: {}, size: {}, sort: {}, q: '{}', source: {}, feedName: '{}', videoGameId: {}, publishedFrom: {}, publishedTo: {}",
+        log.info("GET /api/v1/news - page: {}, size: {}, sort: {}, q: '{}', source: {}, feedName: '{}', videoGameId: {}, publishedFrom: {}, publishedTo: {}",
                 page, size, sort, q, source, feedName, videoGameId, publishedFrom, publishedTo);
 
         if (publishedFrom != null && publishedTo != null && publishedFrom.isAfter(publishedTo)) {
@@ -109,7 +109,7 @@ public class NewsController {
             @RequestParam(defaultValue = "" + QUICK_SEARCH_DEFAULT_LIMIT) int limit) {
 
         int clampedLimit = Math.max(1, Math.min(limit, QUICK_SEARCH_MAX_LIMIT));
-        log.info("GET /api/news/search - q: '{}', limit: {}", q, clampedLimit);
+        log.info("GET /api/v1/news/search - q: '{}', limit: {}", q, clampedLimit);
 
         return ResponseEntity.ok(newsSearchService.quickSearch(q, clampedLimit));
     }
@@ -122,7 +122,7 @@ public class NewsController {
      */
     @GetMapping("/{newsId}")
     public ResponseEntity<NewsResponseDto> getNewsById(@PathVariable UUID newsId) {
-        log.info("GET /api/news/{}", newsId);
+        log.info("GET /api/v1/news/{}", newsId);
 
         NewsResponseDto news = newsService.getNewsById(newsId);
 

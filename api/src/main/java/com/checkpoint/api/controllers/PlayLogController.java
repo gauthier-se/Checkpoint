@@ -24,7 +24,7 @@ import com.checkpoint.api.services.PlayLogService;
  */
 @Tag(name = "Play Logs", description = "Public play log entries")
 @RestController
-@RequestMapping("/api/plays")
+@RequestMapping("/plays")
 public class PlayLogController {
 
     private static final Logger log = LoggerFactory.getLogger(PlayLogController.class);
@@ -48,7 +48,7 @@ public class PlayLogController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
-        log.info("GET /api/plays/{} - viewer: {}", playId, viewerEmail != null ? viewerEmail : "anonymous");
+        log.info("GET /api/v1/plays/{} - viewer: {}", playId, viewerEmail != null ? viewerEmail : "anonymous");
 
         PlayLogDetailDto detail = playLogService.getPlayLogDetail(playId, viewerEmail);
         return ResponseEntity.ok(detail);

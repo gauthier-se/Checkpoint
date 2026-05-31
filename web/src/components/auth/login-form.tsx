@@ -3,6 +3,7 @@ import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { API_PREFIX } from '@/services/api-config'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -43,13 +44,13 @@ function startOAuthLogin(provider: 'google' | 'twitch') {
   // Trade-off: OAuth-issued auth cookies end up on the API origin, so the
   // SSR auth prefetch can't see them in cross-origin dev (flicker remains
   // for OAuth users only).
-  window.location.href = `${API_URL}/api/oauth2/authorization/${provider}`
+  window.location.href = `${API_URL}${API_PREFIX}/oauth2/authorization/${provider}`
 }
 
 function startSteamLogin() {
   // Steam OpenID is stateless on our side (no authorization-state cookie), so
   // we route through Nitro to keep cookies on the web origin.
-  window.location.href = '/api/auth/steam/openid/start?action=login'
+  window.location.href = `${API_PREFIX}/auth/steam/openid/start?action=login`
 }
 
 const loginSchema = z.object({

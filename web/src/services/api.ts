@@ -1,5 +1,6 @@
 import { getRequestCookieServerFn } from '@/services/auth-server'
 import { logDebug } from '@/debug-cookie'
+import { API_PREFIX } from '@/services/api-config'
 
 /**
  * Typed error thrown by `apiFetch` whenever the server returns a non-2xx
@@ -71,9 +72,15 @@ export async function apiFetch(
     if (cookie) headers.set('Cookie', cookie)
   }
 
+  // Rewrite the legacy `/api` segment to the versioned prefix so call sites can
+  // keep using `/api/...` paths while the version lives in one place.
+  const versionedPath = path.startsWith('/api/')
+    ? `${API_PREFIX}${path.slice('/api'.length)}`
+    : path
+
   let res: Response
   try {
-    res = await fetch(`${base}${path}`, {
+    res = await fetch(`${base}${versionedPath}`, {
       ...init,
       headers,
       credentials: 'include',

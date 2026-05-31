@@ -24,7 +24,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Library and Collection", description = "Current user favorite games")
 @RestController
-@RequestMapping("/api/me/favorites")
+@RequestMapping("/me/favorites")
 public class FavoriteController {
 
     private static final Logger log = LoggerFactory.getLogger(FavoriteController.class);
@@ -53,7 +53,7 @@ public class FavoriteController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateFavoritesDto request) {
 
-        log.info("PUT /api/me/favorites - user: {} (count: {})",
+        log.info("PUT /api/v1/me/favorites - user: {} (count: {})",
                 userDetails.getUsername(), request.gameIds().size());
 
         List<FavoriteDto> favorites = favoriteService.replaceFavorites(

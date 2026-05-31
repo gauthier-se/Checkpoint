@@ -76,7 +76,7 @@ class ReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/games/{gameId}/reviews")
+    @DisplayName("GET /api/v1/games/{gameId}/reviews")
     class GetReviews {
 
         @Test
@@ -87,7 +87,7 @@ class ReviewControllerTest {
                     .thenReturn(new PageImpl<>(List.of(reviewResponseDto)));
 
             // When / Then
-            mockMvc.perform(get("/api/games/{gameId}/reviews", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great game!"))
                     .andExpect(jsonPath("$.content[0].haveSpoilers").value(false))
@@ -103,7 +103,7 @@ class ReviewControllerTest {
                     .thenReturn(new PageImpl<>(List.of()));
 
             // When / Then
-            mockMvc.perform(get("/api/games/{gameId}/reviews", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content").isEmpty());
@@ -117,7 +117,7 @@ class ReviewControllerTest {
                     .thenThrow(new GameNotFoundException(gameId));
 
             // When / Then
-            mockMvc.perform(get("/api/games/{gameId}/reviews", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews", gameId))
                     .andExpect(status().isNotFound());
         }
     }
@@ -143,7 +143,7 @@ class ReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/reviews/popular")
+    @DisplayName("GET /api/v1/reviews/popular")
     class GetPopular {
 
         @Test
@@ -152,7 +152,7 @@ class ReviewControllerTest {
             when(reviewService.getPopularReviews(eq(7), any()))
                     .thenReturn(List.of(sampleCard("Best game ever", "Elden Ring")));
 
-            mockMvc.perform(get("/api/reviews/popular"))
+            mockMvc.perform(get("/api/v1/reviews/popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$[0].content").value("Best game ever"))
@@ -165,7 +165,7 @@ class ReviewControllerTest {
         void shouldReturnEmptyArrayWhenNoReviews() throws Exception {
             when(reviewService.getPopularReviews(anyInt(), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/popular"))
+            mockMvc.perform(get("/api/v1/reviews/popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$").isEmpty());
@@ -176,7 +176,7 @@ class ReviewControllerTest {
         void shouldAcceptCustomSize() throws Exception {
             when(reviewService.getPopularReviews(eq(3), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/popular").param("size", "3"))
+            mockMvc.perform(get("/api/v1/reviews/popular").param("size", "3"))
                     .andExpect(status().isOk());
 
             verify(reviewService).getPopularReviews(eq(3), any());
@@ -187,7 +187,7 @@ class ReviewControllerTest {
         void shouldCapSizeToMaximum() throws Exception {
             when(reviewService.getPopularReviews(anyInt(), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/popular").param("size", "100"))
+            mockMvc.perform(get("/api/v1/reviews/popular").param("size", "100"))
                     .andExpect(status().isOk());
 
             verify(reviewService).getPopularReviews(eq(20), any());
@@ -195,7 +195,7 @@ class ReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/reviews/recent")
+    @DisplayName("GET /api/v1/reviews/recent")
     class GetRecent {
 
         @Test
@@ -207,7 +207,7 @@ class ReviewControllerTest {
                             sampleCard("Played all weekend", "Celeste")
                     ));
 
-            mockMvc.perform(get("/api/reviews/recent"))
+            mockMvc.perform(get("/api/v1/reviews/recent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$[0].gameTitle").value("Hollow Knight"))
@@ -219,7 +219,7 @@ class ReviewControllerTest {
         void shouldReturnEmptyArrayWhenNoReviews() throws Exception {
             when(reviewService.getRecentReviews(anyInt(), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/recent"))
+            mockMvc.perform(get("/api/v1/reviews/recent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$").isEmpty());
@@ -230,7 +230,7 @@ class ReviewControllerTest {
         void shouldAcceptCustomSize() throws Exception {
             when(reviewService.getRecentReviews(eq(5), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/recent").param("size", "5"))
+            mockMvc.perform(get("/api/v1/reviews/recent").param("size", "5"))
                     .andExpect(status().isOk());
 
             verify(reviewService).getRecentReviews(eq(5), any());
@@ -241,7 +241,7 @@ class ReviewControllerTest {
         void shouldCapSizeToMaximum() throws Exception {
             when(reviewService.getRecentReviews(anyInt(), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/reviews/recent").param("size", "999"))
+            mockMvc.perform(get("/api/v1/reviews/recent").param("size", "999"))
                     .andExpect(status().isOk());
 
             verify(reviewService).getRecentReviews(eq(20), any());
@@ -249,7 +249,7 @@ class ReviewControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/games/{gameId}/reviews/popular")
+    @DisplayName("GET /api/v1/games/{gameId}/reviews/popular")
     class GetPopularForGame {
 
         @Test
@@ -258,7 +258,7 @@ class ReviewControllerTest {
             when(reviewService.getPopularGameReviews(eq(gameId), eq(7), any()))
                     .thenReturn(List.of(sampleCard("Loved it", "Elden Ring")));
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/popular", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/popular", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$[0].content").value("Loved it"));
@@ -269,7 +269,7 @@ class ReviewControllerTest {
         void shouldCapSizeToMaximum() throws Exception {
             when(reviewService.getPopularGameReviews(eq(gameId), anyInt(), any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/popular", gameId).param("size", "1000"))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/popular", gameId).param("size", "1000"))
                     .andExpect(status().isOk());
 
             verify(reviewService).getPopularGameReviews(eq(gameId), eq(20), any());
@@ -281,13 +281,13 @@ class ReviewControllerTest {
             when(reviewService.getPopularGameReviews(eq(gameId), anyInt(), any()))
                     .thenThrow(new GameNotFoundException(gameId));
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/popular", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/popular", gameId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/games/{gameId}/reviews/from-friends")
+    @DisplayName("GET /api/v1/games/{gameId}/reviews/from-friends")
     class GetFriendReviewsForGame {
 
         @Test
@@ -296,7 +296,7 @@ class ReviewControllerTest {
             when(reviewService.getFriendReviewsForGame(eq(gameId), any(), any()))
                     .thenReturn(new PageImpl<>(List.of(reviewResponseDto)));
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/from-friends", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/from-friends", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great game!"));
         }
@@ -307,7 +307,7 @@ class ReviewControllerTest {
             when(reviewService.getFriendReviewsForGame(eq(gameId), any(), any()))
                     .thenReturn(new PageImpl<>(List.of()));
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/from-friends", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/from-friends", gameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content").isEmpty());
@@ -319,7 +319,7 @@ class ReviewControllerTest {
             when(reviewService.getFriendReviewsForGame(eq(gameId), any(), any()))
                     .thenThrow(new GameNotFoundException(gameId));
 
-            mockMvc.perform(get("/api/games/{gameId}/reviews/from-friends", gameId))
+            mockMvc.perform(get("/api/v1/games/{gameId}/reviews/from-friends", gameId))
                     .andExpect(status().isNotFound());
         }
     }

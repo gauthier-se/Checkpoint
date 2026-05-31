@@ -48,7 +48,7 @@ class AuthApiClientTest {
         verify(mockHttpClient).send(requestCaptor.capture(), any(HttpResponse.BodyHandler.class));
         HttpRequest request = requestCaptor.getValue();
         assertEquals("POST", request.method());
-        assertTrue(request.uri().toString().endsWith("/api/auth/token"));
+        assertTrue(request.uri().toString().endsWith("/api/v1/auth/token"));
     }
 
     @Test

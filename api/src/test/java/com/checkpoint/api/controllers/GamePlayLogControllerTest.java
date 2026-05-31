@@ -64,7 +64,7 @@ class GamePlayLogControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/plays")
+    @DisplayName("POST /api/v1/me/plays")
     class LogPlay {
 
         @Test
@@ -90,7 +90,7 @@ class GamePlayLogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/plays")
+            mockMvc.perform(post("/api/v1/me/plays")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -109,7 +109,7 @@ class GamePlayLogControllerTest {
             );
 
             // When / Then
-            mockMvc.perform(post("/api/me/plays")
+            mockMvc.perform(post("/api/v1/me/plays")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
@@ -117,7 +117,7 @@ class GamePlayLogControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/me/plays/{playId}")
+    @DisplayName("PUT /api/v1/me/plays/{playId}")
     class UpdatePlayLog {
 
         @Test
@@ -143,7 +143,7 @@ class GamePlayLogControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(put("/api/me/plays/{playId}", playId)
+            mockMvc.perform(put("/api/v1/me/plays/{playId}", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -168,7 +168,7 @@ class GamePlayLogControllerTest {
                     .thenThrow(new PlayLogNotFoundException("Not found"));
 
             // When / Then
-            mockMvc.perform(put("/api/me/plays/{playId}", playId)
+            mockMvc.perform(put("/api/v1/me/plays/{playId}", playId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
@@ -176,7 +176,7 @@ class GamePlayLogControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/plays/{playId}")
+    @DisplayName("DELETE /api/v1/me/plays/{playId}")
     class DeletePlayLog {
 
         @Test
@@ -188,7 +188,7 @@ class GamePlayLogControllerTest {
             doNothing().when(gamePlayLogService).deletePlayLog("user@example.com", playId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/plays/{playId}", playId))
+            mockMvc.perform(delete("/api/v1/me/plays/{playId}", playId))
                     .andExpect(status().isNoContent());
         }
 
@@ -202,13 +202,13 @@ class GamePlayLogControllerTest {
                     .when(gamePlayLogService).deletePlayLog("user@example.com", playId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/plays/{playId}", playId))
+            mockMvc.perform(delete("/api/v1/me/plays/{playId}", playId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/plays")
+    @DisplayName("GET /api/v1/me/plays")
     class GetUserPlayLogs {
 
         @Test
@@ -232,7 +232,7 @@ class GamePlayLogControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/plays"))
+            mockMvc.perform(get("/api/v1/me/plays"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].title").value("The Witcher 3"))
@@ -241,7 +241,7 @@ class GamePlayLogControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/plays/game/{videoGameId}")
+    @DisplayName("GET /api/v1/me/plays/game/{videoGameId}")
     class GetGamePlayHistory {
 
         @Test
@@ -263,7 +263,7 @@ class GamePlayLogControllerTest {
                     .thenReturn(List.of(response));
 
             // When / Then
-            mockMvc.perform(get("/api/me/plays/game/{videoGameId}", videoGameId))
+            mockMvc.perform(get("/api/v1/me/plays/game/{videoGameId}", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$[0].title").value("The Witcher 3"));
@@ -280,7 +280,7 @@ class GamePlayLogControllerTest {
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
-            mockMvc.perform(get("/api/me/plays/game/{videoGameId}", videoGameId))
+            mockMvc.perform(get("/api/v1/me/plays/game/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound());
         }
     }

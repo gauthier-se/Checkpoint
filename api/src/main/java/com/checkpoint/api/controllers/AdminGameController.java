@@ -38,7 +38,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Admin", description = "Admin: game catalog management")
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminGameController {
 

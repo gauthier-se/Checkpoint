@@ -34,7 +34,7 @@ public class OAuth2ClientRegistrationConfig {
 
     private static final Logger log = LoggerFactory.getLogger(OAuth2ClientRegistrationConfig.class);
 
-    private static final String DEFAULT_REDIRECT = "{baseUrl}/api/login/oauth2/code/{registrationId}";
+    private static final String DEFAULT_REDIRECT = "{baseUrl}/api/v1/login/oauth2/code/{registrationId}";
 
     private final String googleClientId;
     private final String googleClientSecret;

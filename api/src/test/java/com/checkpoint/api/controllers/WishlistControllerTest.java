@@ -61,7 +61,7 @@ class WishlistControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("POST /api/me/wishlist/{videoGameId}")
+    @DisplayName("POST /api/v1/me/wishlist/{videoGameId}")
     class AddToWishlist {
 
         @Test
@@ -79,7 +79,7 @@ class WishlistControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/wishlist/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/wishlist/{videoGameId}", videoGameId))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(wishId.toString()))
                     .andExpect(jsonPath("$.videoGameId").value(videoGameId.toString()))
@@ -101,7 +101,7 @@ class WishlistControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(post("/api/me/wishlist/{videoGameId}", videoGameId)
+            mockMvc.perform(post("/api/v1/me/wishlist/{videoGameId}", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"HIGH\"}"))
                     .andExpect(status().isCreated())
@@ -119,7 +119,7 @@ class WishlistControllerTest {
                     .thenThrow(new GameAlreadyInWishlistException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/wishlist/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/wishlist/{videoGameId}", videoGameId))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.status").value(409))
                     .andExpect(jsonPath("$.error").value("Conflict"));
@@ -136,14 +136,14 @@ class WishlistControllerTest {
                     .thenThrow(new GameNotFoundException(videoGameId));
 
             // When / Then
-            mockMvc.perform(post("/api/me/wishlist/{videoGameId}", videoGameId))
+            mockMvc.perform(post("/api/v1/me/wishlist/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
     }
 
     @Nested
-    @DisplayName("DELETE /api/me/wishlist/{videoGameId}")
+    @DisplayName("DELETE /api/v1/me/wishlist/{videoGameId}")
     class RemoveFromWishlist {
 
         @Test
@@ -156,7 +156,7 @@ class WishlistControllerTest {
                     .removeFromWishlist("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/wishlist/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/wishlist/{videoGameId}", videoGameId))
                     .andExpect(status().isNoContent());
         }
 
@@ -171,13 +171,13 @@ class WishlistControllerTest {
                     .removeFromWishlist("user@example.com", videoGameId);
 
             // When / Then
-            mockMvc.perform(delete("/api/me/wishlist/{videoGameId}", videoGameId))
+            mockMvc.perform(delete("/api/v1/me/wishlist/{videoGameId}", videoGameId))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/me/wishlist")
+    @DisplayName("GET /api/v1/me/wishlist")
     class GetUserWishlist {
 
         @Test
@@ -197,7 +197,7 @@ class WishlistControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/me/wishlist"))
+            mockMvc.perform(get("/api/v1/me/wishlist"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray())
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
@@ -214,7 +214,7 @@ class WishlistControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/me/wishlist")
+            mockMvc.perform(get("/api/v1/me/wishlist")
                             .param("page", "1")
                             .param("size", "10")
                             .param("sort", "createdAt,asc"))
@@ -224,7 +224,7 @@ class WishlistControllerTest {
     }
 
     @Nested
-    @DisplayName("PATCH /api/me/wishlist/{videoGameId}/priority")
+    @DisplayName("PATCH /api/v1/me/wishlist/{videoGameId}/priority")
     class UpdatePriority {
 
         @Test
@@ -242,7 +242,7 @@ class WishlistControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(patch("/api/me/wishlist/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/wishlist/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"HIGH\"}"))
                     .andExpect(status().isOk())
@@ -265,7 +265,7 @@ class WishlistControllerTest {
                     .thenReturn(response);
 
             // When / Then
-            mockMvc.perform(patch("/api/me/wishlist/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/wishlist/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":null}"))
                     .andExpect(status().isOk())
@@ -283,7 +283,7 @@ class WishlistControllerTest {
                     .thenThrow(new GameNotInWishlistException(videoGameId));
 
             // When / Then
-            mockMvc.perform(patch("/api/me/wishlist/{videoGameId}/priority", videoGameId)
+            mockMvc.perform(patch("/api/v1/me/wishlist/{videoGameId}/priority", videoGameId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"priority\":\"MEDIUM\"}"))
                     .andExpect(status().isNotFound())
@@ -292,7 +292,7 @@ class WishlistControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/me/wishlist/{videoGameId}/status")
+    @DisplayName("GET /api/v1/me/wishlist/{videoGameId}/status")
     class IsInWishlist {
 
         @Test
@@ -305,7 +305,7 @@ class WishlistControllerTest {
                     .thenReturn(true);
 
             // When / Then
-            mockMvc.perform(get("/api/me/wishlist/{videoGameId}/status", videoGameId))
+            mockMvc.perform(get("/api/v1/me/wishlist/{videoGameId}/status", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.inWishlist").value(true));
         }
@@ -320,7 +320,7 @@ class WishlistControllerTest {
                     .thenReturn(false);
 
             // When / Then
-            mockMvc.perform(get("/api/me/wishlist/{videoGameId}/status", videoGameId))
+            mockMvc.perform(get("/api/v1/me/wishlist/{videoGameId}/status", videoGameId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.inWishlist").value(false));
         }

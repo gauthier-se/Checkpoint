@@ -73,7 +73,7 @@ class ProfileControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/users/{username}")
+    @DisplayName("GET /api/v1/users/{username}")
     class GetUserProfile {
 
         @Test
@@ -102,7 +102,7 @@ class ProfileControllerTest {
                     .thenReturn(profile);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("testuser"))
                     .andExpect(jsonPath("$.bio").value("A bio"))
@@ -143,7 +143,7 @@ class ProfileControllerTest {
                     .thenReturn(profile);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.isFollowing").value(true))
                     .andExpect(jsonPath("$.isOwner").value(false));
@@ -157,13 +157,13 @@ class ProfileControllerTest {
                     .thenThrow(new UserNotFoundException("unknown"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}", "unknown"))
+            mockMvc.perform(get("/api/v1/users/{username}", "unknown"))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/reviews")
+    @DisplayName("GET /api/v1/users/{username}/reviews")
     class GetUserReviews {
 
         @Test
@@ -182,7 +182,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/reviews", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/reviews", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].content").value("Great game!"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -196,13 +196,13 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/reviews", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/reviews", "privateuser"))
                     .andExpect(status().isForbidden());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/wishlist")
+    @DisplayName("GET /api/v1/users/{username}/wishlist")
     class GetUserWishlist {
 
         @Test
@@ -220,7 +220,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/wishlist", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/wishlist", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Elden Ring"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -234,13 +234,13 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/wishlist", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/wishlist", "privateuser"))
                     .andExpect(status().isForbidden());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/likes")
+    @DisplayName("GET /api/v1/users/{username}/likes")
     class GetUserLikedGames {
 
         @Test
@@ -258,7 +258,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/likes", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/likes", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Hollow Knight"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -272,7 +272,7 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/likes", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/likes", "privateuser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -284,13 +284,13 @@ class ProfileControllerTest {
                     .thenThrow(new UserNotFoundException("ghost"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/likes", "ghost"))
+            mockMvc.perform(get("/api/v1/users/{username}/likes", "ghost"))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/library")
+    @DisplayName("GET /api/v1/users/{username}/library")
     class GetUserLibrary {
 
         @Test
@@ -309,7 +309,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/library", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/library", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Celeste"))
                     .andExpect(jsonPath("$.content[0].userRating").value(5.0))
@@ -325,7 +325,7 @@ class ProfileControllerTest {
                     .thenReturn(emptyPage);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/library", "testuser").param("status", "COMPLETED"))
+            mockMvc.perform(get("/api/v1/users/{username}/library", "testuser").param("status", "COMPLETED"))
                     .andExpect(status().isOk());
         }
 
@@ -337,7 +337,7 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/library", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/library", "privateuser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -349,13 +349,13 @@ class ProfileControllerTest {
                     .thenThrow(new UserNotFoundException("ghost"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/library", "ghost"))
+            mockMvc.perform(get("/api/v1/users/{username}/library", "ghost"))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/backlog")
+    @DisplayName("GET /api/v1/users/{username}/backlog")
     class GetUserBacklog {
 
         @Test
@@ -373,7 +373,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/backlog", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/backlog", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Hades"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -387,7 +387,7 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/backlog", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/backlog", "privateuser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -399,13 +399,13 @@ class ProfileControllerTest {
                     .thenThrow(new UserNotFoundException("ghost"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/backlog", "ghost"))
+            mockMvc.perform(get("/api/v1/users/{username}/backlog", "ghost"))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/plays")
+    @DisplayName("GET /api/v1/users/{username}/plays")
     class GetUserPlayLog {
 
         @Test
@@ -425,7 +425,7 @@ class ProfileControllerTest {
                     .thenReturn(page);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/plays", "testuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/plays", "testuser"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].title").value("Stardew Valley"))
                     .andExpect(jsonPath("$.metadata.totalElements").value(1));
@@ -439,7 +439,7 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/plays", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/plays", "privateuser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -451,13 +451,13 @@ class ProfileControllerTest {
                     .thenThrow(new UserNotFoundException("ghost"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/plays", "ghost"))
+            mockMvc.perform(get("/api/v1/users/{username}/plays", "ghost"))
                     .andExpect(status().isNotFound());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/users/{username}/compare")
+    @DisplayName("GET /api/v1/users/{username}/compare")
     class CompareProfiles {
 
         @Test
@@ -479,7 +479,7 @@ class ProfileControllerTest {
                     .thenReturn(comparison);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/compare", "target"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "target"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.affinityScore").value(71))
                     .andExpect(jsonPath("$.commonGamesCount").value(1))
@@ -504,7 +504,7 @@ class ProfileControllerTest {
                     .thenThrow(new IllegalArgumentException("Cannot compare a profile with itself"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/compare", "viewer"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "viewer"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -518,7 +518,7 @@ class ProfileControllerTest {
                     .thenThrow(new ProfilePrivateException("privateuser"));
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/compare", "privateuser"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "privateuser"))
                     .andExpect(status().isForbidden());
         }
 
@@ -537,7 +537,7 @@ class ProfileControllerTest {
                     .thenReturn(comparison);
 
             // When / Then
-            mockMvc.perform(get("/api/users/{username}/compare", "target"))
+            mockMvc.perform(get("/api/v1/users/{username}/compare", "target"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.affinityScore").value(0))
                     .andExpect(jsonPath("$.commonGamesCount").value(0))

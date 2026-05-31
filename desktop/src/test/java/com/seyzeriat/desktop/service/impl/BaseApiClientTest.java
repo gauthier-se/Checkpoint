@@ -29,7 +29,7 @@ class BaseApiClientTest {
         }
 
         public String fetchSomething() throws Exception {
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create("http://localhost:8080/api/dummy"));
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(URI.create("http://localhost:8080/api/v1/dummy"));
             HttpResponse<String> response = sendWithAuth(requestBuilder);
             return response.body();
         }

@@ -72,7 +72,7 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/admin/news should create a draft news and return 201")
+    @DisplayName("POST /api/v1/admin/news should create a draft news and return 201")
     @WithMockUser(username = "admin@test.com", roles = "ADMIN")
     void createNews_shouldReturn201() throws Exception {
         // Given
@@ -83,7 +83,7 @@ class AdminNewsControllerTest {
         when(newsService.createNews(eq("admin@test.com"), any(NewsRequestDto.class))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(post("/api/admin/news")
+        mockMvc.perform(post("/api/v1/admin/news")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -94,7 +94,7 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/news should return paginated list of all news")
+    @DisplayName("GET /api/v1/admin/news should return paginated list of all news")
     void getAllNews_shouldReturnPaginatedList() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
@@ -104,7 +104,7 @@ class AdminNewsControllerTest {
         when(newsService.getAllNews(any(Pageable.class))).thenReturn(page);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/news")
+        mockMvc.perform(get("/api/v1/admin/news")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -115,7 +115,7 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/news/{newsId} should return a single news")
+    @DisplayName("GET /api/v1/admin/news/{newsId} should return a single news")
     void getNewsById_shouldReturnNews() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
@@ -124,7 +124,7 @@ class AdminNewsControllerTest {
         when(newsService.getNewsByIdAdmin(newsId)).thenReturn(dto);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/news/{newsId}", newsId))
+        mockMvc.perform(get("/api/v1/admin/news/{newsId}", newsId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(newsId.toString()))
                 .andExpect(jsonPath("$.title").value("Test News"));
@@ -133,7 +133,7 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/admin/news/{newsId} should update and return news")
+    @DisplayName("PUT /api/v1/admin/news/{newsId} should update and return news")
     void updateNews_shouldReturnUpdatedNews() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
@@ -143,7 +143,7 @@ class AdminNewsControllerTest {
         when(newsService.updateNews(eq(newsId), any(NewsRequestDto.class))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(put("/api/admin/news/{newsId}", newsId)
+        mockMvc.perform(put("/api/v1/admin/news/{newsId}", newsId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -153,21 +153,21 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/admin/news/{newsId} should return 204 No Content")
+    @DisplayName("DELETE /api/v1/admin/news/{newsId} should return 204 No Content")
     void deleteNews_shouldReturn204() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
         doNothing().when(newsService).deleteNews(newsId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/news/{newsId}", newsId))
+        mockMvc.perform(delete("/api/v1/admin/news/{newsId}", newsId))
                 .andExpect(status().isNoContent());
 
         verify(newsService).deleteNews(newsId);
     }
 
     @Test
-    @DisplayName("POST /api/admin/news/{newsId}/publish should publish and return news")
+    @DisplayName("POST /api/v1/admin/news/{newsId}/publish should publish and return news")
     void publishNews_shouldReturnPublishedNews() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
@@ -176,7 +176,7 @@ class AdminNewsControllerTest {
         when(newsService.publishNews(newsId)).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(post("/api/admin/news/{newsId}/publish", newsId))
+        mockMvc.perform(post("/api/v1/admin/news/{newsId}/publish", newsId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(newsId.toString()))
                 .andExpect(jsonPath("$.publishedAt").isNotEmpty());
@@ -185,7 +185,7 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/admin/news/{newsId}/unpublish should unpublish and return news")
+    @DisplayName("POST /api/v1/admin/news/{newsId}/unpublish should unpublish and return news")
     void unpublishNews_shouldReturnUnpublishedNews() throws Exception {
         // Given
         UUID newsId = UUID.randomUUID();
@@ -194,7 +194,7 @@ class AdminNewsControllerTest {
         when(newsService.unpublishNews(newsId)).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(post("/api/admin/news/{newsId}/unpublish", newsId))
+        mockMvc.perform(post("/api/v1/admin/news/{newsId}/unpublish", newsId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(newsId.toString()));
 
@@ -202,12 +202,12 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/admin/news/import/STEAM should run the Steam pass and return count")
+    @DisplayName("POST /api/v1/admin/news/import/STEAM should run the Steam pass and return count")
     @WithMockUser(username = "admin@test.com", roles = "ADMIN")
     void triggerImport_steam_shouldReturnCount() throws Exception {
         when(newsImportService.importFromSource(NewsSource.STEAM)).thenReturn(4);
 
-        mockMvc.perform(post("/api/admin/news/import/{source}", "STEAM"))
+        mockMvc.perform(post("/api/v1/admin/news/import/{source}", "STEAM"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imported").value(4));
 
@@ -215,12 +215,12 @@ class AdminNewsControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/admin/news/import/RSS should run the RSS pass and return count")
+    @DisplayName("POST /api/v1/admin/news/import/RSS should run the RSS pass and return count")
     @WithMockUser(username = "admin@test.com", roles = "ADMIN")
     void triggerImport_rss_shouldReturnCount() throws Exception {
         when(newsImportService.importFromSource(NewsSource.RSS)).thenReturn(0);
 
-        mockMvc.perform(post("/api/admin/news/import/{source}", "RSS"))
+        mockMvc.perform(post("/api/v1/admin/news/import/{source}", "RSS"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imported").value(0));
 

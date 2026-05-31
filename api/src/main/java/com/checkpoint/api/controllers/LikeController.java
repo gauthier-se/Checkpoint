@@ -57,12 +57,12 @@ public class LikeController {
      * @param reviewId    the review ID
      * @return the new like status and updated count
      */
-    @PostMapping("/api/reviews/{reviewId}/like")
+    @PostMapping("/reviews/{reviewId}/like")
     public ResponseEntity<LikeResponseDto> toggleReviewLike(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID reviewId) {
 
-        log.info("POST /api/reviews/{}/like - user: {}", reviewId, userDetails.getUsername());
+        log.info("POST /api/v1/reviews/{}/like - user: {}", reviewId, userDetails.getUsername());
 
         LikeResponseDto response = likeService.toggleReviewLike(
                 userDetails.getUsername(), reviewId);
@@ -78,12 +78,12 @@ public class LikeController {
      * @param listId      the game list ID
      * @return the new like status and updated count
      */
-    @PostMapping("/api/lists/{listId}/like")
+    @PostMapping("/lists/{listId}/like")
     public ResponseEntity<LikeResponseDto> toggleListLike(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID listId) {
 
-        log.info("POST /api/lists/{}/like - user: {}", listId, userDetails.getUsername());
+        log.info("POST /api/v1/lists/{}/like - user: {}", listId, userDetails.getUsername());
 
         LikeResponseDto response = likeService.toggleListLike(
                 userDetails.getUsername(), listId);
@@ -99,12 +99,12 @@ public class LikeController {
      * @param commentId   the comment ID
      * @return the new like status and updated count
      */
-    @PostMapping("/api/comments/{commentId}/like")
+    @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<LikeResponseDto> toggleCommentLike(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID commentId) {
 
-        log.info("POST /api/comments/{}/like - user: {}", commentId, userDetails.getUsername());
+        log.info("POST /api/v1/comments/{}/like - user: {}", commentId, userDetails.getUsername());
 
         LikeResponseDto response = likeService.toggleCommentLike(
                 userDetails.getUsername(), commentId);
@@ -121,12 +121,12 @@ public class LikeController {
      * @param videoGameId the video game ID
      * @return the new like status and updated count
      */
-    @PostMapping("/api/me/games/{videoGameId}/like")
+    @PostMapping("/me/games/{videoGameId}/like")
     public ResponseEntity<LikeResponseDto> toggleGameLike(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("POST /api/me/games/{}/like - user: {}", videoGameId, userDetails.getUsername());
+        log.info("POST /api/v1/me/games/{}/like - user: {}", videoGameId, userDetails.getUsername());
 
         LikeResponseDto response = likeService.toggleGameLike(
                 userDetails.getUsername(), videoGameId);
@@ -143,14 +143,14 @@ public class LikeController {
      * @param sort        the sort criteria (e.g., "createdAt,desc")
      * @return paginated list of liked games
      */
-    @GetMapping("/api/me/likes")
+    @GetMapping("/me/likes")
     public ResponseEntity<PagedResponseDto<LikedGameResponseDto>> getLikedGames(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/me/likes - user: {}, page: {}, size: {}, sort: {}",
+        log.info("GET /api/v1/me/likes - user: {}, page: {}, size: {}, sort: {}",
                 userDetails.getUsername(), page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);

@@ -28,7 +28,7 @@ import com.checkpoint.api.services.AdminReportService;
  */
 @Tag(name = "Admin", description = "Admin: report queue")
 @RestController
-@RequestMapping("/api/admin/reports")
+@RequestMapping("/admin/reports")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminReportController {
 

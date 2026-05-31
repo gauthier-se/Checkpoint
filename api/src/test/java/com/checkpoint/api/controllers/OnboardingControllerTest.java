@@ -55,7 +55,7 @@ class OnboardingControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Nested
-    @DisplayName("GET /api/me/onboarding")
+    @DisplayName("GET /api/v1/me/onboarding")
     class GetOnboarding {
 
         @Test
@@ -65,7 +65,7 @@ class OnboardingControllerTest {
             OnboardingDto dto = new OnboardingDto(null, Map.of("welcome", true, "picture", false));
             when(onboardingService.getOnboarding("alice@test.com")).thenReturn(dto);
 
-            mockMvc.perform(get("/api/me/onboarding"))
+            mockMvc.perform(get("/api/v1/me/onboarding"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completedAt").doesNotExist())
                     .andExpect(jsonPath("$.steps.welcome").value(true))
@@ -76,7 +76,7 @@ class OnboardingControllerTest {
     }
 
     @Nested
-    @DisplayName("PATCH /api/me/onboarding")
+    @DisplayName("PATCH /api/v1/me/onboarding")
     class UpdateStep {
 
         @Test
@@ -88,7 +88,7 @@ class OnboardingControllerTest {
             when(onboardingService.updateStep(eq("alice@test.com"), eq("bio"), eq(true)))
                     .thenReturn(dto);
 
-            mockMvc.perform(patch("/api/me/onboarding")
+            mockMvc.perform(patch("/api/v1/me/onboarding")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isOk())
@@ -104,7 +104,7 @@ class OnboardingControllerTest {
             when(onboardingService.updateStep(eq("alice@test.com"), eq("twofa"), eq(false)))
                     .thenReturn(dto);
 
-            mockMvc.perform(patch("/api/me/onboarding")
+            mockMvc.perform(patch("/api/v1/me/onboarding")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isOk())
@@ -117,7 +117,7 @@ class OnboardingControllerTest {
         void shouldReject400OnEmptyStep() throws Exception {
             OnboardingStepUpdateDto body = new OnboardingStepUpdateDto("", true);
 
-            mockMvc.perform(patch("/api/me/onboarding")
+            mockMvc.perform(patch("/api/v1/me/onboarding")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
                     .andExpect(status().isBadRequest());
@@ -125,7 +125,7 @@ class OnboardingControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/me/onboarding/complete")
+    @DisplayName("POST /api/v1/me/onboarding/complete")
     class Complete {
 
         @Test
@@ -135,7 +135,7 @@ class OnboardingControllerTest {
             OnboardingDto dto = new OnboardingDto(LocalDateTime.now(), Map.of());
             when(onboardingService.complete("alice@test.com")).thenReturn(dto);
 
-            mockMvc.perform(post("/api/me/onboarding/complete"))
+            mockMvc.perform(post("/api/v1/me/onboarding/complete"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completedAt").exists());
         }

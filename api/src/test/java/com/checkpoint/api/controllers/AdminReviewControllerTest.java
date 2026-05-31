@@ -50,7 +50,7 @@ class AdminReviewControllerTest {
     private ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Test
-    @DisplayName("GET /api/admin/reviews should return paginated list")
+    @DisplayName("GET /api/v1/admin/reviews should return paginated list")
     void getAllReviews_shouldReturnPaginatedList() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -61,7 +61,7 @@ class AdminReviewControllerTest {
         when(adminReviewService.getAllReviews(any(Pageable.class))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reviews")
+        mockMvc.perform(get("/api/v1/admin/reviews")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class AdminReviewControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reviews/reported should return paginated reported reviews")
+    @DisplayName("GET /api/v1/admin/reviews/reported should return paginated reported reviews")
     void getReportedReviews_shouldReturnPaginatedList() throws Exception {
         // Given
         UUID id1 = UUID.randomUUID();
@@ -87,7 +87,7 @@ class AdminReviewControllerTest {
         when(adminReviewService.getReportedReviews(any(Pageable.class))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reviews/reported")
+        mockMvc.perform(get("/api/v1/admin/reviews/reported")
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ class AdminReviewControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reviews/{id}/reports should return paginated reports for the review")
+    @DisplayName("GET /api/v1/admin/reviews/{id}/reports should return paginated reports for the review")
     void getReviewReports_shouldReturnPaginatedList() throws Exception {
         // Given
         UUID reviewId = UUID.randomUUID();
@@ -115,7 +115,7 @@ class AdminReviewControllerTest {
         when(adminReviewService.getReviewReports(eq(reviewId), any(Pageable.class))).thenReturn(response);
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reviews/{id}/reports", reviewId)
+        mockMvc.perform(get("/api/v1/admin/reviews/{id}/reports", reviewId)
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
@@ -128,7 +128,7 @@ class AdminReviewControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/reviews/{id}/reports should return 404 when review does not exist")
+    @DisplayName("GET /api/v1/admin/reviews/{id}/reports should return 404 when review does not exist")
     void getReviewReports_shouldReturn404WhenReviewMissing() throws Exception {
         // Given
         UUID reviewId = UUID.randomUUID();
@@ -136,21 +136,21 @@ class AdminReviewControllerTest {
                 .when(adminReviewService).getReviewReports(eq(reviewId), any(Pageable.class));
 
         // When / Then
-        mockMvc.perform(get("/api/admin/reviews/{id}/reports", reviewId))
+        mockMvc.perform(get("/api/v1/admin/reviews/{id}/reports", reviewId))
                 .andExpect(status().isNotFound());
 
         verify(adminReviewService).getReviewReports(eq(reviewId), any(Pageable.class));
     }
 
     @Test
-    @DisplayName("DELETE /api/admin/reviews/{id} should return 204 No Content")
+    @DisplayName("DELETE /api/v1/admin/reviews/{id} should return 204 No Content")
     void deleteReview_shouldReturn204() throws Exception {
         // Given
         UUID reviewId = UUID.randomUUID();
         doNothing().when(adminReviewService).deleteReview(reviewId);
 
         // When / Then
-        mockMvc.perform(delete("/api/admin/reviews/{id}", reviewId))
+        mockMvc.perform(delete("/api/v1/admin/reviews/{id}", reviewId))
                 .andExpect(status().isNoContent());
 
         verify(adminReviewService).deleteReview(reviewId);

@@ -98,7 +98,7 @@ All incoming traffic is managed by a Traefik reverse proxy. It acts as the uniqu
 | Route | Target | Description |
 |-------|--------|-------------|
 | `checkpoint.com` | Node.js container | Web application requests |
-| `checkpoint.com/api` | Spring Boot container | API requests |
+| `checkpoint.com/api/v1` | Spring Boot container | API requests |
 
 #### Web Interface
 
@@ -106,7 +106,7 @@ The web user accesses the application via their browser. The Node.js web server 
 
 #### Desktop Interface & API
 
-The desktop user interacts directly with the backend API. The thick client performs authenticated HTTPS calls directly to the `/api` endpoint exposed by the reverse proxy. The backend API container processes these requests, executes business logic, and manages security.
+The desktop user interacts directly with the backend API. The thick client performs authenticated HTTPS calls directly to the `/api/v1` endpoint exposed by the reverse proxy. The backend API container processes these requests, executes business logic, and manages security.
 
 #### Data Persistence
 

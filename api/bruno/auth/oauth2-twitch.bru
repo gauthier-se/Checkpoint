@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/oauth2/authorization/twitch
+  url: {{baseUrl}}/api/v1/oauth2/authorization/twitch
   body: none
   auth: none
 }
@@ -15,7 +15,7 @@ docs {
 
   Entry point of the Twitch OAuth2 login flow. Hitting this URL in a browser
   redirects the user to Twitch's consent screen. After consent, Twitch calls
-  back to `/api/login/oauth2/code/twitch` (handled by Spring Security), which
+  back to `/api/v1/login/oauth2/code/twitch` (handled by Spring Security), which
   triggers `OAuth2AuthenticationSuccessHandler` and redirects the browser to
   `${app.frontend-url}/`.
 

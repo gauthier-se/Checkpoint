@@ -24,7 +24,7 @@ import com.checkpoint.api.services.GameInteractionService;
  */
 @Tag(name = "Library and Collection", description = "Add, update and remove games in the current user collection")
 @RestController
-@RequestMapping("/api/me/games")
+@RequestMapping("/me/games")
 public class GameInteractionController {
 
     private static final Logger log = LoggerFactory.getLogger(GameInteractionController.class);
@@ -47,7 +47,7 @@ public class GameInteractionController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("GET /api/me/games/{}/status - user: {}", videoGameId, userDetails.getUsername());
+        log.info("GET /api/v1/me/games/{}/status - user: {}", videoGameId, userDetails.getUsername());
 
         GameInteractionStatusDto response = gameInteractionService.getGameInteractionStatus(
                 userDetails.getUsername(), videoGameId);

@@ -32,7 +32,7 @@ public interface OnboardingService {
     void markStepDone(String userEmail, String step);
 
     /**
-     * Explicitly records a step's state. Used by {@code PATCH /api/me/onboarding} so the
+     * Explicitly records a step's state. Used by {@code PATCH /api/v1/me/onboarding} so the
      * client can record a "Skip" (done=false) as distinct from "not yet seen" (no entry).
      *
      * @param userEmail the user's email

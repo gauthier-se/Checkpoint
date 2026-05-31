@@ -15,7 +15,7 @@ public interface SteamService {
      * Links a Steam account to the user identified by {@code email}, after first verifying that
      * the given SteamID64 is recognized by the Steam Web API.
      *
-     * <p>Used by {@code POST /api/me/steam/link} when the user types their SteamID manually.</p>
+     * <p>Used by {@code POST /api/v1/me/steam/link} when the user types their SteamID manually.</p>
      *
      * @param email   the authenticated user's email
      * @param steamId the 17-digit SteamID64 supplied by the user
@@ -52,7 +52,7 @@ public interface SteamService {
 
     /**
      * Best-effort lookup of the display name and avatar for a stored SteamID, used to enrich
-     * the {@code /api/auth/me} response. Returns empty if Steam is unreachable or the profile
+     * the {@code /api/v1/auth/me} response. Returns empty if Steam is unreachable or the profile
      * has been removed.
      *
      * @param steamId the SteamID64

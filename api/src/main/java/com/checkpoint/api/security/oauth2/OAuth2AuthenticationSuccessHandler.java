@@ -97,7 +97,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .sameSite("Lax")
-                .path("/api")
+                .path("/api/v1")
                 .maxAge(jwtExpirationMs / 1000)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

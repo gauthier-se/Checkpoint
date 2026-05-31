@@ -39,7 +39,7 @@ import jakarta.validation.Valid;
  */
 @Tag(name = "Library and Collection", description = "Current user game library")
 @RestController
-@RequestMapping("/api/me/library")
+@RequestMapping("/me/library")
 public class UserGameCollectionController {
 
     private static final Logger log = LoggerFactory.getLogger(UserGameCollectionController.class);
@@ -67,7 +67,7 @@ public class UserGameCollectionController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UserGameRequestDto request) {
 
-        log.info("POST /api/me/library - user: {}, gameId: {}, status: {}",
+        log.info("POST /api/v1/me/library - user: {}, gameId: {}, status: {}",
                 userDetails.getUsername(), request.videoGameId(), request.status());
 
         UserGameResponseDto response = userGameCollectionService.addGameToLibrary(
@@ -90,7 +90,7 @@ public class UserGameCollectionController {
             @PathVariable UUID videoGameId,
             @Valid @RequestBody UserGameRequestDto request) {
 
-        log.info("PUT /api/me/library/{} - user: {}, status: {}",
+        log.info("PUT /api/v1/me/library/{} - user: {}, status: {}",
                 videoGameId, userDetails.getUsername(), request.status());
 
         UserGameResponseDto response = userGameCollectionService.updateGameStatus(
@@ -117,7 +117,7 @@ public class UserGameCollectionController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/me/library - user: {}, status: {}, page: {}, size: {}, sort: {}",
+        log.info("GET /api/v1/me/library - user: {}, status: {}, page: {}, size: {}, sort: {}",
                 userDetails.getUsername(), status, page, size, sort);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -142,7 +142,7 @@ public class UserGameCollectionController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID videoGameId) {
 
-        log.info("DELETE /api/me/library/{} - user: {}", videoGameId, userDetails.getUsername());
+        log.info("DELETE /api/v1/me/library/{} - user: {}", videoGameId, userDetails.getUsername());
 
         userGameCollectionService.removeGameFromLibrary(userDetails.getUsername(), videoGameId);
 

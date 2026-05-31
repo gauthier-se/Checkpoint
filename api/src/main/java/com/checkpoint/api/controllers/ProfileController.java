@@ -39,7 +39,7 @@ import com.checkpoint.api.services.ProfileService;
  */
 @Tag(name = "Account and Profile", description = "Public user profiles, library, plays and backlog")
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class ProfileController {
 
     private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
@@ -76,7 +76,7 @@ public class ProfileController {
             @PathVariable String username,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("GET /api/users/{} - viewer: {}", username,
+        log.info("GET /api/v1/users/{} - viewer: {}", username,
                 userDetails != null ? userDetails.getUsername() : "anonymous");
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
@@ -103,7 +103,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/reviews - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/reviews - page: {}, size: {}", username, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -133,7 +133,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/wishlist - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/wishlist - page: {}, size: {}", username, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -163,7 +163,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/likes - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/likes - page: {}, size: {}", username, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -195,7 +195,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/library - status: {}, page: {}, size: {}", username, status, page, size);
+        log.info("GET /api/v1/users/{}/library - status: {}, page: {}, size: {}", username, status, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -225,7 +225,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/backlog - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/backlog - page: {}, size: {}", username, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -255,7 +255,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = "updatedAt,desc") String sort) {
 
-        log.info("GET /api/users/{}/plays - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/plays - page: {}, size: {}", username, page, size);
 
         String viewerEmail = userDetails != null ? userDetails.getUsername() : null;
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
@@ -283,7 +283,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size,
             @RequestParam(defaultValue = DEFAULT_SORT) String sort) {
 
-        log.info("GET /api/users/{}/lists - page: {}, size: {}", username, page, size);
+        log.info("GET /api/v1/users/{}/lists - page: {}, size: {}", username, page, size);
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);
@@ -311,7 +311,7 @@ public class ProfileController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
 
-        log.info("GET /api/users/{}/compare - viewer: {}", username, userDetails.getUsername());
+        log.info("GET /api/v1/users/{}/compare - viewer: {}", username, userDetails.getUsername());
 
         int validatedSize = Math.min(Math.max(1, size), MAX_SIZE);
         int validatedPage = Math.max(0, page);

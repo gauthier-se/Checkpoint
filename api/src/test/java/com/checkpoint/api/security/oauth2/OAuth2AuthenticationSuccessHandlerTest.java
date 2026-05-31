@@ -95,7 +95,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
         assertThat(response.getHeaders("Set-Cookie"))
                 .anyMatch(h -> h.contains("checkpoint_token=jwt.token.here")
                         && h.contains("HttpOnly")
-                        && h.contains("Path=/api"));
+                        && h.contains("Path=/api/v1"));
         assertThat(response.getRedirectedUrl()).isEqualTo(FRONTEND_URL + "/");
     }
 }

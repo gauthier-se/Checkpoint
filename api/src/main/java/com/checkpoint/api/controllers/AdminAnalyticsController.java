@@ -18,7 +18,7 @@ import com.checkpoint.api.services.AdminAnalyticsService;
  */
 @Tag(name = "Admin", description = "Admin: analytics dashboard")
 @RestController
-@RequestMapping("/api/admin/analytics")
+@RequestMapping("/admin/analytics")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminAnalyticsController {
 

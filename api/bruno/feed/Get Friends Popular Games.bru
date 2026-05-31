@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/me/friends/popular-games
+  url: {{baseUrl}}/api/v1/me/friends/popular-games
   body: none
   auth: bearer
 }
@@ -22,7 +22,7 @@ auth:bearer {
 docs {
   # Get Friends Popular Games
 
-  Paginated variant of `/api/me/friends/trending-games` powering the dedicated
+  Paginated variant of `/api/v1/me/friends/trending-games` powering the dedicated
   "Popular with friends" page. Only includes games with at least one interaction
   from the follow graph within the trending window (last 7 days).
 

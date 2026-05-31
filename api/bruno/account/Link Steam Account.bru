@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/me/steam/link
+  url: {{baseUrl}}/api/v1/me/steam/link
   body: json
   auth: bearer
 }
@@ -28,7 +28,7 @@ docs {
   `ISteamUser/GetPlayerSummaries` to verify the SteamID is recognized.
 
   This is the **manual** link path. Users can also link via Steam's OpenID 2.0
-  flow at `GET /api/auth/steam/openid/start?action=link`, which authenticates
+  flow at `GET /api/v1/auth/steam/openid/start?action=link`, which authenticates
   ownership of the Steam account through Steam itself instead of trusting the
   raw SteamID typed in.
 

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/auth/2fa/verify
+  url: {{baseUrl}}/api/v1/auth/2fa/verify
   body: json
   auth: bearer
 }
@@ -24,7 +24,7 @@ docs {
   # 2FA Verify (Enable)
 
   Verifies the first TOTP code after setup and permanently enables 2FA on the account.
-  Must be called after `POST /api/auth/2fa/setup`.
+  Must be called after `POST /api/v1/auth/2fa/setup`.
 
   ## Headers
 

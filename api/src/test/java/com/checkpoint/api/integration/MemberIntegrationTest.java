@@ -148,13 +148,13 @@ class MemberIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/members/popular")
+    @DisplayName("GET /api/v1/members/popular")
     class GetPopularMembers {
 
         @Test
         @DisplayName("should return members sorted by follower count descending")
         void shouldReturnMembersSortedByFollowerCount() throws Exception {
-            mockMvc.perform(get("/api/members/popular").param("size", "10"))
+            mockMvc.perform(get("/api/v1/members/popular").param("size", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(4))
                     .andExpect(jsonPath("$[0].pseudo").value("popularGamer"))
@@ -166,7 +166,7 @@ class MemberIntegrationTest {
         @DisplayName("should include isFollowing when authenticated")
         @WithMockUser(username = "viewer@example.com")
         void shouldIncludeIsFollowingWhenAuthenticated() throws Exception {
-            mockMvc.perform(get("/api/members/popular").param("size", "10"))
+            mockMvc.perform(get("/api/v1/members/popular").param("size", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].pseudo").value("popularGamer"))
                     .andExpect(jsonPath("$[0].isFollowing").value(true));
@@ -175,20 +175,20 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should respect size parameter")
         void shouldRespectSizeParameter() throws Exception {
-            mockMvc.perform(get("/api/members/popular").param("size", "2"))
+            mockMvc.perform(get("/api/v1/members/popular").param("size", "2"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2));
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members/top-reviewers")
+    @DisplayName("GET /api/v1/members/top-reviewers")
     class GetTopReviewers {
 
         @Test
         @DisplayName("should return members sorted by review count descending")
         void shouldReturnMembersSortedByReviewCount() throws Exception {
-            mockMvc.perform(get("/api/members/top-reviewers").param("size", "10"))
+            mockMvc.perform(get("/api/v1/members/top-reviewers").param("size", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].pseudo").value("topReviewer"))
                     .andExpect(jsonPath("$[0].reviewCount").value(2));
@@ -198,7 +198,7 @@ class MemberIntegrationTest {
         @DisplayName("should include isFollowing when authenticated")
         @WithMockUser(username = "viewer@example.com")
         void shouldIncludeIsFollowingWhenAuthenticated() throws Exception {
-            mockMvc.perform(get("/api/members/top-reviewers").param("size", "10"))
+            mockMvc.perform(get("/api/v1/members/top-reviewers").param("size", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].pseudo").value("topReviewer"))
                     .andExpect(jsonPath("$[0].isFollowing").value(false));
@@ -206,7 +206,7 @@ class MemberIntegrationTest {
     }
 
     @Nested
-    @DisplayName("GET /api/members/suggested")
+    @DisplayName("GET /api/v1/members/suggested")
     class GetSuggestedMembers {
 
         @Test
@@ -215,7 +215,7 @@ class MemberIntegrationTest {
         void shouldReturnSuggestionsBasedOnSharedGames() throws Exception {
             // viewer has game1, popularUser and quietUser also have game1
             // viewer already follows popularUser, so only quietUser should appear
-            mockMvc.perform(get("/api/members/suggested").param("size", "10"))
+            mockMvc.perform(get("/api/v1/members/suggested").param("size", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].pseudo").value("quietUser"))
@@ -225,19 +225,19 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should return 401 when not authenticated")
         void shouldReturn401WhenNotAuthenticated() throws Exception {
-            mockMvc.perform(get("/api/members/suggested"))
+            mockMvc.perform(get("/api/v1/members/suggested"))
                     .andExpect(status().isUnauthorized());
         }
     }
 
     @Nested
-    @DisplayName("GET /api/members")
+    @DisplayName("GET /api/v1/members")
     class SearchMembers {
 
         @Test
         @DisplayName("should return paginated list of all members")
         void shouldReturnPaginatedMembers() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("page", "0")
                             .param("size", "20"))
                     .andExpect(status().isOk())
@@ -249,7 +249,7 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should filter members by pseudo search")
         void shouldFilterByPseudoSearch() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("search", "popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
@@ -259,7 +259,7 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should perform case-insensitive search")
         void shouldPerformCaseInsensitiveSearch() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("search", "POPULAR"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(1))
@@ -269,7 +269,7 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should return empty results for non-matching search")
         void shouldReturnEmptyForNonMatchingSearch() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("search", "nonexistent"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content.length()").value(0))
@@ -280,7 +280,7 @@ class MemberIntegrationTest {
         @DisplayName("should include isFollowing when authenticated")
         @WithMockUser(username = "viewer@example.com")
         void shouldIncludeIsFollowingWhenAuthenticated() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("search", "popular"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].isFollowing").value(true));
@@ -289,7 +289,7 @@ class MemberIntegrationTest {
         @Test
         @DisplayName("should respect pagination parameters")
         void shouldRespectPaginationParameters() throws Exception {
-            mockMvc.perform(get("/api/members")
+            mockMvc.perform(get("/api/v1/members")
                             .param("page", "0")
                             .param("size", "2"))
                     .andExpect(status().isOk())
