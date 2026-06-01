@@ -94,7 +94,7 @@ export interface UnifiedGameItem {
   title: string
   coverUrl: string | null
   releaseDate: string | null
-  collectionTypes: CollectionType[]
+  collectionTypes: Array<CollectionType>
   addedAt: string
   libraryStatus: string | null
   userRating: number | null

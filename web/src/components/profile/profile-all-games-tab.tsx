@@ -76,7 +76,10 @@ function CollectionIcon({
       <Tooltip>
         <TooltipTrigger asChild>
           <StatusIcon
-            className={cn('size-3 shrink-0', COLLECTION_TYPE_META.LIBRARY.className)}
+            className={cn(
+              'size-3 shrink-0',
+              COLLECTION_TYPE_META.LIBRARY.className,
+            )}
           />
         </TooltipTrigger>
         <TooltipContent>
@@ -119,10 +122,7 @@ function buildScoreFromRating(userRating: number | null): number | null {
   return Math.round(userRating * 2)
 }
 
-export function ProfileAllGamesTab({
-  profile,
-  page,
-}: ProfileAllGamesTabProps) {
+export function ProfileAllGamesTab({ profile, page }: ProfileAllGamesTabProps) {
   const apiPage = Math.max(0, page - 1)
   const { data, isLoading, isError } = useQuery(
     userAllGamesQueryOptions(profile.username, apiPage),

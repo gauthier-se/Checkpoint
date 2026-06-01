@@ -119,7 +119,12 @@ export function GameDetailCard({
         <GameCardHoverActions gameId={link.gameId} isHovered={isHovered} />
       ) : null}
 
-      {(score != null || status || hasReview || isLiked || isReplay || collectionIcons) && (
+      {(score != null ||
+        status ||
+        hasReview ||
+        isLiked ||
+        isReplay ||
+        collectionIcons) && (
         <div className="flex min-h-4 items-center justify-between gap-1">
           {score != null ? (
             <ScoreStars score={score} starClassName="h-3 w-3" />
