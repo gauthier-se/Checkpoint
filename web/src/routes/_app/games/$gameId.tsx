@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_app/games/$gameId')({
   component: RouteComponent,
   pendingComponent: GameDetailSkeleton,
   pendingMs: 0,
-  loader: async ({ params: { gameId }, context }) => {
+  loader: ({ params: { gameId }, context }) => {
     // We intentionally don't prefetch the social queries (friends activity, etc.)
     // here because background prefetching during SSR loses the request context
     // and causes the backend to see the request as anonymous. They will fetch
@@ -48,12 +48,8 @@ export const Route = createFileRoute('/_app/games/$gameId')({
     )
     void context.queryClient.prefetchQuery(similarGamesQueryOptions(gameId))
   },
-  head: ({ loaderData }) => ({
-    meta: seo({
-      title: loaderData
-        ? `${(loaderData as { title?: string }).title ?? 'Game'} — Checkpoint`
-        : 'Game — Checkpoint',
-    }),
+  head: () => ({
+    meta: seo({ title: 'Game — Checkpoint' }),
   }),
   errorComponent: ({ error, reset }) => {
     if (isApiError(error) && error.status === 404) {
