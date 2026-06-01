@@ -73,7 +73,7 @@ public class User {
     @Column(nullable = false)
     private Integer level = 1;
 
-    @Column(name = "two_factor_enabled", nullable = false)
+    @Column(name = "two_factor_enabled", nullable = false, columnDefinition = "boolean not null default false")
     private Boolean twoFactorEnabled = false;
 
     @Column(name = "totp_secret")
