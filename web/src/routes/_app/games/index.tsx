@@ -267,7 +267,13 @@ function GamesIndexSkeleton() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-8 w-48" />
       </div>
-      {(['Popular games this week', 'Most backlogged', 'Most wishlisted'] as const).map((title) => (
+      {(
+        [
+          'Popular games this week',
+          'Most backlogged',
+          'Most wishlisted',
+        ] as const
+      ).map((title) => (
         <section key={title} className="my-8">
           <div className="flex items-center justify-between py-2">
             <Skeleton className="h-5 w-48" />

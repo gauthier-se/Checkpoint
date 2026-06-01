@@ -80,7 +80,9 @@ function RouteComponent() {
 function BrowseListsContent() {
   const searchParams = Route.useSearch()
   const { page } = searchParams
-  const { data } = useSuspenseQuery(searchListsQueryOptions(searchParams, PAGE_SIZE))
+  const { data } = useSuspenseQuery(
+    searchListsQueryOptions(searchParams, PAGE_SIZE),
+  )
 
   const hasActiveFilters =
     searchParams.q != null ||
@@ -154,4 +156,3 @@ function BrowseListsSkeleton() {
     </div>
   )
 }
-

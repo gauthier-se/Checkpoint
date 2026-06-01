@@ -47,7 +47,6 @@ function LeaderboardPage() {
   )
 }
 
-
 function LeaderboardContent() {
   const { sortBy, following } = Route.useSearch()
   const navigate = useNavigate({ from: '/leaderboard' })
